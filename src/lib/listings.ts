@@ -1,0 +1,231 @@
+// EXAMPLE DATA ONLY. Every business, rating and review below is invented for the design
+// and is labelled "Example" in the UI. Replace with real, verified businesses before launch.
+
+import type { CatKey } from "./directory";
+
+export type Review = { name: string; when: string; rating: number; text: string };
+
+export type Listing = {
+  slug: string;
+  name: string;
+  cat: CatKey;
+  kind: string;
+  city: string;
+  area: string;
+  images: string[];
+  blurb: string;
+  about: string;
+  credentials: { label: string; state: "verified" | "in-review" }[];
+  status: "verified" | "in-review";
+  rating: number;
+  reviewCount: number;
+  price: string;
+  responds: string;
+  languages: string[];
+};
+
+const REVIEWS: Record<CatKey, Review[]> = {
+  rentals: [
+    { name: "Example reviewer", when: "2 weeks ago", rating: 5, text: "Exactly as shown in the photos. The owner met us on time and walked us through everything." },
+    { name: "Example reviewer", when: "1 month ago", rating: 4, text: "Good location and quiet at night. Water pressure could be better, but the owner fixed it quickly." },
+  ],
+  "jobs-hr": [
+    { name: "Example reviewer", when: "3 weeks ago", rating: 5, text: "They understood what we needed and sent a shortlist within a week. Clear about fees from the start." },
+    { name: "Example reviewer", when: "2 months ago", rating: 5, text: "Made the move to Accra far less stressful. Practical advice and they always picked up." },
+  ],
+  education: [
+    { name: "Example reviewer", when: "1 month ago", rating: 5, text: "Our children settled in quickly. Teachers are patient and communicate well with parents." },
+    { name: "Example reviewer", when: "3 months ago", rating: 4, text: "Strong on maths and reading. Admissions took a while but the staff were helpful." },
+  ],
+  entertainment: [
+    { name: "Example reviewer", when: "1 week ago", rating: 5, text: "Great food, generous portions and a lovely atmosphere on a Friday evening." },
+    { name: "Example reviewer", when: "1 month ago", rating: 4, text: "Book ahead at weekends. Service was friendly even when it was busy." },
+  ],
+  "special-services": [
+    { name: "Example reviewer", when: "2 weeks ago", rating: 5, text: "Always on time, clean car, and he knew the quickest routes around the city." },
+    { name: "Example reviewer", when: "2 months ago", rating: 5, text: "Explained the problem clearly and quoted before starting. Fair price." },
+  ],
+  "invest-ngos": [
+    { name: "Example reviewer", when: "1 month ago", rating: 5, text: "Transparent reporting and site visits arranged without fuss." },
+    { name: "Example reviewer", when: "4 months ago", rating: 4, text: "Professional team. Due diligence documents were ready when we asked." },
+  ],
+  emergency: [],
+  classifieds: [
+    { name: "Example reviewer", when: "1 week ago", rating: 5, text: "Item was exactly as described and the seller let me test it before paying." },
+    { name: "Example reviewer", when: "1 month ago", rating: 4, text: "Fair prices and happy to negotiate. Arrived a little late to meet." },
+  ],
+};
+
+export const reviewsFor = (l: Listing) => REVIEWS[l.cat];
+
+const C = {
+  reg: (s: Listing["credentials"][number]["state"] = "verified") => ({ label: "Business registration (Registrar-General)", state: s }),
+  id: (s: Listing["credentials"][number]["state"] = "verified") => ({ label: "Owner identity checked", state: s }),
+  addr: (s: Listing["credentials"][number]["state"] = "verified") => ({ label: "Address visited by our team", state: s }),
+};
+
+export const LISTINGS: Listing[] = [
+  {
+    slug: "airport-residential-apartments",
+    name: "Airport Residential Apartments",
+    cat: "rentals", kind: "Furnished apartment", city: "Accra", area: "Airport Residential",
+    images: ["/images/rentals-2.jpg", "/images/rentals.jpg", "/images/rentals-4.jpg"],
+    blurb: "Two-bedroom furnished apartments with backup power and 24-hour security.",
+    about: "Bright two-bedroom apartments ten minutes from the airport. Each unit has a fitted kitchen, backup generator, water storage and secure parking. Monthly and long-stay terms available directly with the owner.",
+    credentials: [C.reg(), C.id(), C.addr(), { label: "Title documents seen", state: "verified" }],
+    status: "verified", rating: 4.9, reviewCount: 38, price: "Price on request", responds: "Usually replies within a few hours", languages: ["English", "Twi"],
+  },
+  {
+    slug: "east-legon-garden-house",
+    name: "East Legon Garden House",
+    cat: "rentals", kind: "Family home", city: "Accra", area: "East Legon",
+    images: ["/images/rentals-3.jpg", "/images/rentals.jpg", "/images/rentals-4.jpg"],
+    blurb: "Four-bedroom house with a pool and garden on a quiet street.",
+    about: "A four-bedroom family house with a private pool, mature garden and staff quarters. Close to international schools. Viewings by appointment with the owner's agent.",
+    credentials: [C.reg(), C.id(), C.addr("in-review")],
+    status: "verified", rating: 4.8, reviewCount: 12, price: "Price on request", responds: "Usually replies within a day", languages: ["English"],
+  },
+  {
+    slug: "efua-relocation-partners",
+    name: "Efua Relocation Partners",
+    cat: "jobs-hr", kind: "Relocation advisor", city: "Accra", area: "Osu",
+    images: ["/images/portrait-efua.jpg", "/images/jobs-2.jpg"],
+    blurb: "Help with permits, housing searches and settling in for families and staff.",
+    about: "Practical relocation support for individuals, families and companies moving staff to Ghana: residence permits, housing shortlists, school visits, bank accounts and orientation days.",
+    credentials: [C.reg(), C.id(), { label: "Professional references checked", state: "verified" }],
+    status: "verified", rating: 5.0, reviewCount: 21, price: "Quote after first call", responds: "Usually replies within a few hours", languages: ["English", "French", "Twi"],
+  },
+  {
+    slug: "talent-bridge-recruitment",
+    name: "Talent Bridge Recruitment",
+    cat: "jobs-hr", kind: "Recruitment agency", city: "Accra", area: "Ridge",
+    images: ["/images/jobs.jpg", "/images/jobs-3.jpg", "/images/jobs-2.jpg"],
+    blurb: "Recruiters for finance, tech and operations roles across Ghana.",
+    about: "A recruitment team placing mid and senior hires in finance, technology and operations. Also offers payroll set-up and HR policy support for companies opening a local office.",
+    credentials: [C.reg(), C.id(), C.addr()],
+    status: "verified", rating: 4.8, reviewCount: 29, price: "Fee agreed per role", responds: "Usually replies within a day", languages: ["English"],
+  },
+  {
+    slug: "bright-minds-academy",
+    name: "Bright Minds Academy",
+    cat: "education", kind: "Primary school", city: "Kumasi", area: "Ahodwo",
+    images: ["/images/education.jpg", "/images/education-4.jpg"],
+    blurb: "Primary school with small classes and a strong reading programme.",
+    about: "A primary school offering a British-aligned curriculum with Ghanaian languages and culture. Small class sizes, after-school clubs and a school bus on main routes.",
+    credentials: [C.reg(), { label: "Ghana Education Service licence", state: "verified" }, C.addr()],
+    status: "verified", rating: 4.9, reviewCount: 17, price: "Fees on request", responds: "Usually replies within a day", languages: ["English", "Twi"],
+  },
+  {
+    slug: "home-tutors-collective",
+    name: "Home Tutors Collective",
+    cat: "education", kind: "Private tutors", city: "Accra", area: "Cantonments",
+    images: ["/images/education-2.jpg", "/images/education-4.jpg"],
+    blurb: "Vetted tutors for maths, sciences, languages and exam preparation.",
+    about: "A group of qualified tutors offering home and online lessons for primary to university level, including IGCSE, WASSCE and IB preparation.",
+    credentials: [C.reg("in-review"), C.id(), { label: "Tutor qualifications checked", state: "in-review" }],
+    status: "in-review", rating: 4.7, reviewCount: 9, price: "Hourly rates on request", responds: "Usually replies within a few hours", languages: ["English", "French"],
+  },
+  {
+    slug: "labone-kitchen",
+    name: "Labone Kitchen",
+    cat: "entertainment", kind: "Restaurant", city: "Accra", area: "Labone",
+    images: ["/images/dining.jpg", "/images/entertainment-4.jpg"],
+    blurb: "Modern Ghanaian dishes, fresh juices and a relaxed terrace.",
+    about: "A neighbourhood restaurant serving modern takes on Ghanaian and West African dishes. Terrace seating, private dining for groups and catering for events.",
+    credentials: [C.reg(), { label: "Food hygiene certificate", state: "verified" }, C.addr()],
+    status: "verified", rating: 4.7, reviewCount: 112, price: "Menu on request", responds: "Usually replies within a few hours", languages: ["English"],
+  },
+  {
+    slug: "coastline-beach-bar",
+    name: "Coastline Beach Bar",
+    cat: "entertainment", kind: "Beach bar", city: "Takoradi", area: "Busua",
+    images: ["/images/entertainment-3.jpg", "/images/entertainment-2.jpg"],
+    blurb: "Sea views, grilled fish and live drumming on Saturdays.",
+    about: "A beachfront bar and grill with shaded seating, fresh seafood and live music at weekends. Takes group bookings and private events.",
+    credentials: [C.reg(), C.addr("in-review")],
+    status: "in-review", rating: 4.6, reviewCount: 44, price: "Menu on request", responds: "Usually replies within a day", languages: ["English", "Fante"],
+  },
+  {
+    slug: "gold-coast-chauffeurs",
+    name: "Gold Coast Chauffeurs",
+    cat: "special-services", kind: "Private driver", city: "Accra", area: "Cantonments",
+    images: ["/images/chauffeur.jpg", "/images/special-4.jpg"],
+    blurb: "Licensed drivers for airport runs, daily hire and events.",
+    about: "Professional chauffeurs with insured, well-kept vehicles for airport transfers, daily or weekly hire, and events. Drivers are licensed and background-checked.",
+    credentials: [C.reg(), C.id(), { label: "Driver licences and insurance seen", state: "verified" }],
+    status: "verified", rating: 4.8, reviewCount: 64, price: "Day rates on request", responds: "Usually replies within an hour", languages: ["English", "Ga", "Twi"],
+  },
+  {
+    slug: "kwesi-auto-workshop",
+    name: "Kwesi Auto Workshop",
+    cat: "special-services", kind: "Mechanic", city: "Accra", area: "Abossey Okai",
+    images: ["/images/special-2.jpg", "/images/special-4.jpg"],
+    blurb: "Diagnostics, servicing and repairs. Quote before any work starts.",
+    about: "An independent garage handling servicing, diagnostics, brakes, suspension and air-conditioning for most makes. Collection and drop-off available in central Accra.",
+    credentials: [C.reg(), C.id(), C.addr()],
+    status: "verified", rating: 4.7, reviewCount: 31, price: "Quote after inspection", responds: "Usually replies within a day", languages: ["English", "Twi"],
+  },
+  {
+    slug: "brightspark-electrical",
+    name: "BrightSpark Electrical",
+    cat: "special-services", kind: "Electrician", city: "Kumasi", area: "Adum",
+    images: ["/images/special-3.jpg"],
+    blurb: "Wiring, solar back-up and safety checks for homes and offices.",
+    about: "Certified electricians for new wiring, repairs, inverter and solar back-up installation, and safety inspections for landlords and businesses.",
+    credentials: [C.reg(), { label: "Energy Commission certification", state: "in-review" }],
+    status: "in-review", rating: 4.6, reviewCount: 14, price: "Quote after visit", responds: "Usually replies within a day", languages: ["English", "Twi"],
+  },
+  {
+    slug: "sunharvest-energy",
+    name: "SunHarvest Energy",
+    cat: "invest-ngos", kind: "Solar investment", city: "Accra", area: "Spintex",
+    images: ["/images/invest-2.jpg", "/images/invest-3.jpg"],
+    blurb: "Commercial solar projects looking for co-investors and partners.",
+    about: "A developer of rooftop and mini-grid solar projects for businesses and rural communities. Shares project documents and site visits with qualified investors.",
+    credentials: [C.reg(), C.id(), { label: "Audited accounts seen", state: "in-review" }],
+    status: "in-review", rating: 4.8, reviewCount: 6, price: "Investment terms on request", responds: "Usually replies within a day", languages: ["English"],
+  },
+  {
+    slug: "harvest-hands-foundation",
+    name: "Harvest Hands Foundation",
+    cat: "invest-ngos", kind: "Agriculture NGO", city: "Tamale", area: "Northern Region",
+    images: ["/images/invest-3.jpg", "/images/invest-4.jpg"],
+    blurb: "Training and tools for smallholder farmers. Volunteers and donors welcome.",
+    about: "A registered non-profit supporting smallholder farmers with training, seeds and market access. Publishes annual impact reports and hosts volunteer programmes.",
+    credentials: [C.reg(), { label: "NGO registration (Department of Social Welfare)", state: "verified" }],
+    status: "verified", rating: 4.9, reviewCount: 11, price: "Donations and partnerships", responds: "Usually replies within a few days", languages: ["English", "Dagbani"],
+  },
+  {
+    slug: "osu-phone-hub",
+    name: "Osu Phone Hub",
+    cat: "classifieds", kind: "Phones & electronics", city: "Accra", area: "Osu",
+    images: ["/images/classifieds-2.jpg"],
+    blurb: "New and certified used phones, laptops and accessories.",
+    about: "A shop selling new and certified pre-owned phones, laptops and accessories, with a short warranty on used devices and repairs on site.",
+    credentials: [C.reg(), C.addr()],
+    status: "verified", rating: 4.5, reviewCount: 57, price: "Prices in store", responds: "Usually replies within a few hours", languages: ["English"],
+  },
+  {
+    slug: "makola-fashion-house",
+    name: "Makola Fashion House",
+    cat: "classifieds", kind: "Clothing", city: "Accra", area: "Makola",
+    images: ["/images/classifieds-3.jpg", "/images/classifieds.jpg"],
+    blurb: "Ready-to-wear and made-to-measure clothing in local fabrics.",
+    about: "A family tailoring business offering ready-to-wear pieces and made-to-measure outfits in kente, batik and wax prints. Orders usually ready in a week.",
+    credentials: [C.reg("in-review"), C.id()],
+    status: "in-review", rating: 4.7, reviewCount: 23, price: "Prices on request", responds: "Usually replies within a day", languages: ["English", "Ga"],
+  },
+  {
+    slug: "accra-auto-sales",
+    name: "Accra Auto Sales",
+    cat: "classifieds", kind: "Used cars", city: "Accra", area: "Spintex",
+    images: ["/images/classifieds-4.jpg", "/images/special-4.jpg"],
+    blurb: "Inspected used cars with full documents and test drives.",
+    about: "A dealership selling inspected used cars with complete customs and registration papers. Test drives and independent inspections welcome.",
+    credentials: [C.reg(), C.id(), C.addr()],
+    status: "verified", rating: 4.4, reviewCount: 19, price: "Prices on request", responds: "Usually replies within a day", languages: ["English", "Twi"],
+  },
+];
+
+export const getListing = (slug: string) => LISTINGS.find((l) => l.slug === slug);
+export const CITIES = ["Accra", "Kumasi", "Takoradi", "Tamale"];

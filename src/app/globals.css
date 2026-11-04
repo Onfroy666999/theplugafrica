@@ -1,0 +1,156 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   The Plug Africa design tokens — the single source of truth.
+   Scripted (Motion) animations mirror these values in src/lib/motion.ts.
+   ========================================================================== */
+@theme {
+  /* Brand core */
+  --color-navy: #14173a;
+  --color-navy-hover: #1f2350;
+  --color-gold: #b4913f;
+  --color-gold-light: #d9be7a;
+  --color-cream: #faf7f0;
+  --color-line: #e4ddcb;
+  --color-muted: #6e7180;
+  --color-ember: #c8501f;
+  --color-ember-soft: #fbf1ec;
+  --color-ok: #2f7a4e;
+  --color-ok-soft: #e8f3ec;
+  --color-warn: #9a6a12;
+  --color-warn-soft: #fbf3e2;
+  --color-warn-dot: #d9a23a;
+
+  /* Used by the logo lockup on dark backgrounds */
+  --color-paper: #f3eedf;
+  --color-ink: #0a0c21;
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-heading: var(--font-jakarta), var(--font-inter), system-ui, sans-serif;
+
+  /* Corner radius scale: controls are pills, fields/cards 16px, panels 24px, hero blocks 28px */
+  --radius-field: 1rem;
+  --radius-card: 1rem;
+  --radius-panel: 1.5rem;
+  --radius-hero: 1.75rem;
+
+  /* Elevation scale */
+  --shadow-card: 0 12px 40px -18px rgb(20 23 58 / 0.3);
+  --shadow-pop: 0 0 0 1px rgb(20 23 58 / 0.06), 0 16px 48px -12px rgb(20 23 58 / 0.28);
+  --shadow-float: 0 24px 60px -20px rgb(20 23 58 / 0.45);
+  --shadow-header: 0 1px 0 rgb(20 23 58 / 0.08), 0 8px 24px -12px rgb(20 23 58 / 0.15);
+
+  /* Motion: three curves, four durations (Emil Kowalski's values) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-press: 150ms;
+  --dur-fast: 200ms;
+  --dur-base: 250ms;
+  --dur-media: 500ms;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: #fff;
+  color: var(--color-navy);
+}
+
+::selection {
+  background: var(--color-gold-light);
+  color: var(--color-navy);
+}
+
+/* One focus style everywhere (keyboard only) */
+:where(a, button, input, select, textarea, [role="tab"], [role="switch"], [role="combobox"]):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-gold);
+}
+
+/* ---------- Page transition (pure CSS: runs before JS, leaves no transform behind) ---------- */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+}
+.page-enter {
+  animation: page-enter 350ms var(--ease-out) backwards;
+}
+
+/* ---------- Press feedback for every pressable ---------- */
+.press {
+  transition-property: transform, background-color, color, border-color, box-shadow, opacity;
+  transition-duration: var(--dur-press), var(--dur-fast), var(--dur-fast), var(--dur-fast), var(--dur-fast), var(--dur-fast);
+  transition-timing-function: var(--ease-out), ease, ease, ease, ease, ease;
+}
+.press:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* ---------- Media hover: the one image zoom used on every card ---------- */
+.media-zoom {
+  transition: transform var(--dur-media) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .group:hover .media-zoom {
+    transform: scale(1.04);
+  }
+}
+
+/* ---------- Popovers (Select): scale from the trigger, fast in, faster out ---------- */
+.ui-popup {
+  transform-origin: var(--transform-origin);
+  transition: opacity var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+.ui-popup[data-starting-style],
+.ui-popup[data-ending-style] {
+  opacity: 0;
+  transform: scale(0.96);
+}
+.ui-popup[data-ending-style] {
+  transition-duration: 120ms;
+}
+
+/* ---------- Dialog: bottom sheet on phones, centred card on larger screens ---------- */
+.ui-backdrop {
+  transition: opacity var(--dur-base) ease;
+}
+.ui-backdrop[data-starting-style],
+.ui-backdrop[data-ending-style] {
+  opacity: 0;
+}
+.ui-sheet {
+  transition: transform 350ms var(--ease-drawer), opacity var(--dur-base) var(--ease-out);
+}
+.ui-sheet[data-starting-style],
+.ui-sheet[data-ending-style] {
+  transform: translateY(100%);
+}
+.ui-sheet[data-ending-style] {
+  transition-duration: 200ms;
+}
+@media (min-width: 768px) {
+  .ui-sheet[data-starting-style],
+  .ui-sheet[data-ending-style] {
+    transform: translateY(12px) scale(0.98);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  .ui-popup[data-starting-style],
+  .ui-popup[data-ending-style],
+  .ui-sheet[data-starting-style],
+  .ui-sheet[data-ending-style] {
+    transform: none;
+  }
+  .media-zoom { transition: none; }
+}
