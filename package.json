@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -11,7 +11,9 @@
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "admin:password": "tsx --env-file=.env scripts/admin-password.ts"
+    "admin:password": "tsx --env-file=.env scripts/admin-password.ts",
+    "dev:webpack": "next dev",
+    "serve": "next build && next start"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

@@ -18,7 +18,10 @@ import { BUSINESS_STATUS, CONCIERGE_STATUS, CREDENTIAL_STATE, ENQUIRY_STATUS, WA
 // Simple in-memory throttle: 5 failed attempts per email+IP per 15 minutes.
 const attempts = new Map<string, { n: number; until: number }>();
 const WINDOW = 15 * 60 * 1000;
-const DUMMY_HASH = bcrypt.hashSync(randomBytes(16).toString("hex"), 12);
+// Compared against when an email is unknown, so timing doesn't reveal which emails exist.
+// Created on first use (hashing is deliberately slow; doing it at import slowed every admin page load).
+let dummyHash: string | undefined;
+const getDummyHash = async () => (dummyHash ??= await bcrypt.hash(randomBytes(16).toString("hex"), 12));
 
 export async function login(_: unknown, fd: FormData): Promise<{ error: string; email: string } | undefined> {
   const email = String(fd.get("email") ?? "").toLowerCase().trim();
@@ -30,8 +33,7 @@ export async function login(_: unknown, fd: FormData): Promise<{ error: string; 
   if (a && a.n >= 5 && a.until > now) return { error: "Too many attempts. Wait 15 minutes and try again.", email };
 
   const admin = email ? await db.admin.findUnique({ where: { email } }) : null;
-  // Compare against a dummy hash when the email is unknown so timing doesn't reveal which emails exist.
-  const ok = await bcrypt.compare(password, admin?.passwordHash ?? DUMMY_HASH);
+  const ok = await bcrypt.compare(password, admin?.passwordHash ?? (await getDummyHash()));
   if (!admin || !ok) {
     attempts.set(key, { n: (a && a.until > now ? a.n : 0) + 1, until: now + WINDOW });
     return { error: "That email and password don't match.", email };
