@@ -1,15 +1,16 @@
-// The Plug Africa database.
-// Local development uses SQLite (prisma/dev.db). For hosting, switch `provider` to "postgresql"
-// and point DATABASE_URL at the hosted database; the models stay the same.
-// SQLite has no enums, so status fields are strings validated in src/lib/status.ts.
+// The Plug Africa database (PostgreSQL).
+// Local development: Docker (docker-compose.yml, port 5433). Staging/production: Neon.
+// Change the schema with `npm run db:migrate -- --name <change>`; commit the generated migration.
+// Status fields are strings validated in src/lib/status.ts (kept from the SQLite version).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // pooled connection used by the app
+  directUrl = env("DIRECT_URL") // direct connection used by migrations
 }
 
 model Admin {

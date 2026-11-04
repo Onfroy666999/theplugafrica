@@ -1,0 +1,25 @@
+# Local development database. Staging and production use hosted Postgres (Neon).
+# Start: npm run db:up    Stop: docker compose stop
+# Uses host port 5433 (5432 is taken by another local project).
+# The credentials are for this local container only; they are not used anywhere else.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: theplugafrica-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: plug
+      POSTGRES_PASSWORD: plug_local_dev
+      POSTGRES_DB: theplugafrica
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - plug_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U plug -d theplugafrica"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  plug_pgdata:

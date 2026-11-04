@@ -6,14 +6,14 @@ Private repository. Owner: Kenneth Ato Bilson-Ogoe.
 
 ## Stack
 
-Next.js 15 (App Router) · TypeScript · Tailwind CSS 4 · Motion · Base UI · Prisma (SQLite locally, Postgres when hosted)
+Next.js 15 (App Router) · TypeScript · Tailwind CSS 4 · Motion · Base UI · Prisma + PostgreSQL (Docker locally, Neon when hosted)
 
 ## Getting started
 
 ```bash
 npm install
 cp .env.example .env      # fill in values
-npm run db:push && npm run db:seed
+npm run db:up && npm run db:deploy && npm run db:seed   # needs Docker
 npm run dev               # develop with hot reload
 npm run serve             # production build, for day-to-day use
 ```
