@@ -1,0 +1,31 @@
+name: Bug
+description: Something isn't working as it should
+labels: ["type:bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to …
+        2. Click …
+        3. See …
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Where
+      description: Page URL, device and browser (e.g. /admin/businesses, iPhone, Safari).
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or error text
+      description: Don't include customers' personal details.
