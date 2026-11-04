@@ -7,6 +7,9 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 ### Added
 - Collaboration setup: contributing guide, issue and pull request templates, code owners, CI checks on every pull request, consistent line endings.
 
+### Changed
+- Database moved from SQLite to PostgreSQL with versioned migrations (#2). Local development uses Docker on port 5433. CI applies migrations to a fresh Postgres, checks they match the schema, and runs the seed.
+
 ## [0.2.1] - 2026-11-04
 
 ### Fixed

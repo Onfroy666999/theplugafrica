@@ -73,12 +73,16 @@ A change is done when:
 
 ## 8. Running the project
 
+Needs Node 22 and Docker Desktop (for the local Postgres database).
+
 ```bash
 npm install
 cp .env.example .env      # then fill in values
-npm run db:push           # create the local database
+npm run db:up             # start local Postgres in Docker (port 5433)
+npm run db:deploy         # apply migrations
 npm run db:seed           # admin account + example businesses
 npm run dev               # develop (Turbopack, hot reload)
 npm run serve             # use it: production build, fast
 npm run admin:password    # change the admin password
+npm run db:migrate -- --name <change>   # after editing prisma/schema.prisma; commit the migration
 ```
