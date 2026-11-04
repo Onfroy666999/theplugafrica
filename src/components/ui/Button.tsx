@@ -14,6 +14,7 @@ export const buttonStyles = cva(
         light: "bg-white text-navy hover:bg-cream",
         outlineLight: "border border-white/30 text-white hover:bg-white/10",
         ghost: "text-navy hover:bg-navy/[0.05]",
+        danger: "bg-ember text-white hover:bg-ember/90",
       },
       size: {
         sm: "h-10 px-4 text-[14px]",

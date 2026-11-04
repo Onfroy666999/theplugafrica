@@ -3,7 +3,8 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Field, Input, Select, Spinner, Success, Textarea, makeRef, toOptions } from "@/components/market/Form";
+import { submitConcierge } from "@/app/actions";
+import { Field, Input, Select, Spinner, Success, Textarea, toOptions } from "@/components/market/Form";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { CATS } from "@/lib/directory";
 import { CITIES, getListing } from "@/lib/listings";
@@ -18,6 +19,7 @@ export function ConciergeForm() {
   const listing = getListing(params.get("listing") ?? "");
   const [ref, setRef] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <AnimatePresence mode="wait" initial={false}>
@@ -35,12 +37,18 @@ export function ConciergeForm() {
         <motion.form
           key="form"
           exit={{ opacity: 0, transition: { duration: DUR.fast } }}
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
             setBusy(true);
-            setTimeout(() => setRef(makeRef("CNC")), 700);
+            setError(null);
+            const fd = new FormData(e.currentTarget);
+            if (listing) fd.set("listing", listing.slug);
+            const r = await submitConcierge(fd).catch(() => ({ ok: false as const, error: "Something went wrong. Please try again." }));
+            setBusy(false);
+            if (r.ok) setRef(r.ref);
+            else setError(r.error);
           }}
-          className="space-y-5 rounded-hero border border-navy/10 bg-white p-6 shadow-card md:p-9"
+          className="relative space-y-5 rounded-hero border border-navy/10 bg-white p-6 shadow-card md:p-9"
         >
           {listing && (
             <div className="flex items-center justify-between gap-3 rounded-field bg-cream px-4 py-3 text-[14px]">
@@ -73,6 +81,8 @@ export function ConciergeForm() {
           <Field label="When do you need it?">
             <Select label="When do you need it?" name="when" options={WHEN_OPTIONS} defaultValue="This month" />
           </Field>
+          <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 opacity-0" />
+          {error && <p role="alert" className="rounded-field bg-ember-soft px-4 py-3 text-[14px] font-medium text-ember">{error}</p>}
           <Button type="submit" size="lg" full disabled={busy}>
             {busy && <Spinner />}
             {busy ? "Sending" : "Send request"}

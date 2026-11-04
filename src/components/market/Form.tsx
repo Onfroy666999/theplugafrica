@@ -70,7 +70,7 @@ export function Success({ title, body, refCode, children }: { title: string; bod
       <div className="mt-6">
         <RefCode code={refCode} onCopy={() => navigator.clipboard?.writeText(refCode).catch(() => {})} />
       </div>
-      <p className="mt-4 text-[12.5px] text-navy/45">Demo only: nothing was sent. Forms will be connected when the backend is built.</p>
+      <p className="mt-4 text-[12.5px] text-navy/45">Keep this reference. Quote it if you contact us about this request.</p>
       {children}
     </motion.div>
   );
