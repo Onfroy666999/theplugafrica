@@ -18,7 +18,9 @@ export default async function Businesses({ searchParams }: { searchParams: SP })
     ...(sp.status ? { status: sp.status } : {}),
     ...(sp.category ? { category: sp.category } : {}),
     ...(sp.examples ? { isExample: true } : {}),
-    ...(sp.q ? { OR: [{ name: { contains: sp.q } }, { city: { contains: sp.q } }, { area: { contains: sp.q } }, { kind: { contains: sp.q } }] } : {}),
+    ...(sp.q
+      ? { OR: (["name", "city", "area", "kind"] as const).map((f) => ({ [f]: { contains: sp.q, mode: "insensitive" as const } })) }
+      : {}),
   };
   const [rows, total] = await Promise.all([
     db.business.findMany({ where, orderBy: { updatedAt: "desc" }, include: { _count: { select: { enquiries: true } } } }),
