@@ -7,7 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { Lockup } from "@/components/Logo";
 import { CATS, type CatKey } from "@/lib/directory";
-import { LISTINGS } from "@/lib/listings";
+import { LISTINGS, type Listing } from "@/lib/listings";
 import { ListingCard } from "./ListingCard";
 import { Arrow, CatIcon, Chat, Check } from "./Icons";
 import { LinkButton } from "@/components/ui/Button";
@@ -196,7 +196,7 @@ export function CategoryExplorer({ id = "explore" }: { id?: string }) {
 
 /* ---------- Popular rail (Airbnb-style cards with scroll arrows) ---------- */
 
-export function PopularRail({ title = "Popular in Accra" }: { title?: string }) {
+export function PopularRail({ title = "Popular in Accra", listings = LISTINGS }: { title?: string; listings?: Listing[] }) {
   const ref = useRef<HTMLDivElement>(null);
   const [edge, setEdge] = useState({ start: true, end: false });
 
@@ -212,7 +212,7 @@ export function PopularRail({ title = "Popular in Accra" }: { title?: string }) 
       <div className="flex items-end justify-between">
         <Reveal>
           <h2 className="font-heading text-[24px] font-bold tracking-[-0.02em] text-navy md:text-[28px]">{title}</h2>
-          <p className="mt-1 text-[14px] text-navy/55">Example listings. Real businesses are being added now.</p>
+          {listings.some((l) => l.isExample) && <p className="mt-1 text-[14px] text-navy/55">Example listings. Real businesses are being added now.</p>}
         </Reveal>
         <div className="hidden gap-2 md:flex">
           {([-1, 1] as const).map((d) => (
@@ -230,7 +230,7 @@ export function PopularRail({ title = "Popular in Accra" }: { title?: string }) 
       </div>
 
       <div ref={ref} onScroll={update} className="-mx-5 mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 [scrollbar-width:none] md:-mx-0 md:px-0 [&::-webkit-scrollbar]:hidden">
-        {LISTINGS.filter((l) => l.city === "Accra").slice(0, 8).map((l, i) => (
+        {listings.filter((l) => l.city === "Accra").slice(0, 8).map((l, i) => (
           <Reveal key={l.slug} delay={i * STAGGER} className="w-[78%] shrink-0 snap-start sm:w-[46%] md:w-[calc((100%-48px)/4)]">
             <ListingCard l={l} />
           </Reveal>

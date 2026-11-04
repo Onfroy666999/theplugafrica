@@ -1,0 +1,187 @@
+"use server";
+
+import bcrypt from "bcryptjs";
+import { randomBytes } from "node:crypto";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { z } from "zod";
+import { endSession, requireAdmin, startSession } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { CATS } from "@/lib/directory";
+import { BUSINESS_STATUS, CONCIERGE_STATUS, CREDENTIAL_STATE, ENQUIRY_STATUS, WAITLIST_STATUS, values } from "@/lib/status";
+
+/* ---------------- Sign in / out ---------------- */
+
+// Simple in-memory throttle: 5 failed attempts per email+IP per 15 minutes.
+const attempts = new Map<string, { n: number; until: number }>();
+const WINDOW = 15 * 60 * 1000;
+const DUMMY_HASH = bcrypt.hashSync(randomBytes(16).toString("hex"), 12);
+
+export async function login(_: unknown, fd: FormData): Promise<{ error: string; email: string } | undefined> {
+  const email = String(fd.get("email") ?? "").toLowerCase().trim();
+  const password = String(fd.get("password") ?? "");
+  const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+  const key = `${email}|${ip}`;
+  const now = Date.now();
+  const a = attempts.get(key);
+  if (a && a.n >= 5 && a.until > now) return { error: "Too many attempts. Wait 15 minutes and try again.", email };
+
+  const admin = email ? await db.admin.findUnique({ where: { email } }) : null;
+  // Compare against a dummy hash when the email is unknown so timing doesn't reveal which emails exist.
+  const ok = await bcrypt.compare(password, admin?.passwordHash ?? DUMMY_HASH);
+  if (!admin || !ok) {
+    attempts.set(key, { n: (a && a.until > now ? a.n : 0) + 1, until: now + WINDOW });
+    return { error: "That email and password don't match.", email };
+  }
+  attempts.delete(key);
+  await startSession(admin);
+  redirect("/admin");
+}
+
+export async function logout() {
+  await endSession();
+  redirect("/admin/login");
+}
+
+/* ---------------- Businesses ---------------- */
+
+const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .replace(/[\s_]+/g, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 80);
+
+const opt = (max: number) => z.string().trim().max(max).optional().transform((v) => v || null);
+
+const BusinessSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().trim().min(2, "Add the business name").max(160),
+  slug: z.string().trim().max(80).optional(),
+  category: z.enum(CATS.map((c) => c.key) as [string, ...string[]]),
+  kind: z.string().trim().min(2, "Add what kind of business it is").max(80),
+  city: z.string().trim().min(2, "Add the city").max(60),
+  area: z.string().trim().min(2, "Add the area or neighbourhood").max(80),
+  blurb: z.string().trim().min(10, "Add a one-line summary").max(200),
+  about: z.string().trim().min(20, "Add a fuller description").max(4000),
+  price: z.string().trim().max(80).default("Price on request"),
+  responds: z.string().trim().max(80).default("Usually replies within a day"),
+  languages: z.string().trim().max(120).default("English"),
+  phone: opt(40),
+  whatsapp: opt(40),
+  email: z.union([z.literal(""), z.email("Check the email address")]).optional().transform((v) => v || null),
+  status: z.enum(values(BUSINESS_STATUS)),
+  images: z.string().transform((s, ctx) => {
+    try {
+      const v = JSON.parse(s);
+      if (Array.isArray(v) && v.every((x) => typeof x === "string" && x.startsWith("/"))) return v as string[];
+    } catch {}
+    ctx.addIssue({ code: "custom", message: "Images are invalid" });
+    return z.NEVER;
+  }),
+  credentials: z.string().transform((s, ctx) => {
+    try {
+      const v = z.array(z.object({ label: z.string().trim().min(1).max(160), state: z.enum(values(CREDENTIAL_STATE)) })).parse(JSON.parse(s));
+      return v;
+    } catch {}
+    ctx.addIssue({ code: "custom", message: "Credentials are invalid" });
+    return z.NEVER;
+  }),
+});
+
+export type SaveResult = { ok: true; id: string } | { ok: false; error: string; field?: string };
+
+export async function saveBusiness(fd: FormData): Promise<SaveResult> {
+  await requireAdmin();
+  const parsed = BusinessSchema.safeParse(Object.fromEntries(fd));
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    return { ok: false, error: issue.message, field: String(issue.path[0] ?? "") };
+  }
+  const { id, credentials, images, slug: rawSlug, ...d } = parsed.data;
+  const slug = slugify(rawSlug || d.name);
+  if (!slug) return { ok: false, error: "Add a web address (slug)", field: "slug" };
+  const clash = await db.business.findUnique({ where: { slug }, select: { id: true } });
+  if (clash && clash.id !== id) return { ok: false, error: `Another business already uses the address /listing/${slug}`, field: "slug" };
+  if (d.status === "verified" && credentials.some((c) => c.state !== "verified"))
+    return { ok: false, error: "Every credential must be Checked before a business can be marked Verified.", field: "status" };
+
+  const data = { ...d, slug, images: JSON.stringify(images) };
+  const saved = id ? await db.business.update({ where: { id }, data }) : await db.business.create({ data });
+  await db.credential.deleteMany({ where: { businessId: saved.id } });
+  if (credentials.length) await db.credential.createMany({ data: credentials.map((c, i) => ({ ...c, businessId: saved.id, position: i })) });
+
+  revalidatePath("/admin/businesses");
+  return { ok: true, id: saved.id };
+}
+
+export async function setBusinessStatus(id: string, status: string) {
+  await requireAdmin();
+  z.enum(values(BUSINESS_STATUS)).parse(status);
+  if (status === "verified") {
+    const pending = await db.credential.count({ where: { businessId: id, state: { not: "verified" } } });
+    if (pending) return { ok: false as const, error: "Check every credential before marking Verified." };
+  }
+  await db.business.update({ where: { id }, data: { status } });
+  revalidatePath("/admin/businesses");
+  return { ok: true as const };
+}
+
+export async function deleteBusiness(id: string) {
+  await requireAdmin();
+  await db.business.delete({ where: { id } });
+  revalidatePath("/admin/businesses");
+  redirect("/admin/businesses");
+}
+
+/* ---------------- Image upload ---------------- */
+// Saved under public/uploads for local use. Hosting needs cloud storage instead (see CLAUDE.md).
+
+const MAX_BYTES = 6 * 1024 * 1024;
+const TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+
+export async function uploadImages(fd: FormData): Promise<{ ok: true; paths: string[] } | { ok: false; error: string }> {
+  await requireAdmin();
+  const files = fd.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
+  if (!files.length) return { ok: false, error: "Choose at least one photo." };
+  const dir = path.join(process.cwd(), "public", "uploads");
+  await mkdir(dir, { recursive: true });
+  const paths: string[] = [];
+  for (const f of files) {
+    const ext = TYPES[f.type];
+    if (!ext) return { ok: false, error: `${f.name}: use JPG, PNG or WebP.` };
+    if (f.size > MAX_BYTES) return { ok: false, error: `${f.name} is over 6 MB.` };
+    const name = `${Date.now().toString(36)}-${randomBytes(6).toString("hex")}.${ext}`;
+    await writeFile(path.join(dir, name), Buffer.from(await f.arrayBuffer()));
+    paths.push(`/uploads/${name}`);
+  }
+  return { ok: true, paths };
+}
+
+/* ---------------- Inboxes ---------------- */
+
+const INBOX = {
+  enquiry: { statuses: ENQUIRY_STATUS, path: "/admin/enquiries" },
+  concierge: { statuses: CONCIERGE_STATUS, path: "/admin/concierge" },
+  waitlist: { statuses: WAITLIST_STATUS, path: "/admin/waitlist" },
+} as const;
+export type InboxKind = keyof typeof INBOX;
+
+export async function updateInbox(kind: InboxKind, id: string, patch: { status?: string; notes?: string }) {
+  await requireAdmin();
+  const cfg = INBOX[kind];
+  const data: { status?: string; notes?: string | null } = {};
+  if (patch.status !== undefined) data.status = z.enum(values(cfg.statuses)).parse(patch.status);
+  if (patch.notes !== undefined) data.notes = patch.notes.trim().slice(0, 4000) || null;
+  if (kind === "enquiry") await db.enquiry.update({ where: { id }, data });
+  if (kind === "concierge") await db.conciergeRequest.update({ where: { id }, data });
+  if (kind === "waitlist") await db.waitlistEntry.update({ where: { id }, data });
+  revalidatePath(cfg.path);
+  revalidatePath("/admin");
+}

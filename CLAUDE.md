@@ -108,6 +108,14 @@ The owner disliked the first website UI and asked for premium, animated, human-f
   - Use the kit in `src/components/ui/`: `Button`/`LinkButton` (cva variants: primary, secondary, gold, light, outlineLight, ghost; sizes sm 40px, md 48px, lg 56px), `Select` (Base UI; variants field, pill, bare; no native `<select>`), `Switch`, `ChipGroup` (single-select filters with a sliding highlight), `Sheet` (the only dialog: bottom sheet on phones, centred card on desktop). Form fields are in `src/components/market/Form.tsx`.
   - Motion: enter with EASE.out, move on screen with EASE.inOut, exits faster than entries, one SPRING for indicators, a STAGGER of 0.05. Every card image uses the `.media-zoom` hover. Pressables use `.press`. Respect reduced motion.
   - Radii: pills for controls; `rounded-card`/`rounded-field` 16px; `rounded-panel` 24px; `rounded-hero` 28px. Shadows: `shadow-card`, `shadow-pop`, `shadow-float`, `shadow-header`.
+### 6b. Admin and backend (feature/admin, 2026-11-04)
+
+- **Admin user:** the owner, Kenneth Ato Bilson-Ogoe. Sign in at `/admin/login`. The account is seeded from `.env` (`ADMIN_EMAIL`, `ADMIN_NAME`, `ADMIN_PASSWORD`; the file is gitignored). Change the password with `npm run admin:password`.
+- **Stack:** Prisma 6 + SQLite (`prisma/dev.db`) locally. For hosting, switch the datasource to PostgreSQL; the models stay the same. Sessions are signed JWT cookies (jose, `AUTH_SECRET`), checked in `src/middleware.ts` and again by `requireAdmin()` in every admin page and action. Passwords use bcrypt; sign-in is throttled to 5 attempts per 15 minutes.
+- **Admin sections:** Dashboard; Businesses (add, edit, photos, credentials checklist, status Draft → In review → Verified → Hidden; Verified is blocked until every credential is Checked); Enquiries (reference codes from "Contact this business"); Concierge requests; Business waitlist. Each inbox has a status and private notes.
+- **Public site** reads businesses from the database (`src/lib/data.ts`); only In review and Verified are public. The forms and the contact sheet save to the database (`src/app/actions.ts`). The 16 design examples are seeded with `isExample` and labelled "Example".
+- **Setup:** `npm install` → `npm run db:push` → `npm run db:seed` → `npm run dev`.
+- **[Open] Before hosting:** photo uploads go to `public/uploads` (local only), so cloud storage is needed for hosting; move the database to Postgres; set real `AUTH_SECRET` and admin credentials in the host's environment.
 - Performance note: the Claude-in-Chrome test tab renders every rich page at about 1 fps (Airbnb included), probably because of Grammarly desktop. Judge motion in an Incognito window.
 
 ## 7. Suggested path to a production build (for Claude Code)

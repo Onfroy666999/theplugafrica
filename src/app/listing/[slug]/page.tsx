@@ -7,26 +7,25 @@ import { Check, Star } from "@/components/market/Icons";
 import { ListingCard, StatusBadge } from "@/components/market/ListingCard";
 import { Footer, Header, Reveal } from "@/components/market/Sections";
 import { CATS } from "@/lib/directory";
-import { LISTINGS, getListing, reviewsFor } from "@/lib/listings";
+import { getPublicListing, getPublicListings } from "@/lib/data";
+import { reviewsFor } from "@/lib/listings";
 import { ContactPanel } from "./ContactPanel";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export function generateStaticParams() {
-  return LISTINGS.map((l) => ({ slug: l.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const l = getListing((await params).slug);
+  const l = await getPublicListing((await params).slug);
   return l ? { title: `${l.name} — ${l.kind} in ${l.area}, ${l.city} · The Plug Africa`, description: l.blurb } : {};
 }
 
 export default async function ListingPage({ params }: Props) {
-  const l = getListing((await params).slug);
+  const l = await getPublicListing((await params).slug);
   if (!l) notFound();
   const cat = CATS.find((c) => c.key === l.cat)!;
-  const reviews = reviewsFor(l);
-  const similar = LISTINGS.filter((x) => x.cat === l.cat && x.slug !== l.slug).slice(0, 4);
+  const reviews = l.isExample ? reviewsFor(l) : [];
+  const similar = (await getPublicListings()).filter((x) => x.cat === l.cat && x.slug !== l.slug).slice(0, 4);
   const imgs = l.images.length >= 3 ? l.images.slice(0, 3) : [...l.images, ...cat.tiles.map((t) => t.img).filter((i) => !l.images.includes(i))].slice(0, 3);
 
   return (
@@ -46,13 +45,17 @@ export default async function ListingPage({ params }: Props) {
           <div>
             <h1 className="font-heading text-[28px] leading-tight font-extrabold tracking-[-0.03em] text-navy md:text-[38px]">{l.name}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-navy/65">
-              <span className="flex items-center gap-1 font-semibold text-navy"><Star className="h-4 w-4 text-gold" /> {l.rating.toFixed(1)} <span className="font-normal text-navy/55">({l.reviewCount} reviews)</span></span>
+              {l.reviewCount > 0 ? (
+                <span className="flex items-center gap-1 font-semibold text-navy"><Star className="h-4 w-4 text-gold" /> {l.rating.toFixed(1)} <span className="font-normal text-navy/55">({l.reviewCount} reviews)</span></span>
+              ) : (
+                <span className="rounded-full bg-gold/15 px-2.5 py-0.5 text-[12px] font-semibold text-gold">New on The Plug</span>
+              )}
               <span>{l.kind}</span>
               <span>{l.area}, {l.city}</span>
               <StatusBadge status={l.status} />
             </div>
           </div>
-          <span className="rounded-full bg-cream px-3 py-1.5 text-[12px] font-semibold text-navy/70">Example listing</span>
+          {l.isExample && <span className="rounded-full bg-cream px-3 py-1.5 text-[12px] font-semibold text-navy/70">Example listing</span>}
         </div>
 
         {/* Gallery: one large + two stacked (Airbnb pattern) */}
@@ -93,9 +96,9 @@ export default async function ListingPage({ params }: Props) {
             {/* Reviews */}
             <Reveal className="mt-10 border-t border-navy/10 pt-10">
               <h2 className="flex items-center gap-2 font-heading text-[22px] font-bold text-navy">
-                <Star className="h-5 w-5 text-gold" /> {l.rating.toFixed(1)} · {l.reviewCount} reviews
+                {l.reviewCount > 0 ? <><Star className="h-5 w-5 text-gold" /> {l.rating.toFixed(1)} · {l.reviewCount} reviews</> : "Reviews"}
               </h2>
-              <p className="mt-1 text-[14px] text-navy/55">Example reviews. Real reviews are moderated before they appear.</p>
+              <p className="mt-1 text-[14px] text-navy/55">{l.isExample ? "Example reviews. Real reviews are moderated before they appear." : reviews.length ? "Reviews are moderated before they appear." : "No reviews yet. Reviews are moderated before they appear."}</p>
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 {reviews.map((r, i) => (
                   <figure key={i} className="rounded-card bg-cream p-5">
