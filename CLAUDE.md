@@ -108,6 +108,13 @@ The owner disliked the first website UI and asked for premium, animated, human-f
   - Use the kit in `src/components/ui/`: `Button`/`LinkButton` (cva variants: primary, secondary, gold, light, outlineLight, ghost; sizes sm 40px, md 48px, lg 56px), `Select` (Base UI; variants field, pill, bare; no native `<select>`), `Switch`, `ChipGroup` (single-select filters with a sliding highlight), `Sheet` (the only dialog: bottom sheet on phones, centred card on desktop). Form fields are in `src/components/market/Form.tsx`.
   - Motion: enter with EASE.out, move on screen with EASE.inOut, exits faster than entries, one SPRING for indicators, a STAGGER of 0.05. Every card image uses the `.media-zoom` hover. Pressables use `.press`. Respect reduced motion.
   - Radii: pills for controls; `rounded-card`/`rounded-field` 16px; `rounded-panel` 24px; `rounded-hero` 28px. Shadows: `shadow-card`, `shadow-pop`, `shadow-float`, `shadow-header`.
+### 6c. Collaboration rules (decided 2026-11-04; full text in CONTRIBUTING.md)
+
+- **[Decided]** Every change starts from a GitHub Issue → `feature/<issue#>-<slug>` branch off `develop` → PR into `develop` with the template and `Closes #N` → CI green → **the owner reviews and merges**. Releases are a PR `develop` → `main` that the owner merges, then a tag and a CHANGELOG entry.
+- Claude never merges or pushes directly to `develop` or `main`, and adds no co-author or attribution trailers.
+- The backlog lives in GitHub Issues with labels (`type:*`, `area:*`, `priority:*`, `needs-decision`), phase milestones and a project board.
+- The repo is private on GitHub Free, so branch protection isn't available; the rules are conventions, checked by CI (`.github/workflows/ci.yml`).
+
 ### 6b. Admin and backend (feature/admin, 2026-11-04)
 
 - **Admin user:** the owner, Kenneth Ato Bilson-Ogoe. Sign in at `/admin/login`. The account is seeded from `.env` (`ADMIN_EMAIL`, `ADMIN_NAME`, `ADMIN_PASSWORD`; the file is gitignored). Change the password with `npm run admin:password`.
