@@ -1,0 +1,105 @@
+// The Plug Africa database.
+// Local development uses SQLite (prisma/dev.db). For hosting, switch `provider` to "postgresql"
+// and point DATABASE_URL at the hosted database; the models stay the same.
+// SQLite has no enums, so status fields are strings validated in src/lib/status.ts.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Business {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  category    String // CatKey from src/lib/directory.ts
+  kind        String // e.g. "Furnished apartment"
+  city        String
+  area        String
+  blurb       String
+  about       String
+  price       String   @default("Price on request")
+  responds    String   @default("Usually replies within a day")
+  languages   String   @default("English") // comma-separated
+  images      String   @default("[]") // JSON array of image paths
+  // Contact details are only shown after the disclaimer, with a reference code
+  phone       String?
+  whatsapp    String?
+  email       String?
+  status      String   @default("draft") // draft | in_review | verified | hidden
+  isExample   Boolean  @default(false) // design placeholder, not a real business
+  rating      Float?
+  reviewCount Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  credentials       Credential[]
+  enquiries         Enquiry[]
+  conciergeRequests ConciergeRequest[]
+
+  @@index([status, category, city])
+}
+
+model Credential {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  label      String
+  state      String   @default("pending") // pending | in_review | verified
+  note       String?
+  position   Int      @default(0)
+}
+
+/// Every "Contact this business" creates one: the reference code proves the lead came from The Plug.
+model Enquiry {
+  id         String    @id @default(cuid())
+  ref        String    @unique
+  businessId String?
+  business   Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  status     String    @default("new") // new | contacted | converted | closed
+  notes      String?
+  createdAt  DateTime  @default(now())
+}
+
+model ConciergeRequest {
+  id         String    @id @default(cuid())
+  ref        String    @unique
+  name       String
+  phone      String
+  email      String?
+  city       String
+  category   String
+  details    String
+  timing     String
+  businessId String?
+  business   Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  status     String    @default("new") // new | in_progress | done | closed
+  notes      String?
+  createdAt  DateTime  @default(now())
+}
+
+model WaitlistEntry {
+  id           String   @id @default(cuid())
+  ref          String   @unique
+  businessName String
+  category     String
+  city         String
+  name         String
+  phone        String
+  email        String?
+  status       String   @default("new") // new | contacted | onboarded | declined
+  notes        String?
+  createdAt    DateTime @default(now())
+}

@@ -22,6 +22,8 @@ export type Listing = {
   price: string;
   responds: string;
   languages: string[];
+  /** Design placeholder rather than a real business. Shown with an "Example" label. */
+  isExample?: boolean;
 };
 
 const REVIEWS: Record<CatKey, Review[]> = {
@@ -73,7 +75,7 @@ export const LISTINGS: Listing[] = [
     blurb: "Two-bedroom furnished apartments with backup power and 24-hour security.",
     about: "Bright two-bedroom apartments ten minutes from the airport. Each unit has a fitted kitchen, backup generator, water storage and secure parking. Monthly and long-stay terms available directly with the owner.",
     credentials: [C.reg(), C.id(), C.addr(), { label: "Title documents seen", state: "verified" }],
-    status: "verified", rating: 4.9, reviewCount: 38, price: "Price on request", responds: "Usually replies within a few hours", languages: ["English", "Twi"],
+    isExample: true, status: "verified", rating: 4.9, reviewCount: 38, price: "Price on request", responds: "Usually replies within a few hours", languages: ["English", "Twi"],
   },
   {
     slug: "east-legon-garden-house",
@@ -83,7 +85,7 @@ export const LISTINGS: Listing[] = [
     blurb: "Four-bedroom house with a pool and garden on a quiet street.",
     about: "A four-bedroom family house with a private pool, mature garden and staff quarters. Close to international schools. Viewings by appointment with the owner's agent.",
     credentials: [C.reg(), C.id(), C.addr("in-review")],
-    status: "verified", rating: 4.8, reviewCount: 12, price: "Price on request", responds: "Usually replies within a day", languages: ["English"],
+    isExample: true, status: "verified", rating: 4.8, reviewCount: 12, price: "Price on request", responds: "Usually replies within a day", languages: ["English"],
   },
   {
     slug: "efua-relocation-partners",
@@ -93,7 +95,7 @@ export const LISTINGS: Listing[] = [
     blurb: "Help with permits, housing searches and settling in for families and staff.",
     about: "Practical relocation support for individuals, families and companies moving staff to Ghana: residence permits, housing shortlists, school visits, bank accounts and orientation days.",
     credentials: [C.reg(), C.id(), { label: "Professional references checked", state: "verified" }],
-    status: "verified", rating: 5.0, reviewCount: 21, price: "Quote after first call", responds: "Usually replies within a few hours", languages: ["English", "French", "Twi"],
+    isExample: true, status: "verified", rating: 5.0, reviewCount: 21, price: "Quote after first call", responds: "Usually replies within a few hours", languages: ["English", "French", "Twi"],
   },
   {
     slug: "talent-bridge-recruitment",
@@ -103,7 +105,7 @@ export const LISTINGS: Listing[] = [
     blurb: "Recruiters for finance, tech and operations roles across Ghana.",
     about: "A recruitment team placing mid and senior hires in finance, technology and operations. Also offers payroll set-up and HR policy support for companies opening a local office.",
     credentials: [C.reg(), C.id(), C.addr()],
-    status: "verified", rating: 4.8, reviewCount: 29, price: "Fee agreed per role", responds: "Usually replies within a day", languages: ["English"],
+    isExample: true, status: "verified", rating: 4.8, reviewCount: 29, price: "Fee agreed per role", responds: "Usually replies within a day", languages: ["English"],
   },
   {
     slug: "bright-minds-academy",
@@ -113,7 +115,7 @@ export const LISTINGS: Listing[] = [
     blurb: "Primary school with small classes and a strong reading programme.",
     about: "A primary school offering a British-aligned curriculum with Ghanaian languages and culture. Small class sizes, after-school clubs and a school bus on main routes.",
     credentials: [C.reg(), { label: "Ghana Education Service licence", state: "verified" }, C.addr()],
-    status: "verified", rating: 4.9, reviewCount: 17, price: "Fees on request", responds: "Usually replies within a day", languages: ["English", "Twi"],
+    isExample: true, status: "verified", rating: 4.9, reviewCount: 17, price: "Fees on request", responds: "Usually replies within a day", languages: ["English", "Twi"],
   },
   {
     slug: "home-tutors-collective",
@@ -123,7 +125,7 @@ export const LISTINGS: Listing[] = [
     blurb: "Vetted tutors for maths, sciences, languages and exam preparation.",
     about: "A group of qualified tutors offering home and online lessons for primary to university level, including IGCSE, WASSCE and IB preparation.",
     credentials: [C.reg("in-review"), C.id(), { label: "Tutor qualifications checked", state: "in-review" }],
-    status: "in-review", rating: 4.7, reviewCount: 9, price: "Hourly rates on request", responds: "Usually replies within a few hours", languages: ["English", "French"],
+    isExample: true, status: "in-review", rating: 4.7, reviewCount: 9, price: "Hourly rates on request", responds: "Usually replies within a few hours", languages: ["English", "French"],
   },
   {
     slug: "labone-kitchen",
@@ -133,7 +135,7 @@ export const LISTINGS: Listing[] = [
     blurb: "Modern Ghanaian dishes, fresh juices and a relaxed terrace.",
     about: "A neighbourhood restaurant serving modern takes on Ghanaian and West African dishes. Terrace seating, private dining for groups and catering for events.",
     credentials: [C.reg(), { label: "Food hygiene certificate", state: "verified" }, C.addr()],
-    status: "verified", rating: 4.7, reviewCount: 112, price: "Menu on request", responds: "Usually replies within a few hours", languages: ["English"],
+    isExample: true, status: "verified", rating: 4.7, reviewCount: 112, price: "Menu on request", responds: "Usually replies within a few hours", languages: ["English"],
   },
   {
     slug: "coastline-beach-bar",
@@ -143,7 +145,7 @@ export const LISTINGS: Listing[] = [
     blurb: "Sea views, grilled fish and live drumming on Saturdays.",
     about: "A beachfront bar and grill with shaded seating, fresh seafood and live music at weekends. Takes group bookings and private events.",
     credentials: [C.reg(), C.addr("in-review")],
-    status: "in-review", rating: 4.6, reviewCount: 44, price: "Menu on request", responds: "Usually replies within a day", languages: ["English", "Fante"],
+    isExample: true, status: "in-review", rating: 4.6, reviewCount: 44, price: "Menu on request", responds: "Usually replies within a day", languages: ["English", "Fante"],
   },
   {
     slug: "gold-coast-chauffeurs",
@@ -153,7 +155,7 @@ export const LISTINGS: Listing[] = [
     blurb: "Licensed drivers for airport runs, daily hire and events.",
     about: "Professional chauffeurs with insured, well-kept vehicles for airport transfers, daily or weekly hire, and events. Drivers are licensed and background-checked.",
     credentials: [C.reg(), C.id(), { label: "Driver licences and insurance seen", state: "verified" }],
-    status: "verified", rating: 4.8, reviewCount: 64, price: "Day rates on request", responds: "Usually replies within an hour", languages: ["English", "Ga", "Twi"],
+    isExample: true, status: "verified", rating: 4.8, reviewCount: 64, price: "Day rates on request", responds: "Usually replies within an hour", languages: ["English", "Ga", "Twi"],
   },
   {
     slug: "kwesi-auto-workshop",
@@ -163,7 +165,7 @@ export const LISTINGS: Listing[] = [
     blurb: "Diagnostics, servicing and repairs. Quote before any work starts.",
     about: "An independent garage handling servicing, diagnostics, brakes, suspension and air-conditioning for most makes. Collection and drop-off available in central Accra.",
     credentials: [C.reg(), C.id(), C.addr()],
-    status: "verified", rating: 4.7, reviewCount: 31, price: "Quote after inspection", responds: "Usually replies within a day", languages: ["English", "Twi"],
+    isExample: true, status: "verified", rating: 4.7, reviewCount: 31, price: "Quote after inspection", responds: "Usually replies within a day", languages: ["English", "Twi"],
   },
   {
     slug: "brightspark-electrical",
@@ -173,7 +175,7 @@ export const LISTINGS: Listing[] = [
     blurb: "Wiring, solar back-up and safety checks for homes and offices.",
     about: "Certified electricians for new wiring, repairs, inverter and solar back-up installation, and safety inspections for landlords and businesses.",
     credentials: [C.reg(), { label: "Energy Commission certification", state: "in-review" }],
-    status: "in-review", rating: 4.6, reviewCount: 14, price: "Quote after visit", responds: "Usually replies within a day", languages: ["English", "Twi"],
+    isExample: true, status: "in-review", rating: 4.6, reviewCount: 14, price: "Quote after visit", responds: "Usually replies within a day", languages: ["English", "Twi"],
   },
   {
     slug: "sunharvest-energy",
@@ -183,7 +185,7 @@ export const LISTINGS: Listing[] = [
     blurb: "Commercial solar projects looking for co-investors and partners.",
     about: "A developer of rooftop and mini-grid solar projects for businesses and rural communities. Shares project documents and site visits with qualified investors.",
     credentials: [C.reg(), C.id(), { label: "Audited accounts seen", state: "in-review" }],
-    status: "in-review", rating: 4.8, reviewCount: 6, price: "Investment terms on request", responds: "Usually replies within a day", languages: ["English"],
+    isExample: true, status: "in-review", rating: 4.8, reviewCount: 6, price: "Investment terms on request", responds: "Usually replies within a day", languages: ["English"],
   },
   {
     slug: "harvest-hands-foundation",
@@ -193,7 +195,7 @@ export const LISTINGS: Listing[] = [
     blurb: "Training and tools for smallholder farmers. Volunteers and donors welcome.",
     about: "A registered non-profit supporting smallholder farmers with training, seeds and market access. Publishes annual impact reports and hosts volunteer programmes.",
     credentials: [C.reg(), { label: "NGO registration (Department of Social Welfare)", state: "verified" }],
-    status: "verified", rating: 4.9, reviewCount: 11, price: "Donations and partnerships", responds: "Usually replies within a few days", languages: ["English", "Dagbani"],
+    isExample: true, status: "verified", rating: 4.9, reviewCount: 11, price: "Donations and partnerships", responds: "Usually replies within a few days", languages: ["English", "Dagbani"],
   },
   {
     slug: "osu-phone-hub",
@@ -203,7 +205,7 @@ export const LISTINGS: Listing[] = [
     blurb: "New and certified used phones, laptops and accessories.",
     about: "A shop selling new and certified pre-owned phones, laptops and accessories, with a short warranty on used devices and repairs on site.",
     credentials: [C.reg(), C.addr()],
-    status: "verified", rating: 4.5, reviewCount: 57, price: "Prices in store", responds: "Usually replies within a few hours", languages: ["English"],
+    isExample: true, status: "verified", rating: 4.5, reviewCount: 57, price: "Prices in store", responds: "Usually replies within a few hours", languages: ["English"],
   },
   {
     slug: "makola-fashion-house",
@@ -213,7 +215,7 @@ export const LISTINGS: Listing[] = [
     blurb: "Ready-to-wear and made-to-measure clothing in local fabrics.",
     about: "A family tailoring business offering ready-to-wear pieces and made-to-measure outfits in kente, batik and wax prints. Orders usually ready in a week.",
     credentials: [C.reg("in-review"), C.id()],
-    status: "in-review", rating: 4.7, reviewCount: 23, price: "Prices on request", responds: "Usually replies within a day", languages: ["English", "Ga"],
+    isExample: true, status: "in-review", rating: 4.7, reviewCount: 23, price: "Prices on request", responds: "Usually replies within a day", languages: ["English", "Ga"],
   },
   {
     slug: "accra-auto-sales",
@@ -223,9 +225,11 @@ export const LISTINGS: Listing[] = [
     blurb: "Inspected used cars with full documents and test drives.",
     about: "A dealership selling inspected used cars with complete customs and registration papers. Test drives and independent inspections welcome.",
     credentials: [C.reg(), C.id(), C.addr()],
-    status: "verified", rating: 4.4, reviewCount: 19, price: "Prices on request", responds: "Usually replies within a day", languages: ["English", "Twi"],
+    isExample: true, status: "verified", rating: 4.4, reviewCount: 19, price: "Prices on request", responds: "Usually replies within a day", languages: ["English", "Twi"],
   },
 ];
 
 export const getListing = (slug: string) => LISTINGS.find((l) => l.slug === slug);
+
+// LISTINGS seeds the database (prisma/seed.ts). Pages read businesses from the database via src/lib/data.ts.
 export const CITIES = ["Accra", "Kumasi", "Takoradi", "Tamale"];

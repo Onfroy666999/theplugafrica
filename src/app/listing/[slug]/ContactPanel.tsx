@@ -2,7 +2,8 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
-import { RefCode, makeRef } from "@/components/market/Form";
+import { createEnquiry } from "@/app/actions";
+import { RefCode, Spinner } from "@/components/market/Form";
 import { Chat, Check, Shield } from "@/components/market/Icons";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Sheet, SheetTitle } from "@/components/ui/Sheet";
@@ -50,10 +51,34 @@ export function ContactPanel({ l }: { l: Listing }) {
   );
 }
 
+type Contact = { phone?: string; whatsapp?: string; email?: string };
+
 function ContactSteps({ l }: { l: Listing }) {
   const [agreed, setAgreed] = useState(false);
   const [ref, setRef] = useState<string | null>(null);
+  const [contact, setContact] = useState<Contact>({});
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const getDetails = async () => {
+    setBusy(true);
+    setError(null);
+    const r = await createEnquiry(l.slug).catch(() => ({ ok: false as const, error: "Something went wrong. Please try again." }));
+    setBusy(false);
+    if (r.ok) {
+      setContact(r.contact);
+      setRef(r.ref);
+    } else setError(r.error);
+  };
+
+  const wa = contact.whatsapp?.replace(/[^\d]/g, "");
+  const channels = [
+    { label: "Call", href: contact.phone ? `tel:${contact.phone.replace(/\s+/g, "")}` : undefined },
+    { label: "WhatsApp", href: wa ? `https://wa.me/${wa}?text=${encodeURIComponent(`Hello, I found you on The Plug Africa. Ref ${ref ?? ""}`)}` : undefined },
+    { label: "Email", href: contact.email ? `mailto:${contact.email}?subject=${encodeURIComponent(`Enquiry via The Plug Africa (${ref ?? ""})`)}` : undefined },
+  ];
+  const hasAny = channels.some((c) => c.href);
 
   return (
     <AnimatePresence mode="wait" initial={false}>
@@ -77,7 +102,9 @@ function ContactSteps({ l }: { l: Listing }) {
             <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="h-[18px] w-[18px] accent-[#14173A]" />
             I understand
           </label>
-          <Button full size="lg" className="mt-4" disabled={!agreed} onClick={() => setRef(makeRef("PLG"))}>
+          {error && <p role="alert" className="mt-4 rounded-field bg-ember-soft px-4 py-3 text-[14px] font-medium text-ember">{error}</p>}
+          <Button full size="lg" className="mt-4" disabled={!agreed || busy} onClick={getDetails}>
+            {busy && <Spinner />}
             Get contact details
           </Button>
         </motion.div>
@@ -95,13 +122,21 @@ function ContactSteps({ l }: { l: Listing }) {
             <RefCode code={ref} copied={copied} onCopy={() => navigator.clipboard?.writeText(ref).then(() => setCopied(true), () => {})} />
           </div>
           <div className="mt-5 grid grid-cols-3 gap-2">
-            {["Call", "WhatsApp", "Email"].map((c) => (
-              <span key={c} className="flex h-12 items-center justify-center rounded-full border border-navy/12 text-[14px] font-semibold text-navy/40">{c}</span>
-            ))}
+            {channels.map((c) =>
+              c.href ? (
+                <a key={c.label} href={c.href} target={c.label === "WhatsApp" ? "_blank" : undefined} rel="noopener noreferrer" className="press flex h-12 items-center justify-center rounded-full bg-navy text-[14px] font-semibold text-white hover:bg-navy-hover">
+                  {c.label}
+                </a>
+              ) : (
+                <span key={c.label} className="flex h-12 items-center justify-center rounded-full border border-navy/12 text-[14px] font-semibold text-navy/35">{c.label}</span>
+              ),
+            )}
           </div>
-          <p className="mt-3 text-[12.5px] leading-relaxed text-navy/50">
-            Demo: in the live site, the business&apos;s phone, WhatsApp and email appear here, routed through The Plug so your number stays private.
-          </p>
+          {!hasAny && (
+            <p className="mt-3 text-[12.5px] leading-relaxed text-navy/50">
+              This business&apos;s contact details are being added. A Plug concierge can reach them for you meanwhile.
+            </p>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

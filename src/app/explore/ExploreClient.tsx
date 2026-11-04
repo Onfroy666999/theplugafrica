@@ -10,7 +10,7 @@ import { ChipGroup } from "@/components/ui/ChipGroup";
 import { Select } from "@/components/ui/Select";
 import { Switch } from "@/components/ui/Switch";
 import { CATS, type CatKey } from "@/lib/directory";
-import { CITIES, LISTINGS } from "@/lib/listings";
+import { CITIES, type Listing } from "@/lib/listings";
 import { DUR, EASE } from "@/lib/motion";
 
 const SORT_OPTIONS = [
@@ -24,7 +24,7 @@ const CAT_CHIPS = [
   ...CATS.filter((c) => c.key !== "emergency").map((c) => ({ value: c.key, label: c.name, icon: <CatIcon k={c.key} className="h-[18px] w-[18px]" /> })),
 ];
 
-export function ExploreClient() {
+export function ExploreClient({ listings }: { listings: Listing[] }) {
   const params = useSearchParams();
   const router = useRouter();
   const path = usePathname();
@@ -46,7 +46,7 @@ export function ExploreClient() {
 
   const results = useMemo(() => {
     const words = q.trim().toLowerCase().split(/\s+/).filter((w) => w.length > 2);
-    let r = LISTINGS.filter(
+    let r = listings.filter(
       (l) =>
         (!cat || l.cat === cat) &&
         (!city || l.city === city) &&
@@ -56,7 +56,7 @@ export function ExploreClient() {
     if (sort === "rating") r = [...r].sort((a, b) => b.rating - a.rating);
     if (sort === "reviews") r = [...r].sort((a, b) => b.reviewCount - a.reviewCount);
     return r;
-  }, [q, cat, city, verifiedOnly, sort]);
+  }, [listings, q, cat, city, verifiedOnly, sort]);
 
   const catName = CATS.find((c) => c.key === cat)?.name;
 
@@ -99,7 +99,8 @@ export function ExploreClient() {
       />
 
       <p className="mt-6 text-[14px] text-navy/55">
-        {results.length} {results.length === 1 ? "result" : "results"} · Example listings while real businesses are added
+        {results.length} {results.length === 1 ? "result" : "results"}
+        {results.some((l) => l.isExample) && " · Example listings while real businesses are added"}
       </p>
 
       <motion.div layout={!reduce} className="mt-4 grid grid-cols-1 gap-x-5 gap-y-9 sm:grid-cols-2 lg:grid-cols-4">
