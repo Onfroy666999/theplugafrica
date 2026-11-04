@@ -1,0 +1,26 @@
+name: Feature or task
+description: New functionality, an improvement, or a piece of planned work
+labels: ["type:feature"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / goal
+      description: What need does this meet, and for whom (visitors, businesses, admin)?
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Acceptance criteria
+      description: How we'll know it's done. A checklist works well.
+      placeholder: |
+        - [ ] …
+        - [ ] …
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes and open decisions
+      description: Constraints, links, and anything the owner needs to decide (add the needs-decision label).
