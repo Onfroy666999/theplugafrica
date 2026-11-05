@@ -1,5 +1,6 @@
-// Seeds the admin account (from .env) and the 16 example businesses used by the design.
-// Safe to re-run: the admin is only created if missing, and examples are upserted by slug.
+// Seeds the admin account (from .env), the starting services, and the example businesses used by the design.
+// Safe to re-run: the admin is only created if missing, services only if missing, and examples are upserted by slug.
+// SEED_EXAMPLES=false skips the example businesses (production starts with real categories and services only).
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { LISTINGS } from "../src/lib/listings";
@@ -34,6 +35,11 @@ async function main() {
     }
   }
   console.log(`${createdServices} services created (existing services left as they are).`);
+
+  if (process.env.SEED_EXAMPLES === "false") {
+    console.log("Example businesses skipped (SEED_EXAMPLES=false).");
+    return;
+  }
 
   for (const l of LISTINGS) {
     const data = {

@@ -86,7 +86,9 @@ The build applies migrations but doesn't seed. To load the starting services, th
    ADMIN_NAME="<admin name>"
    ADMIN_PASSWORD="<a new password for the hosted admin>"
    ```
-2. Ask Claude to run the seed against it (Claude reads the file without showing the values), or run it yourself: `npx dotenv-cli -e .env.staging -- npx prisma db seed`.
+2. Ask Claude to run the seed against it (Claude reads the file without showing the values), or run it yourself: `node --env-file=.env.staging -e "require('child_process').execSync('npx prisma db seed',{stdio:'inherit'})"`.
+
+For **production**, use `.env.production` (also ignored by git, with a different admin password) and add `SEED_EXAMPLES=false` so the example businesses are skipped: production starts with the real categories and services only.
 
 ## Part F: Check it
 
