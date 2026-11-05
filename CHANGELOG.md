@@ -13,6 +13,10 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 - Home care in Special Services (#24): housekeepers and maids, cleaning services, nannies and childcare, laundry and ironing, with two example home-care businesses.
 - Collaboration setup: contributing guide, issue and pull request templates, code owners, CI checks on every pull request, consistent line endings.
 
+### Fixed
+- The header and mobile menu no longer show a Sign in button that went nowhere; "List your business" takes its place until customer accounts arrive (#28).
+- Unknown addresses and missing listings show a branded "page not found" page with search and categories; failed pages show a branded error page whose "Try again" reloads from the server (#28).
+
 ### Changed
 - Car hire moved from Special Services to Rentals → Cars.
 - Explore search matches word roots, so "cleaner" finds cleaning services and "nanny" finds nannies.

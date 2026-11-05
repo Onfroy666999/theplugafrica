@@ -54,8 +54,8 @@ export function Header() {
           })}
         </nav>
         <div className="flex items-center gap-2">
-          <LinkButton href="/businesses" variant="ghost" size="sm" className="hidden sm:inline-flex">List your business</LinkButton>
-          <LinkButton href="#" size="sm" className="hidden sm:inline-flex">Sign in</LinkButton>
+          {/* Customer sign-in arrives with accounts (#20); until then there is no Sign in button. */}
+          <LinkButton href="/businesses" size="sm" className="hidden sm:inline-flex">List your business</LinkButton>
           <button
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
@@ -77,12 +77,12 @@ export function Header() {
             transition={{ duration: DUR.fast, ease: EASE.out }}
             className="border-t border-navy/10 bg-white px-5 pt-2 pb-5 lg:hidden"
           >
-            {[...NAV, { label: "List your business", href: "/businesses" }].map((n) => (
+            {NAV.map((n) => (
               <Link key={n.label} href={n.href} className="block border-b border-navy/[0.06] py-3.5 font-heading text-[17px] font-semibold text-navy">
                 {n.label}
               </Link>
             ))}
-            <LinkButton href="#" full className="mt-4">Sign in</LinkButton>
+            <LinkButton href="/businesses" full className="mt-4">List your business</LinkButton>
           </motion.nav>
         )}
       </AnimatePresence>
