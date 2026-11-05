@@ -6,7 +6,7 @@ Private repository. Owner: Kenneth Ato Bilson-Ogoe.
 
 ## Stack
 
-Next.js 15 (App Router) · TypeScript · Tailwind CSS 4 · Motion · Base UI · Prisma + PostgreSQL (Docker locally, Neon when hosted)
+Next.js 15 (App Router) · TypeScript · Tailwind CSS 4 · Motion · Base UI · Prisma + PostgreSQL (Docker locally, Supabase when hosted) · Cloudflare hosting
 
 ## Getting started
 
