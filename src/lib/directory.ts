@@ -6,6 +6,7 @@ export type CatKey =
   | "education"
   | "entertainment"
   | "special-services"
+  | "new-business"
   | "invest-ngos"
   | "emergency"
   | "classifieds";
@@ -14,7 +15,8 @@ export type Tile = { title: string; img: string };
 
 // `tiles` now only feed the Emergency tab and fallbacks; services come from the database (issue #26).
 
-export const CATS: { key: CatKey; name: string; line: string; tiles: Tile[] }[] = [
+/** `concierge`: The Plug delivers the service itself (no business listings); service pages lead to a concierge request (issue #36). */
+export const CATS: { key: CatKey; name: string; line: string; tiles: Tile[]; concierge?: boolean }[] = [
   {
     key: "rentals",
     name: "Rentals",
@@ -74,7 +76,18 @@ export const CATS: { key: CatKey; name: string; line: string; tiles: Tile[] }[] 
       { title: "Nannies & childcare", img: "/images/homecare-nanny.jpg" },
       { title: "Laundry & ironing", img: "/images/homecare-laundry.jpg" },
     ],
+  },  {
+    key: "new-business",
+    name: "New Business",
+    line: "Starting or running a business in Ghana? The Plug handles registration, licences and compliance for you.",
+    concierge: true,
+    tiles: [
+      { title: "Set up a new business", img: "/images/svc-business-setup.jpg" },
+      { title: "Licence acquisition", img: "/images/svc-licences.jpg" },
+      { title: "Compliance services", img: "/images/svc-compliance.jpg" },
+    ],
   },
+
   {
     key: "invest-ngos",
     name: "Invest & NGOs",
@@ -138,3 +151,9 @@ export const FIND_PLACEHOLDERS = [
 ];
 
 export const getCat = (key: string) => CATS.find((c) => c.key === key);
+
+/** True for categories The Plug delivers itself through the concierge (issue #36). */
+export const isConciergeCat = (key: string) => getCat(key)?.concierge === true;
+
+/** Categories that hold business listings: Explore filters, the business form and the waitlist. */
+export const LISTING_CATS = CATS.filter((c) => c.key !== "emergency" && !c.concierge);

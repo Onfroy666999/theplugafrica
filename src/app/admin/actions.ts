@@ -66,7 +66,8 @@ const BusinessSchema = z.object({
   id: z.string().optional(),
   name: z.string().trim().min(2, "Add the business name").max(160),
   slug: z.string().trim().max(80).optional(),
-  category: z.enum(CATS.map((c) => c.key) as [string, ...string[]]),
+  // Concierge-only categories (New Business, #36) take no business listings.
+  category: z.enum(CATS.filter((c) => !c.concierge).map((c) => c.key) as [string, ...string[]]),
   kind: z.string().trim().min(2, "Add what kind of business it is").max(80),
   city: z.string().trim().min(2, "Add the city").max(60),
   area: z.string().trim().min(2, "Add the area or neighbourhood").max(80),

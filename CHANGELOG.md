@@ -4,6 +4,10 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- New Business category (#36), delivered fully by The Plug's concierge: Set up a new business, Licence acquisition and Compliance services. Each service page explains the steps and has a request form pre-set to that service; requests arrive in Admin › Concierge labelled with the service. New Business is in the header, homepage tabs, footer and sitemap, and is kept out of business listings.
+- Richer category and service pages (#38): every category opens with a welcome and an introduction, then its services, what we check before a business is listed, what to do before you commit, common questions and a concierge band. New Business service pages explain what's included, what you'll need, who it's for and why to trust The Plug, with the other services shown as cards further down. New accordion component for questions.
+
 ## [0.3.0] - 2026-11-05
 
 ### Added

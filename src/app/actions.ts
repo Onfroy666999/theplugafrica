@@ -40,6 +40,8 @@ const ConciergeSchema = z.object({
   details: text(4000),
   when: text(60),
   listing: optional(120),
+  /** Service slug when sent from a service page (issue #36). */
+  service: optional(80),
 });
 
 export async function submitConcierge(fd: FormData): Promise<FormResult> {
@@ -48,9 +50,11 @@ export async function submitConcierge(fd: FormData): Promise<FormResult> {
   if (!parsed.success) return { ok: false, error: "Please fill in your name, phone and what you need." };
   const d = parsed.data;
   const business = d.listing ? await db.business.findUnique({ where: { slug: d.listing }, select: { id: true } }) : null;
+  // Store the service name (not the slug) so the request still reads correctly if the service is renamed later.
+  const service = d.service ? await db.service.findFirst({ where: { category: d.category, slug: d.service }, select: { name: true } }) : null;
   const ref = makeRef("CNC");
   await db.conciergeRequest.create({
-    data: { ref, name: d.name, phone: d.phone, email: d.email, city: d.city, category: d.category, details: d.details, timing: d.when, businessId: business?.id },
+    data: { ref, name: d.name, phone: d.phone, email: d.email, city: d.city, category: d.category, service: service?.name, details: d.details, timing: d.when, businessId: business?.id },
   });
   return { ok: true, ref };
 }

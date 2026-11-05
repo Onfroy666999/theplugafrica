@@ -54,6 +54,7 @@ const REVIEWS: Record<CatKey, Review[]> = {
     { name: "Example reviewer", when: "4 months ago", rating: 4, text: "Professional team. Due diligence documents were ready when we asked." },
   ],
   emergency: [],
+  "new-business": [], // concierge only: no listings, so no reviews
   classifieds: [
     { name: "Example reviewer", when: "1 week ago", rating: 5, text: "Item was exactly as described and the seller let me test it before paying." },
     { name: "Example reviewer", when: "1 month ago", rating: 4, text: "Fair prices and happy to negotiate. Arrived a little late to meet." },

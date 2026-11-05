@@ -25,6 +25,12 @@ export const SERVICE_SEED: Partial<Record<CatKey, ServiceSeed[]>> = {
     { slug: "laundry-ironing", name: "Laundry & ironing", description: "Washing, ironing and dry cleaning, with pick-up.", image: "/images/homecare-laundry.jpg" },
     { slug: "errands-concierge", name: "Errands & concierge", description: "Deliveries, errands and personal assistance.", image: "/images/svc-errands.jpg" },
   ],
+  // Fully concierge: The Plug does the work itself (issue #36).
+  "new-business": [
+    { slug: "business-setup", name: "Set up a new business", description: "Company registration, tax and social security numbers, a business bank account and an office address, handled for you.", image: "/images/svc-business-setup.jpg" },
+    { slug: "licences", name: "Licence acquisition", description: "The permits and licences your trade needs, from the right agencies, applied for and followed up on your behalf.", image: "/images/svc-licences.jpg" },
+    { slug: "compliance", name: "Compliance services", description: "Annual returns, tax filings, renewals and statutory deadlines kept on track, so your business stays in good standing.", image: "/images/svc-compliance.jpg" },
+  ],
   "jobs-hr": [
     { slug: "recruitment", name: "Recruitment agencies", description: "Recruiters for local and international roles.", image: "/images/jobs.jpg" },
     { slug: "relocation", name: "Relocation support", description: "Permits, housing searches and settling in.", image: "/images/portrait-efua.jpg" },

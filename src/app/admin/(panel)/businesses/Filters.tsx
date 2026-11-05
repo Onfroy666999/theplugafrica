@@ -5,11 +5,11 @@ import { useEffect, useState } from "react";
 import { Search } from "@/components/market/Icons";
 import { ChipGroup } from "@/components/ui/ChipGroup";
 import { Select } from "@/components/ui/Select";
-import { CATS } from "@/lib/directory";
+import { LISTING_CATS } from "@/lib/directory";
 import { BUSINESS_STATUS } from "@/lib/status";
 
 const STATUS_CHIPS = [{ value: "all", label: "All" }, ...BUSINESS_STATUS.map((s) => ({ value: s.value, label: s.label }))];
-const CAT_OPTIONS = [{ value: "all", label: "All categories" }, ...CATS.filter((c) => c.key !== "emergency").map((c) => ({ value: c.key, label: c.name }))];
+const CAT_OPTIONS = [{ value: "all", label: "All categories" }, ...LISTING_CATS.map((c) => ({ value: c.key, label: c.name }))];
 
 export function BusinessFilters() {
   const params = useSearchParams();

@@ -43,6 +43,14 @@ const PATHS: Record<CatKey, React.ReactNode> = {
       <circle {...P} cx="16.5" cy="16.5" r="1.8" />
     </>
   ),
+  // Shopfront with an awning: a business being opened (issue #36)
+  "new-business": (
+    <>
+      <path {...P} d="M4 9.5 5.5 4.5h13L20 9.5" />
+      <path {...P} d="M4 9.5a2.67 2.67 0 0 0 5.33 0 2.67 2.67 0 0 0 5.34 0 2.67 2.67 0 0 0 5.33 0" />
+      <path {...P} d="M5.5 11.5v8h13v-8M10 19.5V15h4v4.5" />
+    </>
+  ),
   "invest-ngos": (
     <>
       <path {...P} d="M3.5 19.5h17" />
