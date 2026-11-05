@@ -43,3 +43,9 @@ export const PUBLIC_STATUSES = ["in_review", "verified"] as const;
 
 export const values = (xs: readonly { value: string }[]) => xs.map((x) => x.value) as [string, ...string[]];
 export const find = (xs: readonly { value: string; label: string; tone: Tone }[], v: string) => xs.find((x) => x.value === v) ?? { value: v, label: v, tone: "muted" as Tone };
+
+export const CONTACT_STATUS = def([
+  { value: "new", label: "New", tone: "info" },
+  { value: "replied", label: "Replied", tone: "ok" },
+  { value: "closed", label: "Closed", tone: "muted" },
+] as const);

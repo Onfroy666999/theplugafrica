@@ -345,7 +345,7 @@ export function BusinessAndEmergency() {
 export function Footer() {
   const cols = [
     { h: "Explore", l: CATS.filter((c) => c.key !== "emergency").slice(0, 5).map((c) => ({ t: c.name, href: `/explore/${c.key}` })) },
-    { h: "The Plug", l: [{ t: "How it works", href: "/#how-it-works" }, { t: "Concierge", href: "/concierge" }, { t: "Emergency", href: "/emergency" }] },
+    { h: "The Plug", l: [{ t: "About", href: "/about" }, { t: "How it works", href: "/#how-it-works" }, { t: "Concierge", href: "/concierge" }, { t: "Emergency", href: "/emergency" }, { t: "Contact", href: "/contact" }] },
     { h: "Businesses", l: [{ t: "List your business", href: "/businesses" }, { t: "How verification works", href: "/businesses#verification" }] },
   ];
   return (

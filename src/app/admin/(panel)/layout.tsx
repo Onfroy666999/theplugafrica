@@ -11,10 +11,11 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const admin = await requireAdmin();
-  const [enq, cnc, wl] = await Promise.all([
+  const [enq, cnc, wl, msg] = await Promise.all([
     db.enquiry.count({ where: { status: "new" } }),
     db.conciergeRequest.count({ where: { status: "new" } }),
     db.waitlistEntry.count({ where: { status: "new" } }),
+    db.contactMessage.count({ where: { status: "new" } }),
   ]);
   const items: NavItem[] = [
     { href: "/admin", label: "Dashboard" },
@@ -23,6 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/enquiries", label: "Enquiries", count: enq },
     { href: "/admin/concierge", label: "Concierge", count: cnc },
     { href: "/admin/waitlist", label: "Waitlist", count: wl },
+    { href: "/admin/messages", label: "Messages", count: msg },
   ];
   const first = admin.name.split(" ")[0];
 
