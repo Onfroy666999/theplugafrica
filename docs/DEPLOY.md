@@ -34,7 +34,7 @@ Check the **account switcher** (top left) shows Kenneth's account before every s
 
 1. Storage & Databases › **Hyperdrive** › **Create configuration**.
 2. Name `theplugafrica-staging-db`; paste the **Session pooler** string; **Create**.
-3. Copy the configuration **ID** (it isn't secret) and send it to Claude, who adds it to `wrangler.jsonc` under `env.staging.hyperdrive` and merges that into `develop`. Repeat for production later with `theplugafrica-db`.
+3. Copy the configuration **ID** (it isn't secret; it's also the last part of the page address) and send it to Claude, who adds it to `wrangler.jsonc` under `env.staging.hyperdrive` and merges that into `develop`. Repeat for production later with `theplugafrica-db`.
 
 ## Part D: Create the Workers from GitHub (Reginald, in Kenneth's Cloudflare account)
 
@@ -103,4 +103,4 @@ The build applies migrations but doesn't seed. To load the starting services, th
 
 ## Local testing of the Cloudflare build
 
-`npm run preview` builds the Worker and runs it in Wrangler on http://localhost:8787, reading secrets from `.dev.vars` (git ignores it). Docker Desktop must be running for the local database. This computer's Wrangler is signed in to Reginald's own Cloudflare account, so never run `wrangler deploy` from here.
+`npm run preview` builds the Worker and runs it in Wrangler on http://localhost:8787, reading secrets from `.dev.vars` (git ignores it). Staging has a Hyperdrive binding, so for local runs point it at the local database first: set the shell variable `CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE` to the local `DATABASE_URL` (Wrangler uses it instead of the real Hyperdrive). Docker Desktop must be running for the local database. This computer's Wrangler is signed in to Reginald's own Cloudflare account, so never run `wrangler deploy` from here.

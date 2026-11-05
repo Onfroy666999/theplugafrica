@@ -22,8 +22,9 @@
     "staging": {
       "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "theplugafrica-staging" }],
       "images": { "binding": "IMAGES" },
-      "vars": { "SITE_ENV": "staging" }
-      // "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "<staging-hyperdrive-id>" }]
+      "vars": { "SITE_ENV": "staging" },
+      // Hyperdrive config `theplugafrica-staging-db` in Kenneth's account (Supabase staging, Session pooler)
+      "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "dd99b214f8ec47358ebd2bdf5b1929e9" }]
     }
   }
 }
