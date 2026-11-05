@@ -1,0 +1,30 @@
+// Cloudflare Workers config for the OpenNext build (issues #4). Hosted in Kenneth's Cloudflare account,
+// deployed by Workers Builds (see docs/DEPLOY.md). Never deploy from a developer's own Wrangler login.
+//
+//   Production: Worker `theplugafrica`          branch main     deploy: npx opennextjs-cloudflare deploy
+//   Staging:    Worker `theplugafrica-staging`  branch develop  deploy: npx opennextjs-cloudflare deploy --env staging
+//
+// Secrets (AUTH_SECRET, and DATABASE_URL if Hyperdrive isn't set up) are set on each Worker in the dashboard.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "theplugafrica",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "images": { "binding": "IMAGES" },
+  "observability": { "enabled": true },
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "theplugafrica" }],
+  "vars": { "SITE_ENV": "production" },
+  // Add once the production Hyperdrive config exists (its ID is not a secret):
+  // "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "<production-hyperdrive-id>" }],
+  "env": {
+    "staging": {
+      "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "theplugafrica-staging" }],
+      "images": { "binding": "IMAGES" },
+      "vars": { "SITE_ENV": "staging" },
+      // Hyperdrive config `theplugafrica-staging-db` in Kenneth's account (Supabase staging, Session pooler)
+      "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "dd99b214f8ec47358ebd2bdf5b1929e9" }]
+    }
+  }
+}

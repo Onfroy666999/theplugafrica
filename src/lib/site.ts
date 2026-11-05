@@ -16,8 +16,8 @@ export const cityFromSlug = (slug: string) => CITIES.find((c) => citySlug(c) ===
  * Child pages replace (not merge) openGraph, so every page builds the whole object here.
  */
 export function pageMeta({ title, description, path, image, noindex }: { title: string; description: string; path?: string; image?: string; noindex?: boolean }): Metadata {
-  // Without its own photo a page uses the branded share card (src/app/opengraph-image.tsx).
-  const images = [{ url: abs(image ?? "/opengraph-image"), width: 1200, height: 630, alt: title }];
+  // Without its own photo a page uses the branded share card: a fixed PNG (Workers have no disk to read fonts from at runtime, issue #4).
+  const images = [{ url: abs(image ?? "/images/share-card.png"), width: 1200, height: 630, alt: title }];
   return {
     title,
     description,

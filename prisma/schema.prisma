@@ -4,6 +4,7 @@
 // Status fields are strings validated in src/lib/status.ts (kept from the SQLite version).
 
 generator client {
+  // No custom `output`: OpenNext patches the default client for Cloudflare Workers (issue #4).
   provider = "prisma-client-js"
 }
 
