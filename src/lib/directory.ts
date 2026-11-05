@@ -12,10 +12,13 @@ export type CatKey =
 
 export type Tile = { title: string; img: string };
 
-export const CATS: { key: CatKey; name: string; tiles: Tile[] }[] = [
+// `tiles` now only feed the Emergency tab and fallbacks; services come from the database (issue #26).
+
+export const CATS: { key: CatKey; name: string; line: string; tiles: Tile[] }[] = [
   {
     key: "rentals",
     name: "Rentals",
+    line: "Homes, cars, event equipment and office space from verified owners.",
     tiles: [
       { title: "Furnished apartments", img: "/images/rentals.jpg" },
       { title: "Family homes", img: "/images/rentals-3.jpg" },
@@ -26,6 +29,7 @@ export const CATS: { key: CatKey; name: string; tiles: Tile[] }[] = [
   {
     key: "jobs-hr",
     name: "Jobs & HR",
+    line: "Recruiters, relocation support and HR services.",
     tiles: [
       { title: "Recruiters", img: "/images/jobs.jpg" },
       { title: "Relocation support", img: "/images/portrait-efua.jpg" },
@@ -36,6 +40,7 @@ export const CATS: { key: CatKey; name: string; tiles: Tile[] }[] = [
   {
     key: "education",
     name: "Education",
+    line: "Schools, tutors, universities and courses.",
     tiles: [
       { title: "Schools", img: "/images/education.jpg" },
       { title: "Private tutors", img: "/images/education-2.jpg" },
@@ -46,6 +51,7 @@ export const CATS: { key: CatKey; name: string; tiles: Tile[] }[] = [
   {
     key: "entertainment",
     name: "Entertainment",
+    line: "Places to eat, drink, dance, relax and explore.",
     tiles: [
       { title: "Restaurants", img: "/images/dining.jpg" },
       { title: "Live music & events", img: "/images/entertainment-2.jpg" },
@@ -56,6 +62,7 @@ export const CATS: { key: CatKey; name: string; tiles: Tile[] }[] = [
   {
     key: "special-services",
     name: "Special Services",
+    line: "Drivers, trades and help at home, all checked by our team.",
     tiles: [
       { title: "Chauffeurs", img: "/images/chauffeur.jpg" },
       { title: "Mechanics", img: "/images/special-2.jpg" },
@@ -71,6 +78,7 @@ export const CATS: { key: CatKey; name: string; tiles: Tile[] }[] = [
   {
     key: "invest-ngos",
     name: "Invest & NGOs",
+    line: "Opportunities to invest in, and organisations to support.",
     tiles: [
       { title: "Business partners", img: "/images/invest.jpg" },
       { title: "Solar & energy", img: "/images/invest-2.jpg" },
@@ -81,6 +89,7 @@ export const CATS: { key: CatKey; name: string; tiles: Tile[] }[] = [
   {
     key: "emergency",
     name: "Emergency",
+    line: "Hospitals, police, fire and embassies by city.",
     tiles: [
       { title: "Ambulance", img: "/images/emergency.jpg" },
       { title: "Hospitals & clinics", img: "/images/emergency-2.jpg" },
@@ -91,6 +100,7 @@ export const CATS: { key: CatKey; name: string; tiles: Tile[] }[] = [
   {
     key: "classifieds",
     name: "Classifieds",
+    line: "Phones, fashion, vehicles and furniture from verified sellers.",
     tiles: [
       { title: "Markets & sellers", img: "/images/classifieds.jpg" },
       { title: "Phones & electronics", img: "/images/classifieds-2.jpg" },
@@ -126,3 +136,5 @@ export const FIND_PLACEHOLDERS = [
   "a recruiter",
   "dinner tonight",
 ];
+
+export const getCat = (key: string) => CATS.find((c) => c.key === key);

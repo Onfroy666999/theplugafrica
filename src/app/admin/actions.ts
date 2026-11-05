@@ -87,6 +87,16 @@ const BusinessSchema = z.object({
     ctx.addIssue({ code: "custom", message: "Images are invalid" });
     return z.NEVER;
   }),
+  services: z
+    .string()
+    .default("[]")
+    .transform((s, ctx) => {
+      try {
+        return z.array(z.string().min(1).max(40)).max(30).parse(JSON.parse(s));
+      } catch {}
+      ctx.addIssue({ code: "custom", message: "Services are invalid" });
+      return z.NEVER;
+    }),
   credentials: z.string().transform((s, ctx) => {
     try {
       const v = z.array(z.object({ label: z.string().trim().min(1).max(160), state: z.enum(values(CREDENTIAL_STATE)) })).parse(JSON.parse(s));
@@ -106,7 +116,7 @@ export async function saveBusiness(fd: FormData): Promise<SaveResult> {
     const issue = parsed.error.issues[0];
     return { ok: false, error: issue.message, field: String(issue.path[0] ?? "") };
   }
-  const { id, credentials, images, slug: rawSlug, ...d } = parsed.data;
+  const { id, credentials, images, services: serviceIds, slug: rawSlug, ...d } = parsed.data;
   const slug = slugify(rawSlug || d.name);
   if (!slug) return { ok: false, error: "Add a web address (slug)", field: "slug" };
   const clash = await db.business.findUnique({ where: { slug }, select: { id: true } });
@@ -114,8 +124,16 @@ export async function saveBusiness(fd: FormData): Promise<SaveResult> {
   if (d.status === "verified" && credentials.some((c) => c.state !== "verified"))
     return { ok: false, error: "Every credential must be Checked before a business can be marked Verified.", field: "status" };
 
-  const data = { ...d, slug, images: JSON.stringify(images) };
-  const saved = id ? await db.business.update({ where: { id }, data }) : await db.business.create({ data });
+  // Services must belong to the business's category; at least one is required when the category has services.
+  const valid = await db.service.findMany({ where: { id: { in: serviceIds }, category: d.category }, select: { id: true } });
+  if (valid.length !== serviceIds.length) return { ok: false, error: "Some chosen services belong to another category. Re-check the services.", field: "services" };
+  if (!valid.length && (await db.service.count({ where: { category: d.category } })) > 0)
+    return { ok: false, error: "Choose at least one service so visitors can find this business.", field: "services" };
+
+  const data = { ...d, slug, images: JSON.stringify(images), services: { set: valid } };
+  const saved = id
+    ? await db.business.update({ where: { id }, data })
+    : await db.business.create({ data: { ...d, slug, images: JSON.stringify(images), services: { connect: valid } } });
   await db.credential.deleteMany({ where: { businessId: saved.id } });
   if (credentials.length) await db.credential.createMany({ data: credentials.map((c, i) => ({ ...c, businessId: saved.id, position: i })) });
 
@@ -186,4 +204,73 @@ export async function updateInbox(kind: InboxKind, id: string, patch: { status?:
   if (kind === "waitlist") await db.waitlistEntry.update({ where: { id }, data });
   revalidatePath(cfg.path);
   revalidatePath("/admin");
+}
+
+/* ---------------- Services (sub-categories, issue #26) ---------------- */
+
+const CAT_KEYS = CATS.filter((c) => c.key !== "emergency").map((c) => c.key) as [string, ...string[]];
+
+const ServiceSchema = z.object({
+  id: z.string().optional(),
+  category: z.enum(CAT_KEYS),
+  name: z.string().trim().min(2, "Add a service name").max(80),
+  slug: z.string().trim().max(60).optional(),
+  description: z.string().trim().max(240).default(""),
+  image: z.string().trim().max(300).refine((v) => v === "" || v.startsWith("/"), "Choose a photo from the library").default(""),
+  visible: z.enum(["true", "false"]).default("true"),
+});
+
+export async function saveService(fd: FormData): Promise<SaveResult> {
+  await requireAdmin();
+  const parsed = ServiceSchema.safeParse(Object.fromEntries(fd));
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    return { ok: false, error: issue.message, field: String(issue.path[0] ?? "") };
+  }
+  const { id, slug: rawSlug, visible, ...d } = parsed.data;
+  const slug = slugify(rawSlug || d.name);
+  if (!slug) return { ok: false, error: "Add a web address", field: "slug" };
+  const clash = await db.service.findUnique({ where: { category_slug: { category: d.category, slug } }, select: { id: true } });
+  if (clash && clash.id !== id) return { ok: false, error: `This category already has a service at /${slug}`, field: "slug" };
+
+  if (id) {
+    const before = await db.service.findUnique({ where: { id }, select: { category: true } });
+    if (before && before.category !== d.category) return { ok: false, error: "A service can't move to another category. Create it there instead.", field: "category" };
+    await db.service.update({ where: { id }, data: { ...d, slug, visible: visible === "true" } });
+    revalidatePath("/admin/services");
+    return { ok: true, id };
+  }
+  const last = await db.service.findFirst({ where: { category: d.category }, orderBy: { position: "desc" }, select: { position: true } });
+  const created = await db.service.create({ data: { ...d, slug, visible: visible === "true", position: (last?.position ?? -1) + 1 } });
+  revalidatePath("/admin/services");
+  return { ok: true, id: created.id };
+}
+
+export async function setServiceVisible(id: string, visible: boolean) {
+  await requireAdmin();
+  await db.service.update({ where: { id }, data: { visible } });
+  revalidatePath("/admin/services");
+}
+
+/** Swap a service with its neighbour above (-1) or below (+1) within its category. */
+export async function moveService(id: string, dir: -1 | 1) {
+  await requireAdmin();
+  const svc = await db.service.findUnique({ where: { id } });
+  if (!svc) return;
+  const list = await db.service.findMany({ where: { category: svc.category }, orderBy: [{ position: "asc" }, { name: "asc" }], select: { id: true } });
+  const i = list.findIndex((s) => s.id === id);
+  const j = i + dir;
+  if (j < 0 || j >= list.length) return;
+  [list[i], list[j]] = [list[j], list[i]];
+  await db.$transaction(list.map((s, pos) => db.service.update({ where: { id: s.id }, data: { position: pos } })));
+  revalidatePath("/admin/services");
+}
+
+export async function deleteService(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireAdmin();
+  const n = await db.business.count({ where: { services: { some: { id } } } });
+  if (n > 0) return { ok: false, error: `${n} ${n === 1 ? "business uses" : "businesses use"} this service. Move them to another service or hide it instead.` };
+  await db.service.delete({ where: { id } });
+  revalidatePath("/admin/services");
+  return { ok: true };
 }

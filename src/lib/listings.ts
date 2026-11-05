@@ -24,6 +24,8 @@ export type Listing = {
   languages: string[];
   /** Design placeholder rather than a real business. Shown with an "Example" label. */
   isExample?: boolean;
+  /** Services (sub-categories) the business offers, in display order. Filled from the database. */
+  services?: { slug: string; name: string }[];
 };
 
 const REVIEWS: Record<CatKey, Review[]> = {
@@ -65,7 +67,17 @@ const HOME_CARE_REVIEWS: Review[] = [
 ];
 const HOME_CARE = /clean|housekeep|maid|nann|laundry|home care/i;
 
-export const reviewsFor = (l: Listing) => (l.cat === "special-services" && HOME_CARE.test(`${l.kind} ${l.blurb}`) ? HOME_CARE_REVIEWS : REVIEWS[l.cat]);
+const HIRE_REVIEWS: Review[] = [
+  { name: "Example reviewer", when: "2 weeks ago", rating: 5, text: "Everything arrived on time and in good condition. Set-up and collection were handled without any fuss." },
+  { name: "Example reviewer", when: "1 month ago", rating: 4, text: "Fair prices and clear terms. Ask for the deposit details up front." },
+];
+
+export const reviewsFor = (l: Listing) =>
+  l.cat === "special-services" && HOME_CARE.test(`${l.kind} ${l.blurb}`)
+    ? HOME_CARE_REVIEWS
+    : l.cat === "rentals" && /car|event|equipment/i.test(l.kind)
+      ? HIRE_REVIEWS
+      : REVIEWS[l.cat];
 
 const C = {
   reg: (s: Listing["credentials"][number]["state"] = "verified") => ({ label: "Business registration (Registrar-General)", state: s }),
@@ -93,6 +105,26 @@ export const LISTINGS: Listing[] = [
     about: "A four-bedroom family house with a private pool, mature garden and staff quarters. Close to international schools. Viewings by appointment with the owner's agent.",
     credentials: [C.reg(), C.id(), C.addr("in-review")],
     isExample: true, status: "verified", rating: 4.8, reviewCount: 12, price: "Price on request", responds: "Usually replies within a day", languages: ["English"],
+  },
+  {
+    slug: "accra-drive-car-rentals",
+    name: "Accra Drive Car Rentals",
+    cat: "rentals", kind: "Car rental", city: "Accra", area: "Airport",
+    images: ["/images/special-4.jpg", "/images/classifieds-4.jpg"],
+    blurb: "Saloon cars and SUVs to rent by the day or week, with or without a driver.",
+    about: "A rental company with insured, well-serviced saloon cars, SUVs and minibuses. Airport delivery and collection available. Drivers can be added for any booking.",
+    credentials: [C.reg(), C.id(), { label: "Vehicle insurance and roadworthy certificates seen", state: "verified" }],
+    isExample: true, status: "verified", rating: 4.7, reviewCount: 33, price: "Daily rates on request", responds: "Usually replies within a few hours", languages: ["English", "Twi"],
+  },
+  {
+    slug: "royal-canopy-events",
+    name: "Royal Canopy Events",
+    cat: "rentals", kind: "Event rentals", city: "Accra", area: "Tema",
+    images: ["/images/svc-event-rentals.jpg"],
+    blurb: "Canopies, tents, chairs, tables, sound systems and lighting for any event.",
+    about: "Event hire for weddings, funerals, parties and corporate events: canopies and marquee tents, chairs and tables with covers, PA systems and speakers, lighting and generators. Delivery, set-up and collection included.",
+    credentials: [C.reg(), C.id("in-review")],
+    isExample: true, status: "in-review", rating: 4.6, reviewCount: 18, price: "Packages on request", responds: "Usually replies within a day", languages: ["English", "Twi", "Ga"],
   },
   {
     slug: "efua-relocation-partners",

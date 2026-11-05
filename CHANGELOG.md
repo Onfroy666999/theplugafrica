@@ -5,10 +5,14 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 ## [Unreleased]
 
 ### Added
+- Services inside categories (#26): each category page (`/explore/rentals`) lists its services, and each service page (`/explore/rentals/cars`) lists the businesses offering it. 36 starting services, breadcrumbs on category, service and listing pages, and homepage category tabs built from the services.
+- Admin Services page: add, edit, hide, reorder and delete services per category. The business form now asks which services (one or more) a business offers.
+- Example businesses for car rental and event rentals.
 - Home care in Special Services (#24): housekeepers and maids, cleaning services, nannies and childcare, laundry and ironing, with two example home-care businesses.
 - Collaboration setup: contributing guide, issue and pull request templates, code owners, CI checks on every pull request, consistent line endings.
 
 ### Changed
+- Car hire moved from Special Services to Rentals → Cars.
 - Explore search matches word roots, so "cleaner" finds cleaning services and "nanny" finds nannies.
 - Database moved from SQLite to PostgreSQL with versioned migrations (#2). Local development uses Docker on port 5433. CI applies migrations to a fresh Postgres, checks they match the schema, and runs the seed.
 

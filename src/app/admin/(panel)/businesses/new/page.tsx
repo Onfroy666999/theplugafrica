@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BusinessForm } from "../BusinessForm";
+import { allServiceOptions } from "../serviceOptions";
 import { photoLibrary } from "../library";
 import { PageHeader } from "../../ui";
 
@@ -10,7 +11,7 @@ export default async function NewBusiness() {
       <div className="mt-3">
         <PageHeader title="Add a business" sub="Saved as a draft until you change the status." />
       </div>
-      <BusinessForm library={await photoLibrary()} />
+      <BusinessForm library={await photoLibrary()} allServices={await allServiceOptions()} />
     </>
   );
 }
