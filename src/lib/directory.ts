@@ -61,6 +61,11 @@ export const CATS: { key: CatKey; name: string; tiles: Tile[] }[] = [
       { title: "Mechanics", img: "/images/special-2.jpg" },
       { title: "Electricians & trades", img: "/images/special-3.jpg" },
       { title: "Car hire", img: "/images/special-4.jpg" },
+      // Home care (issue #24)
+      { title: "Housekeepers & maids", img: "/images/homecare-housekeeper.jpg" },
+      { title: "Cleaning services", img: "/images/homecare-cleaning.jpg" },
+      { title: "Nannies & childcare", img: "/images/homecare-nanny.jpg" },
+      { title: "Laundry & ironing", img: "/images/homecare-laundry.jpg" },
     ],
   },
   {
@@ -117,6 +122,7 @@ export const FIND_PLACEHOLDERS = [
   "a flat in East Legon",
   "a school nearby",
   "a reliable driver",
+  "a cleaner for this week",
   "a recruiter",
   "dinner tonight",
 ];

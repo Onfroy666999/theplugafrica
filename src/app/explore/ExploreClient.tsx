@@ -24,6 +24,12 @@ const CAT_CHIPS = [
   ...CATS.filter((c) => c.key !== "emergency").map((c) => ({ value: c.key, label: c.name, icon: <CatIcon k={c.key} className="h-[18px] w-[18px]" /> })),
 ];
 
+/** Rough English word root: strips common endings, keeping at least 3 letters. */
+function root(w: string) {
+  const r = w.replace(/(ies|ers|er|ing|es|s|y)$/, "");
+  return r.length >= 3 ? r : w;
+}
+
 export function ExploreClient({ listings }: { listings: Listing[] }) {
   const params = useSearchParams();
   const router = useRouter();
@@ -45,7 +51,8 @@ export function ExploreClient({ listings }: { listings: Listing[] }) {
   };
 
   const results = useMemo(() => {
-    const words = q.trim().toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+    // Compare word roots so "cleaner" finds "cleaning" and "nanny" finds "nannies".
+    const words = q.trim().toLowerCase().split(/\s+/).filter((w) => w.length > 2).map(root);
     let r = listings.filter(
       (l) =>
         (!cat || l.cat === cat) &&
