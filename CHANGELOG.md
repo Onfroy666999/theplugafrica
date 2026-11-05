@@ -7,6 +7,10 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 ### Added
 - Collaboration setup: contributing guide, issue and pull request templates, code owners, CI checks on every pull request, consistent line endings.
 
+### Fixed
+- The header and mobile menu no longer show a Sign in button that went nowhere; "List your business" takes its place until customer accounts arrive (#28).
+- Unknown addresses and missing listings show a branded "page not found" page with search and categories; failed pages show a branded error page whose "Try again" reloads from the server (#28).
+
 ### Changed
 - Database moved from SQLite to PostgreSQL with versioned migrations (#2). Local development uses Docker on port 5433. CI applies migrations to a fresh Postgres, checks they match the schema, and runs the seed.
 
