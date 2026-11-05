@@ -1,5 +1,5 @@
 // The Plug Africa database (PostgreSQL).
-// Local development: Docker (docker-compose.yml, port 5433). Staging/production: Neon.
+// Local development: Docker (docker-compose.yml, port 5433). Staging/production: Supabase (London).
 // Change the schema with `npm run db:migrate -- --name <change>`; commit the generated migration.
 // Status fields are strings validated in src/lib/status.ts (kept from the SQLite version).
 
