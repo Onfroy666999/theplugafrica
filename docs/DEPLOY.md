@@ -17,7 +17,7 @@ The site runs on **Cloudflare Workers** (via OpenNext) with a **Supabase** Postg
 ## Part A: Access and plan (Kenneth)
 
 1. **Cloudflare members:** Manage Account › **Members** › **Invite members**. Enter Reginald's email, scope **the entire account**, and choose a role that can manage Workers and Hyperdrive (Workers Platform Admin, or Administrator). Select **Invite members**; Reginald accepts from the email.
-2. **Cloudflare plan:** Workers & Pages › Plans › **Workers Paid** (about $5/month). The app is about 3.1 MiB compressed and the free plan allows 3 MiB.
+2. **Cloudflare plan:** switch to **Workers Paid** (about $5/month). The app's size (about 2.4 MiB compressed) fits the free plan's 3 MiB, but the free plan allows only 10 ms of CPU per request, which server-rendered pages often exceed, and caps Hyperdrive at 100,000 queries a day.
 3. **Supabase members:** Organization › **Team** › **Invite**, role **Developer**.
 
 ## Part B: Supabase (Reginald, in Kenneth's organisation)

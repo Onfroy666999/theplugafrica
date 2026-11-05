@@ -123,7 +123,7 @@ The owner disliked the first website UI and asked for premium, animated, human-f
 - Accounts are created by the owner (Claude can't create accounts). Secrets go into Cloudflare/Supabase settings, never into chat or the repo.
 - **[Decided 2026-11-05] Whose accounts:** the site is hosted on **Kenneth's** Cloudflare and Supabase accounts. The developer is **Reginald** (GitHub `Onfroy666999`, which owns the repo); he works through membership of Kenneth's accounts. This computer's Wrangler is signed in to Reginald's own Cloudflare account for other projects: never deploy from it and never log it out.
 - **[Decided 2026-11-05] How it deploys:** Cloudflare **Workers Builds** (Git integration) in Kenneth's account builds from the GitHub repo. Two Workers: `theplugafrica-staging` from `develop` and `theplugafrica` from `main`, using the environments in `wrangler.jsonc`. No Cloudflare token is stored in GitHub. Step-by-step setup: `docs/DEPLOY.md`.
-- Bundle size measured 2026-11-05: about 3.1 MiB gzipped, over the free plan's 3 MiB, so the **Workers Paid plan (about $5/month) is required**.
+- Bundle size measured 2026-11-05: **about 2.4 MiB gzipped**, under the free plan's 3 MiB limit (it was 3.1 MiB until the share card became a fixed image, which removed `next/og`). Most of it is the Next.js runtime, our pages, Prisma's query engine, Motion and Base UI. Keep an eye on it: avoid `next/og` and other heavy server-side libraries. Workers Paid (about $5/month) is still needed: the free plan allows 10 ms CPU per request, which server-rendered pages often exceed.
 
 ### 6b. Admin and backend (feature/admin, 2026-11-04)
 
