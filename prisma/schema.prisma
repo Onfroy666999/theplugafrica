@@ -101,6 +101,7 @@ model ConciergeRequest {
   email      String?
   city       String
   category   String
+  service    String? // service name when sent from a service page, e.g. "Licence acquisition" (issue #36)
   details    String
   timing     String
   businessId String?

@@ -14,7 +14,8 @@ const CATEGORY_OPTIONS = CATS.filter((c) => c.key !== "emergency").map((c) => ({
 const CITY_OPTIONS = toOptions([...CITIES, "Somewhere else"]);
 const WHEN_OPTIONS = toOptions(["As soon as possible", "This week", "This month", "In the next few months", "Just exploring"]);
 
-export function ConciergeForm() {
+/** `service`: set on a concierge service page (issue #36); fixes the category and names the service. */
+export function ConciergeForm({ service }: { service?: { category: string; slug: string; name: string } } = {}) {
   const params = useSearchParams();
   const listing = getListing(params.get("listing") ?? "");
   const [ref, setRef] = useState<string | null>(null);
@@ -43,6 +44,10 @@ export function ConciergeForm() {
             setError(null);
             const fd = new FormData(e.currentTarget);
             if (listing) fd.set("listing", listing.slug);
+            if (service) {
+              fd.set("category", service.category);
+              fd.set("service", service.slug);
+            }
             const r = await submitConcierge(fd).catch(() => ({ ok: false as const, error: "Something went wrong. Please try again." }));
             setBusy(false);
             if (r.ok) setRef(r.ref);
@@ -50,6 +55,11 @@ export function ConciergeForm() {
           }}
           className="relative space-y-5 rounded-hero border border-navy/10 bg-white p-6 shadow-card md:p-9"
         >
+          {service && (
+            <div className="rounded-field bg-cream px-4 py-3 text-[14px] text-navy/70">
+              About: <strong className="text-navy">{service.name}</strong>
+            </div>
+          )}
           {listing && (
             <div className="flex items-center justify-between gap-3 rounded-field bg-cream px-4 py-3 text-[14px]">
               <span className="text-navy/70">About: <strong className="text-navy">{listing.name}</strong></span>
@@ -65,9 +75,11 @@ export function ConciergeForm() {
             <Field label="City">
               <Select label="City" name="city" options={CITY_OPTIONS} defaultValue={listing?.city ?? "Accra"} />
             </Field>
-            <Field label="What is it about?">
-              <Select label="What is it about?" name="category" options={CATEGORY_OPTIONS} defaultValue={listing?.cat ?? "special-services"} />
-            </Field>
+            {!service && (
+              <Field label="What is it about?">
+                <Select label="What is it about?" name="category" options={CATEGORY_OPTIONS} defaultValue={listing?.cat ?? "special-services"} />
+              </Field>
+            )}
           </div>
           <Field label="What do you need?">
             <Textarea
@@ -75,7 +87,7 @@ export function ConciergeForm() {
               required
               name="details"
               defaultValue={listing ? `I'd like help with ${listing.name} (${listing.kind}, ${listing.area}). ` : ""}
-              placeholder="For example: I'm moving to Accra in March with two children and need a furnished 3-bed near a good school."
+              placeholder={service?.category === "new-business" ? "For example: I want to register a small import business in Accra and open a business bank account." : "For example: I'm moving to Accra in March with two children and need a furnished 3-bed near a good school."}
             />
           </Field>
           <Field label="When do you need it?">

@@ -5,11 +5,11 @@ import { useState } from "react";
 import { joinWaitlist } from "@/app/actions";
 import { Field, Input, Select, Spinner, Success, toOptions } from "@/components/market/Form";
 import { Button } from "@/components/ui/Button";
-import { CATS } from "@/lib/directory";
+import { LISTING_CATS } from "@/lib/directory";
 import { CITIES } from "@/lib/listings";
 import { DUR } from "@/lib/motion";
 
-const CATEGORY_OPTIONS = CATS.filter((c) => c.key !== "emergency").map((c) => ({ value: c.key, label: c.name }));
+const CATEGORY_OPTIONS = LISTING_CATS.map((c) => ({ value: c.key, label: c.name }));
 const CITY_OPTIONS = toOptions([...CITIES, "Somewhere else"]);
 
 export function WaitlistForm() {

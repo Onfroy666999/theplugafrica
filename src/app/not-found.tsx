@@ -23,7 +23,7 @@ export default function NotFound() {
         <ul className="mt-8 flex flex-wrap justify-center gap-2">
           {CATS.filter((c) => c.key !== "emergency").map((c) => (
             <li key={c.key}>
-              <Link href={`/explore?cat=${c.key}`} className="press flex h-11 items-center gap-2 rounded-full border border-navy/15 px-4 text-[14px] font-semibold text-navy hover:border-navy/35">
+              <Link href={`/explore/${c.key}`} className="press flex h-11 items-center gap-2 rounded-full border border-navy/15 px-4 text-[14px] font-semibold text-navy hover:border-navy/35">
                 <CatIcon k={c.key} className="h-[18px] w-[18px]" />
                 {c.name}
               </Link>

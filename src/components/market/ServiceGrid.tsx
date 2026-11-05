@@ -7,7 +7,7 @@ import { STAGGER } from "@/lib/motion";
 import { Reveal } from "./Sections";
 
 /** Photo tiles for the services inside a category. Each links to that service's businesses. */
-export function ServiceGrid({ category, services }: { category: string; services: ServiceCard[] }) {
+export function ServiceGrid({ category, services, concierge }: { category: string; services: ServiceCard[]; concierge?: boolean }) {
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
       {services.map((s, i) => (
@@ -18,7 +18,7 @@ export function ServiceGrid({ category, services }: { category: string; services
               <div className="absolute inset-x-0 bottom-0 p-4">
                 <p className="font-heading text-[17px] leading-tight font-bold text-white md:text-[19px]">{s.name}</p>
                 <p className="mt-1 text-[12.5px] font-medium text-white/75">
-                  {s.count > 0 ? `${s.count} ${s.count === 1 ? "business" : "businesses"}` : "Coming soon"}
+                  {concierge ? "Handled by The Plug" : s.count > 0 ? `${s.count} ${s.count === 1 ? "business" : "businesses"}` : "Coming soon"}
                 </p>
               </div>
             </Link>

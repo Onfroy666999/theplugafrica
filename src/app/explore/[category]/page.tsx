@@ -35,14 +35,20 @@ export default async function CategoryPage({ params }: Props) {
             <h1 className="font-heading text-[32px] leading-tight font-extrabold tracking-[-0.03em] text-navy md:text-[44px]">{cat.name}</h1>
             <p className="mt-2 max-w-xl text-[16px] text-navy/60">{cat.line}</p>
           </div>
-          <LinkButton href={`/explore?cat=${cat.key}`} variant="secondary" size="sm">
-            See all {cat.name.toLowerCase()} businesses
-          </LinkButton>
+          {cat.concierge ? (
+            <LinkButton href="/concierge" size="sm">
+              Talk to a concierge
+            </LinkButton>
+          ) : (
+            <LinkButton href={`/explore?cat=${cat.key}`} variant="secondary" size="sm">
+              See all {cat.name.toLowerCase()} businesses
+            </LinkButton>
+          )}
         </div>
 
         <h2 className="mt-10 mb-5 font-heading text-[20px] font-bold text-navy">Choose a service</h2>
         {services.length ? (
-          <ServiceGrid category={cat.key} services={services} />
+          <ServiceGrid category={cat.key} services={services} concierge={cat.concierge} />
         ) : (
           <div className="rounded-panel bg-cream p-10 text-center">
             <p className="font-heading text-[20px] font-bold text-navy">Services are being added</p>

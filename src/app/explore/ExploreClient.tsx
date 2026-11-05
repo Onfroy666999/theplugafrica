@@ -9,7 +9,7 @@ import { Button, LinkButton } from "@/components/ui/Button";
 import { ChipGroup } from "@/components/ui/ChipGroup";
 import { Select } from "@/components/ui/Select";
 import { Switch } from "@/components/ui/Switch";
-import { CATS, type CatKey } from "@/lib/directory";
+import { CATS, LISTING_CATS, type CatKey } from "@/lib/directory";
 import { CITIES, type Listing } from "@/lib/listings";
 import { DUR, EASE } from "@/lib/motion";
 
@@ -24,7 +24,7 @@ const CITY_OPTIONS = [
 ];
 const CAT_CHIPS = [
   { value: "all", label: "All" },
-  ...CATS.filter((c) => c.key !== "emergency").map((c) => ({
+  ...LISTING_CATS.map((c) => ({
     value: c.key,
     label: c.name,
     icon: <CatIcon k={c.key} className="h-[18px] w-[18px]" />,
