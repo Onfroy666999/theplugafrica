@@ -1,0 +1,28 @@
+// Cloudflare Workers config for the OpenNext build (issue #4).
+// Two Workers: `theplugafrica-staging` (from develop) and `theplugafrica` (from main).
+// Secrets (DATABASE_URL, AUTH_SECRET) are set per Worker in the Cloudflare dashboard or with
+// `wrangler secret put NAME --env <staging|production>`. They are never stored in this file.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "theplugafrica",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "images": { "binding": "IMAGES" },
+  "observability": { "enabled": true },
+  "env": {
+    "staging": {
+      "name": "theplugafrica-staging",
+      "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "theplugafrica-staging" }],
+      "images": { "binding": "IMAGES" },
+      "vars": { "SITE_ENV": "staging" }
+    },
+    "production": {
+      "name": "theplugafrica",
+      "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "theplugafrica" }],
+      "images": { "binding": "IMAGES" },
+      "vars": { "SITE_ENV": "production" }
+    }
+  }
+}

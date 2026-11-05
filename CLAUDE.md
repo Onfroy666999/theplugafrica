@@ -121,6 +121,9 @@ The owner disliked the first website UI and asked for premium, animated, human-f
 - Costs: Cloudflare Workers paid plan (about $5/month, likely needed for bundle size). Supabase Free is fine for staging, but **production must be on Supabase Pro (about $25/month)** because free projects pause after a week of inactivity.
 - What the Workers runtime means for the code (issues #3 and #4): photo uploads and the photo library move to Supabase Storage (no local disk); the Prisma connection must work on Workers; `next/image` needs a Cloudflare- or Supabase-compatible loader.
 - Accounts are created by the owner (Claude can't create accounts). Secrets go into Cloudflare/Supabase settings, never into chat or the repo.
+- **[Decided 2026-11-05] Whose accounts:** the site is hosted on **Kenneth's** Cloudflare and Supabase accounts. The developer is **Reginald** (GitHub `Onfroy666999`, which owns the repo); he works through membership of Kenneth's accounts. This computer's Wrangler is signed in to Reginald's own Cloudflare account for other projects: never deploy from it and never log it out.
+- **[Decided 2026-11-05] How it deploys:** Cloudflare **Workers Builds** (Git integration) in Kenneth's account builds from the GitHub repo. Two Workers: `theplugafrica-staging` from `develop` and `theplugafrica` from `main`, using the environments in `wrangler.jsonc`. No Cloudflare token is stored in GitHub. Step-by-step setup: `docs/DEPLOY.md`.
+- Bundle size measured 2026-11-05: about 3.1 MiB gzipped, over the free plan's 3 MiB, so the **Workers Paid plan (about $5/month) is required**.
 
 ### 6b. Admin and backend (feature/admin, 2026-11-04)
 

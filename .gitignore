@@ -46,3 +46,9 @@ next-env.d.ts
 /prisma/*.db-journal
 /public/uploads/
 !.env.example
+src/lib/photo-library.json
+
+# cloudflare (OpenNext build output and local Worker secrets)
+.open-next
+.wrangler
+.dev.vars*

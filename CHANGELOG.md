@@ -4,6 +4,14 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- Cloudflare hosting setup (#4): OpenNext build for Cloudflare Workers, staging and production Workers in `wrangler.jsonc`, deploys by Cloudflare Workers Builds from `develop` and `main` (no tokens in GitHub), setup guide in `docs/DEPLOY.md`. The staging site shows a banner and blocks search engines.
+
+### Changed
+- The database client connects through the `pg` driver adapter, with a fresh connection per request on Workers.
+- The admin photo library is listed at build time; photo uploads show a "not available yet" message on the hosted site until Supabase Storage (#3).
+- The share card is a fixed image (`public/images/share-card.png`) instead of being drawn on request.
+
 ## [0.3.0] - 2026-11-05
 
 ### Added

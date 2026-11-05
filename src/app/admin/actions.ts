@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { endSession, requireAdmin, startSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { onWorkers } from "@/lib/runtime";
 import { CATS } from "@/lib/directory";
 import { BUSINESS_STATUS, CONCIERGE_STATUS, CREDENTIAL_STATE, ENQUIRY_STATUS, WAITLIST_STATUS, CONTACT_STATUS, values } from "@/lib/status";
 
@@ -170,6 +171,8 @@ export async function uploadImages(fd: FormData): Promise<{ ok: true; paths: str
   await requireAdmin();
   const files = fd.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
   if (!files.length) return { ok: false, error: "Choose at least one photo." };
+  // The hosted site has no disk to save to; uploads move to Supabase Storage with issue #3.
+  if (onWorkers) return { ok: false, error: "Photo uploads aren't available on the hosted site yet. Choose photos from the library for now." };
   const dir = path.join(process.cwd(), "public", "uploads");
   await mkdir(dir, { recursive: true });
   const paths: string[] = [];
