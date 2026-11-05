@@ -11,7 +11,7 @@ import { z } from "zod";
 import { endSession, requireAdmin, startSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { CATS } from "@/lib/directory";
-import { BUSINESS_STATUS, CONCIERGE_STATUS, CREDENTIAL_STATE, ENQUIRY_STATUS, WAITLIST_STATUS, values } from "@/lib/status";
+import { BUSINESS_STATUS, CONCIERGE_STATUS, CREDENTIAL_STATE, ENQUIRY_STATUS, WAITLIST_STATUS, CONTACT_STATUS, values } from "@/lib/status";
 
 /* ---------------- Sign in / out ---------------- */
 
@@ -190,6 +190,7 @@ const INBOX = {
   enquiry: { statuses: ENQUIRY_STATUS, path: "/admin/enquiries" },
   concierge: { statuses: CONCIERGE_STATUS, path: "/admin/concierge" },
   waitlist: { statuses: WAITLIST_STATUS, path: "/admin/waitlist" },
+  contact: { statuses: CONTACT_STATUS, path: "/admin/messages" },
 } as const;
 export type InboxKind = keyof typeof INBOX;
 
@@ -202,6 +203,7 @@ export async function updateInbox(kind: InboxKind, id: string, patch: { status?:
   if (kind === "enquiry") await db.enquiry.update({ where: { id }, data });
   if (kind === "concierge") await db.conciergeRequest.update({ where: { id }, data });
   if (kind === "waitlist") await db.waitlistEntry.update({ where: { id }, data });
+  if (kind === "contact") await db.contactMessage.update({ where: { id }, data });
   revalidatePath(cfg.path);
   revalidatePath("/admin");
 }

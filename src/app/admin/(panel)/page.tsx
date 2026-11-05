@@ -6,12 +6,13 @@ import { CONCIERGE_STATUS, ENQUIRY_STATUS, WAITLIST_STATUS, find } from "@/lib/s
 import { PageHeader, Panel, StatCard, fmtDate } from "./ui";
 
 export default async function Dashboard() {
-  const [byStatus, examples, newEnq, newCnc, newWl, enquiries, concierge, waitlist] = await Promise.all([
+  const [byStatus, examples, newEnq, newCnc, newWl, newMsg, enquiries, concierge, waitlist] = await Promise.all([
     db.business.groupBy({ by: ["status"], _count: true }),
     db.business.count({ where: { isExample: true } }),
     db.enquiry.count({ where: { status: "new" } }),
     db.conciergeRequest.count({ where: { status: "new" } }),
     db.waitlistEntry.count({ where: { status: "new" } }),
+    db.contactMessage.count({ where: { status: "new" } }),
     db.enquiry.findMany({ take: 5, orderBy: { createdAt: "desc" }, include: { business: { select: { name: true } } } }),
     db.conciergeRequest.findMany({ take: 5, orderBy: { createdAt: "desc" } }),
     db.waitlistEntry.findMany({ take: 5, orderBy: { createdAt: "desc" } }),
@@ -32,11 +33,12 @@ export default async function Dashboard() {
     <>
       <PageHeader title="Dashboard" sub="What's live, and what needs you." action={<LinkButton href="/admin/businesses/new">Add a business</LinkButton>} />
 
-      <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard label="Live on the site" value={live} href="/admin/businesses" note={`${count("verified")} verified · ${count("in_review")} in review`} />
         <StatCard label="New enquiries" value={newEnq} href="/admin/enquiries" note="People who asked for contact details" />
         <StatCard label="New concierge requests" value={newCnc} href="/admin/concierge" note="Paid, hands-on requests" />
         <StatCard label="New on the waitlist" value={newWl} href="/admin/waitlist" note="Businesses asking to be listed" />
+        <StatCard label="New messages" value={newMsg} href="/admin/messages" note="From the Contact page" />
       </div>
 
       {(count("draft") > 0 || examples > 0) && (

@@ -8,6 +8,7 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 - Services inside categories (#26): each category page (`/explore/rentals`) lists its services, and each service page (`/explore/rentals/cars`) lists the businesses offering it. 36 starting services, breadcrumbs on category, service and listing pages, and homepage category tabs built from the services.
 - Admin Services page: add, edit, hide, reorder and delete services per category. The business form now asks which services (one or more) a business offers.
 - Example businesses for car rental and event rentals.
+- About and Contact pages (#29). The Contact form saves to a new admin **Messages** inbox (status and notes like the others) and gives the sender a reference code. Footer links to both.
 - Search engines (#13): sitemap.xml, robots.txt (admin and design options excluded), canonical links, a branded share card and per-page share previews, service-by-city pages (`/explore/rentals/cars/accra`), and structured data for breadcrumbs and real businesses. Example listings, and service pages without a real business, are kept out of search results. Set `NEXT_PUBLIC_SITE_URL` in each environment.
 - Home care in Special Services (#24): housekeepers and maids, cleaning services, nannies and childcare, laundry and ironing, with two example home-care businesses.
 - Collaboration setup: contributing guide, issue and pull request templates, code owners, CI checks on every pull request, consistent line endings.

@@ -26,5 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     u("/concierge", { priority: 0.7 }),
     u("/businesses", { priority: 0.5 }),
     u("/emergency", { priority: 0.5 }),
+    u("/about", { priority: 0.5 }),
+    u("/contact", { priority: 0.4 }),
   ];
 }

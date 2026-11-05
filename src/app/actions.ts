@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { CONTACT_TOPICS } from "@/lib/contact";
 import { PUBLIC_STATUSES } from "@/lib/status";
 
 // Public form handlers. Each one saves to the admin inboxes and returns a reference code.
@@ -70,5 +71,30 @@ export async function joinWaitlist(fd: FormData): Promise<FormResult> {
   const d = parsed.data;
   const ref = makeRef("BIZ");
   await db.waitlistEntry.create({ data: { ref, businessName: d.business, category: d.category, city: d.city, name: d.name, phone: d.phone, email: d.email } });
+  return { ok: true, ref };
+}
+
+
+const ContactSchema = z
+  .object({
+    name: text(120),
+    email: optional(160).pipe(z.string().email().optional()),
+    phone: optional(40),
+    topic: z.enum(CONTACT_TOPICS),
+    message: z.string().trim().min(10).max(4000),
+  })
+  .refine((d) => d.email || d.phone, { message: "Add an email or a phone number so we can reply." });
+
+/** Contact page (issue #29): a general message for The Plug team. */
+export async function sendContactMessage(fd: FormData): Promise<FormResult> {
+  if (isBot(fd)) return { ok: true, ref: makeRef("MSG") };
+  const parsed = ContactSchema.safeParse(Object.fromEntries(fd));
+  if (!parsed.success) {
+    const custom = parsed.error.issues.find((i) => i.code === "custom");
+    return { ok: false, error: custom?.message ?? "Please add your name, a way to reply, and a message of at least a sentence." };
+  }
+  const d = parsed.data;
+  const ref = makeRef("MSG");
+  await db.contactMessage.create({ data: { ref, name: d.name, email: d.email, phone: d.phone, topic: d.topic, message: d.message } });
   return { ok: true, ref };
 }

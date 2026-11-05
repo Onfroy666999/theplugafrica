@@ -123,3 +123,19 @@ model WaitlistEntry {
   notes        String?
   createdAt    DateTime @default(now())
 }
+
+/// General messages from the Contact page (issue #29).
+model ContactMessage {
+  id        String   @id @default(cuid())
+  ref       String   @unique
+  name      String
+  email     String?
+  phone     String?
+  topic     String
+  message   String
+  status    String   @default("new") // new | replied | closed
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+}
