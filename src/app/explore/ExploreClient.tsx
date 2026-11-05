@@ -37,13 +37,18 @@ function root(w: string) {
   return r.length >= 3 ? r : w;
 }
 
-/** `embedded`: used inside a service page, which supplies its own heading and fixes the category. */
+/**
+ * `embedded`: used inside a service page, which supplies its own heading and fixes the category.
+ * `lockCity`: the page has its own city links, so the City filter is hidden.
+ */
 export function ExploreClient({
   listings,
   embedded = false,
+  lockCity = false,
 }: {
   listings: Listing[];
   embedded?: boolean;
+  lockCity?: boolean;
 }) {
   const params = useSearchParams();
   const router = useRouter();
@@ -120,15 +125,17 @@ export function ExploreClient({
           />
         </label>
         <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] md:overflow-visible md:pb-0">
-          <div className="w-[150px] shrink-0">
-            <Select
-              variant="pill"
-              label="City"
-              options={CITY_OPTIONS}
-              value={city || "all"}
-              onChange={(v) => setParam("city", v === "all" ? null : v)}
-            />
-          </div>
+          {!lockCity && (
+            <div className="w-[150px] shrink-0">
+              <Select
+                variant="pill"
+                label="City"
+                options={CITY_OPTIONS}
+                value={city || "all"}
+                onChange={(v) => setParam("city", v === "all" ? null : v)}
+              />
+            </div>
+          )}
           <div className="w-[170px] shrink-0">
             <Select
               variant="pill"

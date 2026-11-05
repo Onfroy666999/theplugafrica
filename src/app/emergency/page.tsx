@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/site";
 import Image from "next/image";
 import { CatIcon } from "@/components/market/Icons";
 import { Footer, Header } from "@/components/market/Sections";
 import { EmergencyClient } from "./EmergencyClient";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Emergency contacts — The Plug Africa",
   description: "Hospitals, police, fire, embassies and pharmacies by city.",
-};
+  path: "/emergency",
+});
 
 export default function EmergencyPage() {
   return (
