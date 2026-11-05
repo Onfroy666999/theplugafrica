@@ -24,7 +24,10 @@
       "images": { "binding": "IMAGES" },
       "vars": { "SITE_ENV": "staging" },
       // Hyperdrive config `theplugafrica-staging-db` in Kenneth's account (Supabase staging, Session pooler)
-      "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "dd99b214f8ec47358ebd2bdf5b1929e9" }]
+      // localConnectionString: a placeholder (no password) that `opennextjs-cloudflare deploy` needs while it briefly
+      // emulates the Worker on the build machine; nothing connects to it. Local runs override it with the shell variable
+      // CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE (see docs/DEPLOY.md).
+      "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "dd99b214f8ec47358ebd2bdf5b1929e9", "localConnectionString": "postgresql://localhost:5433/theplugafrica" }]
     }
   }
 }
