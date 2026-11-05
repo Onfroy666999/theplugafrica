@@ -6,6 +6,7 @@ import { ServiceGrid } from "@/components/market/ServiceGrid";
 import { LinkButton } from "@/components/ui/Button";
 import { getCategoryServices } from "@/lib/data";
 import { getCat } from "@/lib/directory";
+import { pageMeta } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ type Props = { params: Promise<{ category: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cat = getCat((await params).category);
-  return cat ? { title: `${cat.name} in Ghana — The Plug Africa`, description: cat.line } : {};
+  return cat ? pageMeta({ title: `${cat.name} in Ghana — The Plug Africa`, description: cat.line, path: `/explore/${cat.key}`, image: cat.tiles[0]?.img }) : {};
 }
 
 /** Category page: the services inside one category (issue #26). */

@@ -8,7 +8,8 @@ import { ListingCard, StatusBadge } from "@/components/market/ListingCard";
 import { Footer, Header, Reveal } from "@/components/market/Sections";
 import { CATS } from "@/lib/directory";
 import { getPublicListing, getPublicListings } from "@/lib/data";
-import { reviewsFor } from "@/lib/listings";
+import { reviewsFor, type Listing } from "@/lib/listings";
+import { abs, jsonLd, pageMeta } from "@/lib/site";
 import { ContactPanel } from "./ContactPanel";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -17,7 +18,29 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const l = await getPublicListing((await params).slug);
-  return l ? { title: `${l.name} — ${l.kind} in ${l.area}, ${l.city} · The Plug Africa`, description: l.blurb } : {};
+  if (!l) return {};
+  return pageMeta({
+    title: `${l.name} — ${l.kind} in ${l.area}, ${l.city} · The Plug Africa`,
+    description: l.blurb,
+    path: `/listing/${l.slug}`,
+    image: l.images[0],
+    // Example listings are design placeholders, not real businesses: keep them out of search results.
+    noindex: l.isExample,
+  });
+}
+
+/** schema.org LocalBusiness for real listings (issue #13). Ratings are left out until reviews are real (#14). */
+function businessLd(l: Listing) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: l.name,
+    description: l.blurb,
+    url: abs(`/listing/${l.slug}`),
+    image: l.images.map(abs),
+    address: { "@type": "PostalAddress", streetAddress: l.area, addressLocality: l.city, addressCountry: "GH" },
+    ...(l.languages.length && { knowsLanguage: l.languages }),
+  };
 }
 
 export default async function ListingPage({ params }: Props) {
@@ -30,6 +53,7 @@ export default async function ListingPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-white pb-20 text-navy lg:pb-0">
+      {!l.isExample && <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(businessLd(l))} />}
       <Header />
       <div className="mx-auto max-w-[1280px] px-5 pt-6 md:px-8">
         <Breadcrumbs

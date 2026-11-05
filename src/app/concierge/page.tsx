@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/site";
 import Image from "next/image";
 import { Suspense } from "react";
 import { Check } from "@/components/market/Icons";
 import { Footer, Header, Reveal } from "@/components/market/Sections";
 import { ConciergeForm } from "./ConciergeForm";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Concierge — The Plug Africa",
   description: "Tell a Plug concierge what you need. We find the right people, make introductions, mediate and follow up.",
-};
+  path: "/concierge",
+});
 
 const DOES = [
   "Find and shortlist verified businesses for you",

@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/site";
 import { LinkButton } from "@/components/ui/Button";
 import Image from "next/image";
 import { Shield } from "@/components/market/Icons";
 import { Footer, Header, Reveal } from "@/components/market/Sections";
 import { WaitlistForm } from "./WaitlistForm";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "List your business — The Plug Africa",
   description: "Get verified and found by expats, returnees, investors and locals looking for trusted businesses.",
-};
+  path: "/businesses",
+});
 
 const BENEFITS = [
   { t: "Get found by people ready to buy", d: "Expats, returnees, investors and locals searching for exactly what you offer." },

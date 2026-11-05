@@ -105,3 +105,21 @@ export async function getServiceListings(category: string, slug: string): Promis
   });
   return rows.map(toListing);
 }
+
+/* ---------------- Search engines (issue #13) ---------------- */
+
+/** Real (non-example) public businesses: the only ones search engines should see. */
+const realWhere = { ...publicWhere, isExample: false };
+
+/** Services that list at least one real business, with the cities those businesses are in. */
+export async function getIndexableServices(): Promise<{ category: string; slug: string; updatedAt: Date; cities: string[] }[]> {
+  const rows = await db.service.findMany({
+    where: { visible: true, businesses: { some: realWhere } },
+    select: { category: true, slug: true, updatedAt: true, businesses: { where: realWhere, select: { city: true } } },
+  });
+  return rows.map((r) => ({ category: r.category, slug: r.slug, updatedAt: r.updatedAt, cities: [...new Set(r.businesses.map((b) => b.city))] }));
+}
+
+export async function getIndexableListings() {
+  return db.business.findMany({ where: realWhere, select: { slug: true, updatedAt: true } });
+}
