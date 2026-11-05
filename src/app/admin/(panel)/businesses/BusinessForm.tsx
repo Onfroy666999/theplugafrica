@@ -32,19 +32,25 @@ export type BusinessInput = {
   status: string;
   images: string[];
   credentials: { label: string; state: string }[];
+  services: string[]; // service ids
   isExample?: boolean;
 };
+
+export type ServiceOption = { id: string; category: string; name: string; visible: boolean };
 
 const CAT_OPTIONS = CATS.filter((c) => c.key !== "emergency").map((c) => ({ value: c.key, label: c.name }));
 const STATUS_OPTIONS = BUSINESS_STATUS.map((s) => ({ value: s.value, label: s.label }));
 const CRED_OPTIONS = CREDENTIAL_STATE.map((s) => ({ value: s.value, label: s.label }));
 const DEFAULT_CREDS = ["Business registration (Registrar-General)", "Owner identity checked", "Address visited by our team"];
 
-export function BusinessForm({ initial, library }: { initial?: BusinessInput; library: string[] }) {
+export function BusinessForm({ initial, library, allServices }: { initial?: BusinessInput; library: string[]; allServices: ServiceOption[] }) {
   const router = useRouter();
   const reduce = useReducedMotion();
   const formRef = useRef<HTMLFormElement>(null);
   const [images, setImages] = useState<string[]>(initial?.images ?? []);
+  const [category, setCategory] = useState(initial?.category || "rentals");
+  const [serviceIds, setServiceIds] = useState<string[]>(initial?.services ?? []);
+  const categoryServices = allServices.filter((sv) => sv.category === category);
   const [creds, setCreds] = useState(initial?.credentials ?? DEFAULT_CREDS.map((label) => ({ label, state: "pending" })));
   const [error, setError] = useState<{ msg: string; field?: string } | null>(null);
   const [saved, setSaved] = useState(false);
@@ -81,6 +87,7 @@ export function BusinessForm({ initial, library }: { initial?: BusinessInput; li
     const fd = new FormData(e.currentTarget);
     fd.set("images", JSON.stringify(images));
     fd.set("credentials", JSON.stringify(creds.filter((c) => c.label.trim())));
+    fd.set("services", JSON.stringify(serviceIds));
     if (initial?.id) fd.set("id", initial.id);
     start(async () => {
       const r = await saveBusiness(fd);
@@ -111,7 +118,19 @@ export function BusinessForm({ initial, library }: { initial?: BusinessInput; li
                 <input name="slug" aria-label="Web address" defaultValue={v("slug")} placeholder="business-name" className="h-12 w-full min-w-0 bg-transparent pr-4 text-navy outline-none placeholder:text-navy/30 focus-visible:shadow-none" />
               </div>
             </Field>
-            <Field label="Category"><Select label="Category" name="category" options={CAT_OPTIONS} defaultValue={v("category") || "rentals"} /></Field>
+            <Field label="Category">
+              <Select
+                label="Category"
+                name="category"
+                options={CAT_OPTIONS}
+                value={category}
+                onChange={(c) => {
+                  setCategory(c);
+                  // Services belong to one category: keep only those that still apply.
+                  setServiceIds((ids) => ids.filter((id) => allServices.some((sv) => sv.id === id && sv.category === c)));
+                }}
+              />
+            </Field>
             <Field label="What kind of business"><Input label="What kind of business" name="kind" defaultValue={v("kind")} placeholder="e.g. Furnished apartment" required /></Field>
             <Field label="City"><Input label="City" name="city" defaultValue={v("city") || "Accra"} required /></Field>
             <Field label="Area"><Input label="Area" name="area" defaultValue={v("area")} placeholder="e.g. East Legon" required /></Field>
@@ -125,6 +144,33 @@ export function BusinessForm({ initial, library }: { initial?: BusinessInput; li
               <Field label="Languages" hint="comma-separated"><Input label="Languages" name="languages" defaultValue={v("languages") || "English"} /></Field>
             </div>
           </div>
+        </Section>
+
+        <Section title="Services" sub="Where this business appears inside its category. Choose every service it offers.">
+          {categoryServices.length ? (
+            <div role="group" aria-label="Services" className="flex flex-wrap gap-2" data-field="services">
+              {categoryServices.map((sv) => {
+                const on = serviceIds.includes(sv.id);
+                return (
+                  <button
+                    key={sv.id}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => setServiceIds((ids) => (on ? ids.filter((x) => x !== sv.id) : [...ids, sv.id]))}
+                    className={`press flex h-10 items-center gap-2 rounded-full border px-4 text-[14px] font-medium ${on ? "border-navy bg-navy text-white" : "border-navy/15 text-navy hover:border-navy/35"}`}
+                  >
+                    {on && <span aria-hidden="true">✓</span>}
+                    {sv.name}
+                    {!sv.visible && <span className={`text-[11px] ${on ? "text-white/70" : "text-navy/45"}`}>(hidden)</span>}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-[14px] text-navy/55">
+              This category has no services yet. <Link href="/admin/services" className="font-semibold text-navy underline-offset-4 hover:underline">Add services</Link> first.
+            </p>
+          )}
         </Section>
 
         <Section title="Contact details" sub="Shown to customers only after they accept the disclaimer and receive a reference code.">

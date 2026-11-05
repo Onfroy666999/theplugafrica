@@ -24,6 +24,8 @@ export type Listing = {
   languages: string[];
   /** Design placeholder rather than a real business. Shown with an "Example" label. */
   isExample?: boolean;
+  /** Services (sub-categories) the business offers, in display order. Filled from the database. */
+  services?: { slug: string; name: string }[];
 };
 
 const REVIEWS: Record<CatKey, Review[]> = {
@@ -58,7 +60,24 @@ const REVIEWS: Record<CatKey, Review[]> = {
   ],
 };
 
-export const reviewsFor = (l: Listing) => REVIEWS[l.cat];
+// Home-care businesses sit in Special Services but need their own example reviews (issue #24).
+const HOME_CARE_REVIEWS: Review[] = [
+  { name: "Example reviewer", when: "1 week ago", rating: 5, text: "Thorough, punctual and trustworthy. The house has never been this clean, and they brought their own supplies." },
+  { name: "Example reviewer", when: "1 month ago", rating: 5, text: "They matched us with a nanny who is patient and kind with our two children. References were checked before she started." },
+];
+const HOME_CARE = /clean|housekeep|maid|nann|laundry|home care/i;
+
+const HIRE_REVIEWS: Review[] = [
+  { name: "Example reviewer", when: "2 weeks ago", rating: 5, text: "Everything arrived on time and in good condition. Set-up and collection were handled without any fuss." },
+  { name: "Example reviewer", when: "1 month ago", rating: 4, text: "Fair prices and clear terms. Ask for the deposit details up front." },
+];
+
+export const reviewsFor = (l: Listing) =>
+  l.cat === "special-services" && HOME_CARE.test(`${l.kind} ${l.blurb}`)
+    ? HOME_CARE_REVIEWS
+    : l.cat === "rentals" && /car|event|equipment/i.test(l.kind)
+      ? HIRE_REVIEWS
+      : REVIEWS[l.cat];
 
 const C = {
   reg: (s: Listing["credentials"][number]["state"] = "verified") => ({ label: "Business registration (Registrar-General)", state: s }),
@@ -86,6 +105,26 @@ export const LISTINGS: Listing[] = [
     about: "A four-bedroom family house with a private pool, mature garden and staff quarters. Close to international schools. Viewings by appointment with the owner's agent.",
     credentials: [C.reg(), C.id(), C.addr("in-review")],
     isExample: true, status: "verified", rating: 4.8, reviewCount: 12, price: "Price on request", responds: "Usually replies within a day", languages: ["English"],
+  },
+  {
+    slug: "accra-drive-car-rentals",
+    name: "Accra Drive Car Rentals",
+    cat: "rentals", kind: "Car rental", city: "Accra", area: "Airport",
+    images: ["/images/special-4.jpg", "/images/classifieds-4.jpg"],
+    blurb: "Saloon cars and SUVs to rent by the day or week, with or without a driver.",
+    about: "A rental company with insured, well-serviced saloon cars, SUVs and minibuses. Airport delivery and collection available. Drivers can be added for any booking.",
+    credentials: [C.reg(), C.id(), { label: "Vehicle insurance and roadworthy certificates seen", state: "verified" }],
+    isExample: true, status: "verified", rating: 4.7, reviewCount: 33, price: "Daily rates on request", responds: "Usually replies within a few hours", languages: ["English", "Twi"],
+  },
+  {
+    slug: "royal-canopy-events",
+    name: "Royal Canopy Events",
+    cat: "rentals", kind: "Event rentals", city: "Accra", area: "Tema",
+    images: ["/images/svc-event-rentals.jpg"],
+    blurb: "Canopies, tents, chairs, tables, sound systems and lighting for any event.",
+    about: "Event hire for weddings, funerals, parties and corporate events: canopies and marquee tents, chairs and tables with covers, PA systems and speakers, lighting and generators. Delivery, set-up and collection included.",
+    credentials: [C.reg(), C.id("in-review")],
+    isExample: true, status: "in-review", rating: 4.6, reviewCount: 18, price: "Packages on request", responds: "Usually replies within a day", languages: ["English", "Twi", "Ga"],
   },
   {
     slug: "efua-relocation-partners",
@@ -176,6 +215,26 @@ export const LISTINGS: Listing[] = [
     about: "Certified electricians for new wiring, repairs, inverter and solar back-up installation, and safety inspections for landlords and businesses.",
     credentials: [C.reg(), { label: "Energy Commission certification", state: "in-review" }],
     isExample: true, status: "in-review", rating: 4.6, reviewCount: 14, price: "Quote after visit", responds: "Usually replies within a day", languages: ["English", "Twi"],
+  },
+  {
+    slug: "sparkle-home-cleaning",
+    name: "Sparkle Home Cleaning",
+    cat: "special-services", kind: "Cleaning service", city: "Accra", area: "East Legon",
+    images: ["/images/homecare-cleaning.jpg", "/images/homecare-cleaning-2.jpg", "/images/homecare-laundry-2.jpg"],
+    blurb: "Regular and deep cleaning for homes and apartments, with supplies included.",
+    about: "A trained cleaning team for weekly, fortnightly or one-off deep cleans, move-in and move-out cleans, and post-renovation cleaning. Cleaners bring their own equipment and eco-friendly supplies.",
+    credentials: [C.reg(), C.id(), { label: "Staff background checks", state: "verified" }],
+    isExample: true, status: "verified", rating: 4.9, reviewCount: 41, price: "Quote after a short call", responds: "Usually replies within a few hours", languages: ["English", "Twi", "Ga"],
+  },
+  {
+    slug: "trusted-hands-home-care",
+    name: "Trusted Hands Home Care",
+    cat: "special-services", kind: "Housekeepers, maids & nannies", city: "Accra", area: "Airport Residential",
+    images: ["/images/homecare-housekeeper.jpg", "/images/homecare-nanny.jpg", "/images/homecare-laundry.jpg"],
+    blurb: "Vetted housekeepers, maids, nannies and laundry help, live-in or daily.",
+    about: "An agency placing housekeepers, maids, nannies and laundry and ironing help with families and expats. Every placement starts with a trial week, references are checked, and replacements are arranged if it isn't the right fit.",
+    credentials: [C.reg(), C.id(), { label: "Staff references and background checks", state: "in-review" }],
+    isExample: true, status: "in-review", rating: 4.8, reviewCount: 26, price: "Monthly and daily rates on request", responds: "Usually replies within a day", languages: ["English", "Twi", "French"],
   },
   {
     slug: "sunharvest-energy",

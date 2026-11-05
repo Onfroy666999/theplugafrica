@@ -18,6 +18,7 @@ import {
 } from "@/components/market/Sections";
 import { DUR, EASE } from "@/lib/motion";
 import type { Listing } from "@/lib/listings";
+import type { ServiceCard } from "@/lib/data";
 
 const SLIDES = [
   { img: "/images/rentals.jpg", cap: "Rentals · Example home, East Legon", pos: "50% 55%" },
@@ -26,7 +27,7 @@ const SLIDES = [
   { img: "/images/dining.jpg", cap: "Entertainment · Example restaurant, Osu", pos: "50% 40%" },
 ];
 
-export function HomeClient({ listings }: { listings: Listing[] }) {
+export function HomeClient({ listings, services }: { listings: Listing[]; services: Record<string, ServiceCard[]> }) {
   const [i, setI] = useState(0);
   const reduce = useReducedMotion();
 
@@ -134,7 +135,7 @@ export function HomeClient({ listings }: { listings: Listing[] }) {
         </div>
       </section>
 
-      <CategoryExplorer />
+      <CategoryExplorer services={services} />
       <PopularRail listings={listings} />
       <HowItWorks />
       <ConciergeBand />

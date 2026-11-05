@@ -38,5 +38,20 @@ All photos are from Unsplash under the Unsplash License (free for commercial use
 | classifieds-2.jpg | Category tile | https://unsplash.com/photos/photo-1556742111-a301076d9d18 |
 | classifieds-3.jpg | Category tile | https://unsplash.com/photos/photo-1786609871123-7a01b08ca33d |
 | classifieds-4.jpg | Category tile | https://unsplash.com/photos/photo-1574023240744-64c47c8c0676 |
+| homecare-housekeeper.jpg | Home care: housekeepers & maids | https://unsplash.com/photos/photo-1553135440-a0130c1626e9 |
+| homecare-cleaning.jpg | Home care: cleaning services | https://unsplash.com/photos/photo-1581578731548-c64695cc6952 |
+| homecare-nanny.jpg | Home care: nannies & childcare | https://unsplash.com/photos/photo-1545658902-ed0bb8aee40d |
+| homecare-laundry.jpg | Home care: laundry & ironing | https://unsplash.com/photos/photo-1647202152259-98fe50ad0618 |
+| homecare-cleaning-2.jpg | Example cleaning listing | https://unsplash.com/photos/photo-1642505172378-a6f5e5b15580 |
+| homecare-laundry-2.jpg | Example cleaning listing | https://unsplash.com/photos/photo-1582735689369-4fe89db7114c |
+| svc-event-rentals.jpg | Rentals: event rentals | https://unsplash.com/photos/photo-1768179123386-a86a85f1c35c |
+| svc-equipment.jpg | Rentals: equipment | https://unsplash.com/photos/photo-1523559094051-53bac879eb80 |
+| svc-office-space.jpg | Rentals: office space | https://unsplash.com/photos/photo-1531973576160-7125cd663d86 |
+| svc-errands.jpg | Special Services: errands & concierge | https://unsplash.com/photos/photo-1605302596154-63eabbae53b5 |
+| svc-language-classes.jpg | Education: language classes | https://unsplash.com/photos/photo-1509062522246-3755977927d7 |
+| svc-bars-nightlife.jpg | Entertainment: bars & nightlife | https://unsplash.com/photos/photo-1572116469696-31de0f17cc34 |
+| svc-tours-culture.jpg | Entertainment: tours & culture | https://unsplash.com/photos/photo-1647215480241-b150d74c75c0 |
+| svc-real-estate.jpg | Invest: real estate | https://unsplash.com/photos/photo-1630254428244-ac29b798067f |
+| svc-furniture.jpg | Classifieds: furniture & home | https://unsplash.com/photos/photo-1680503397090-0483be73406f |
 
 Names on example cards (e.g. Efua A., Kwame O.) are invented placeholders, labelled "Example" in the UI, and are not the people in the photos.

@@ -3,6 +3,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { LISTINGS } from "../src/lib/listings";
+import { EXAMPLE_SERVICES, SERVICE_SEED } from "../src/lib/taxonomy";
 
 const db = new PrismaClient();
 
@@ -20,6 +21,19 @@ async function main() {
   } else {
     console.warn("ADMIN_EMAIL / ADMIN_PASSWORD not set in .env: no admin account created.");
   }
+
+  // Services: create missing ones only, so names/photos/order edited in the admin are never overwritten.
+  let createdServices = 0;
+  for (const [category, list] of Object.entries(SERVICE_SEED)) {
+    for (const [i, svc] of (list ?? []).entries()) {
+      const exists = await db.service.findUnique({ where: { category_slug: { category, slug: svc.slug } } });
+      if (!exists) {
+        await db.service.create({ data: { category, slug: svc.slug, name: svc.name, description: svc.description, image: svc.image, position: i } });
+        createdServices++;
+      }
+    }
+  }
+  console.log(`${createdServices} services created (existing services left as they are).`);
 
   for (const l of LISTINGS) {
     const data = {
@@ -40,6 +54,9 @@ async function main() {
       reviewCount: l.reviewCount,
     };
     const b = await db.business.upsert({ where: { slug: l.slug }, update: data, create: { slug: l.slug, ...data } });
+    const slugs = EXAMPLE_SERVICES[l.slug] ?? [];
+    const services = await db.service.findMany({ where: { category: l.cat, slug: { in: slugs } }, select: { id: true } });
+    await db.business.update({ where: { id: b.id }, data: { services: { set: services } } });
     await db.credential.deleteMany({ where: { businessId: b.id } });
     await db.credential.createMany({
       data: l.credentials.map((c, i) => ({ businessId: b.id, label: c.label, state: c.state === "verified" ? "verified" : "in_review", position: i })),

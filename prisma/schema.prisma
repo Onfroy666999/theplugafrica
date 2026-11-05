@@ -49,6 +49,7 @@ model Business {
   credentials       Credential[]
   enquiries         Enquiry[]
   conciergeRequests ConciergeRequest[]
+  services          Service[] // one or more services within its category (issue #26)
 
   @@index([status, category, city])
 }
@@ -61,6 +62,24 @@ model Credential {
   state      String   @default("pending") // pending | in_review | verified
   note       String?
   position   Int      @default(0)
+}
+
+/// A service (sub-category) inside a category, e.g. Rentals → Cars. Managed by the admin (issue #26).
+model Service {
+  id          String     @id @default(cuid())
+  category    String // CatKey from src/lib/directory.ts
+  slug        String // unique within its category; used in /explore/<category>/<slug>
+  name        String
+  description String     @default("")
+  image       String     @default("")
+  position    Int        @default(0)
+  visible     Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  businesses  Business[]
+
+  @@unique([category, slug])
+  @@index([category, visible, position])
 }
 
 /// Every "Contact this business" creates one: the reference code proves the lead came from The Plug.

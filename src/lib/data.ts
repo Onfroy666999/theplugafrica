@@ -1,11 +1,11 @@
 import "server-only";
-import type { Business, Credential } from "@prisma/client";
+import type { Business, Credential, Service } from "@prisma/client";
 import { db } from "./db";
 import type { CatKey } from "./directory";
 import type { Listing } from "./listings";
 import { PUBLIC_STATUSES } from "./status";
 
-type Row = Business & { credentials: Credential[] };
+type Row = Business & { credentials: Credential[]; services?: Service[] };
 
 export function parseImages(json: string): string[] {
   try {
@@ -40,6 +40,10 @@ export function toListing(b: Row): Listing {
     responds: b.responds,
     languages: b.languages.split(",").map((s) => s.trim()).filter(Boolean),
     isExample: b.isExample,
+    services: (b.services ?? [])
+      .filter((sv) => sv.visible)
+      .sort((x, y) => x.position - y.position)
+      .map((sv) => ({ slug: sv.slug, name: sv.name })),
   };
 }
 
@@ -48,13 +52,56 @@ const publicWhere = { status: { in: [...PUBLIC_STATUSES] } };
 export async function getPublicListings(): Promise<Listing[]> {
   const rows = await db.business.findMany({
     where: publicWhere,
-    include: { credentials: true },
+    include: { credentials: true, services: true },
     orderBy: [{ status: "desc" }, { rating: "desc" }, { createdAt: "desc" }],
   });
   return rows.map(toListing);
 }
 
 export async function getPublicListing(slug: string): Promise<Listing | null> {
-  const row = await db.business.findFirst({ where: { slug, ...publicWhere }, include: { credentials: true } });
+  const row = await db.business.findFirst({ where: { slug, ...publicWhere }, include: { credentials: true, services: true } });
   return row ? toListing(row) : null;
+}
+
+/* ---------------- Services (sub-categories, issue #26) ---------------- */
+
+export type ServiceCard = { slug: string; name: string; description: string; image: string; count: number };
+
+const toCard = (s: Service & { _count: { businesses: number } }): ServiceCard => ({
+  slug: s.slug,
+  name: s.name,
+  description: s.description,
+  image: s.image || "/images/rentals.jpg",
+  count: s._count.businesses,
+});
+
+const countPublic = { _count: { select: { businesses: { where: publicWhere } } } } as const;
+
+/** Visible services in one category, in admin order, with the number of public businesses. */
+export async function getCategoryServices(category: string): Promise<ServiceCard[]> {
+  const rows = await db.service.findMany({ where: { category, visible: true }, orderBy: [{ position: "asc" }, { name: "asc" }], include: countPublic });
+  return rows.map(toCard);
+}
+
+/** All visible services grouped by category (homepage tabs). */
+export async function getServicesByCategory(): Promise<Record<string, ServiceCard[]>> {
+  const rows = await db.service.findMany({ where: { visible: true }, orderBy: [{ position: "asc" }, { name: "asc" }], include: countPublic });
+  const out: Record<string, ServiceCard[]> = {};
+  for (const r of rows) (out[r.category] ??= []).push(toCard(r));
+  return out;
+}
+
+export async function getService(category: string, slug: string): Promise<ServiceCard | null> {
+  const r = await db.service.findFirst({ where: { category, slug, visible: true }, include: countPublic });
+  return r ? toCard(r) : null;
+}
+
+/** Public businesses offering one service. */
+export async function getServiceListings(category: string, slug: string): Promise<Listing[]> {
+  const rows = await db.business.findMany({
+    where: { ...publicWhere, category, services: { some: { slug, category } } },
+    include: { credentials: true, services: true },
+    orderBy: [{ status: "desc" }, { rating: "desc" }, { createdAt: "desc" }],
+  });
+  return rows.map(toListing);
 }

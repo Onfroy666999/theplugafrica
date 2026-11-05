@@ -5,12 +5,13 @@ import { parseImages } from "@/lib/data";
 import { db } from "@/lib/db";
 import { BUSINESS_STATUS, find } from "@/lib/status";
 import { BusinessForm } from "../BusinessForm";
+import { allServiceOptions } from "../serviceOptions";
 import { photoLibrary } from "../library";
 import { PageHeader } from "../../ui";
 
 export default async function EditBusiness({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ created?: string }> }) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
-  const b = await db.business.findUnique({ where: { id }, include: { credentials: { orderBy: { position: "asc" } } } });
+  const b = await db.business.findUnique({ where: { id }, include: { credentials: { orderBy: { position: "asc" } }, services: { select: { id: true } } } });
   if (!b) notFound();
   const s = find(BUSINESS_STATUS, b.status);
 
@@ -27,6 +28,7 @@ export default async function EditBusiness({ params, searchParams }: { params: P
       {sp.created && <p role="status" className="mb-6 rounded-field bg-ok-soft px-4 py-3 text-[14px] font-medium text-ok">Business created. It stays off the site until the status is In review or Verified.</p>}
       <BusinessForm
         library={await photoLibrary()}
+        allServices={await allServiceOptions()}
         initial={{
           id: b.id,
           name: b.name,
@@ -46,6 +48,7 @@ export default async function EditBusiness({ params, searchParams }: { params: P
           status: b.status,
           images: parseImages(b.images),
           credentials: b.credentials.map((c) => ({ label: c.label, state: c.state })),
+          services: b.services.map((sv) => sv.id),
           isExample: b.isExample,
         }}
       />
