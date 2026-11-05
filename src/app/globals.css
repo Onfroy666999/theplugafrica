@@ -117,6 +117,18 @@ body {
   transition-duration: 120ms;
 }
 
+/* ---------- Accordion (FAQ): height follows content, moves on screen with ease-in-out ---------- */
+.ui-accordion-panel {
+  height: var(--accordion-panel-height);
+  overflow: hidden;
+  transition: height var(--dur-base) var(--ease-in-out), opacity var(--dur-base) var(--ease-out);
+}
+.ui-accordion-panel[data-starting-style],
+.ui-accordion-panel[data-ending-style] {
+  height: 0;
+  opacity: 0;
+}
+
 /* ---------- Dialog: bottom sheet on phones, centred card on larger screens ---------- */
 .ui-backdrop {
   transition: opacity var(--dur-base) ease;

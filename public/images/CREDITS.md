@@ -53,5 +53,9 @@ All photos are from Unsplash under the Unsplash License (free for commercial use
 | svc-tours-culture.jpg | Entertainment: tours & culture | https://unsplash.com/photos/photo-1647215480241-b150d74c75c0 |
 | svc-real-estate.jpg | Invest: real estate | https://unsplash.com/photos/photo-1630254428244-ac29b798067f |
 | svc-furniture.jpg | Classifieds: furniture & home | https://unsplash.com/photos/photo-1680503397090-0483be73406f |
+| new-business.jpg | New Business (concierge) | https://unsplash.com/photos/photo-1600880292203-757bb62b4baf |
+| svc-business-setup.jpg | New Business: set up a new business | https://unsplash.com/photos/photo-1521791136064-7986c2920216 |
+| svc-licences.jpg | New Business: licence acquisition | https://unsplash.com/photos/photo-1450101499163-c8848c66ca85 |
+| svc-compliance.jpg | New Business: compliance services | https://unsplash.com/photos/photo-1554224155-6726b3ff858f |
 
 Names on example cards (e.g. Efua A., Kwame O.) are invented placeholders, labelled "Example" in the UI, and are not the people in the photos.

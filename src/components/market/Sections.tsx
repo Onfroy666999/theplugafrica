@@ -21,6 +21,7 @@ export { EASE } from "@/lib/motion";
 
 const NAV = [
   { label: "Explore", href: "/explore" },
+  { label: "New Business", href: "/explore/new-business" },
   { label: "Concierge", href: "/concierge" },
   { label: "How it works", href: "/#how-it-works" },
   { label: "Emergency", href: "/emergency" },
@@ -135,7 +136,7 @@ export function CategoryExplorer({ id = "explore", services }: { id?: string; se
   const fromDb = services?.[active];
   // Services from the database when available; Emergency (and the reference page) use the built-in tiles.
   const tiles = fromDb?.length
-    ? fromDb.slice(0, 8).map((s) => ({ title: s.name, img: s.image, href: `/explore/${active}/${s.slug}`, note: s.count ? `${s.count} ${s.count === 1 ? "business" : "businesses"}` : "Coming soon" }))
+    ? fromDb.slice(0, 8).map((s) => ({ title: s.name, img: s.image, href: `/explore/${active}/${s.slug}`, note: cat.concierge ? "Handled by The Plug" : s.count ? `${s.count} ${s.count === 1 ? "business" : "businesses"}` : "Coming soon" }))
     : cat.tiles.map((t) => ({ ...t, href: active === "emergency" ? "/emergency" : `/explore?cat=${active}`, note: "" }));
   const seeAll = active === "emergency" ? "/emergency" : `/explore/${active}`;
 
@@ -143,7 +144,7 @@ export function CategoryExplorer({ id = "explore", services }: { id?: string; se
     <section id={id} className="mx-auto max-w-[1280px] px-5 pt-20 md:px-8">
       <Reveal>
         <h2 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-navy md:text-[34px]">What do you need help with?</h2>
-        <p className="mt-2 text-[15px] text-navy/60">Eight categories, one place. Pick one to see what&apos;s inside.</p>
+        <p className="mt-2 text-[15px] text-navy/60">Every category in one place. Pick one to see what&apos;s inside.</p>
       </Reveal>
 
       <div role="tablist" className="mt-8 flex gap-1 overflow-x-auto border-b border-navy/10 [mask-image:linear-gradient(90deg,#000_85%,transparent)] [scrollbar-width:none] md:[mask-image:none] [&::-webkit-scrollbar]:hidden">
@@ -344,7 +345,7 @@ export function BusinessAndEmergency() {
 
 export function Footer() {
   const cols = [
-    { h: "Explore", l: CATS.filter((c) => c.key !== "emergency").slice(0, 5).map((c) => ({ t: c.name, href: `/explore/${c.key}` })) },
+    { h: "Explore", l: CATS.filter((c) => c.key !== "emergency").slice(0, 6).map((c) => ({ t: c.name, href: `/explore/${c.key}` })) },
     { h: "The Plug", l: [{ t: "About", href: "/about" }, { t: "How it works", href: "/#how-it-works" }, { t: "Concierge", href: "/concierge" }, { t: "Emergency", href: "/emergency" }, { t: "Contact", href: "/contact" }] },
     { h: "Businesses", l: [{ t: "List your business", href: "/businesses" }, { t: "How verification works", href: "/businesses#verification" }] },
   ];

@@ -3,7 +3,9 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Breadcrumbs } from "@/components/market/Breadcrumbs";
 import { FloatingConcierge, Footer, Header } from "@/components/market/Sections";
+import { FaqSection, HelpBand, TrustAndTips } from "@/components/market/TrustSections";
 import { LinkButton } from "@/components/ui/Button";
+import { CATEGORY_CONTENT } from "@/lib/content";
 import type { ServiceCard } from "@/lib/data";
 import type { Listing } from "@/lib/listings";
 import { citySlug } from "@/lib/site";
@@ -30,6 +32,7 @@ export function ServiceView({
   const base = `/explore/${cat.key}/${svc.slug}`;
   const others = siblings.filter((s) => s.slug !== svc.slug);
   const heading = city ? `${svc.name} in ${city}` : svc.name;
+  const c = CATEGORY_CONTENT[cat.key as keyof typeof CATEGORY_CONTENT];
 
   return (
     <main className="min-h-screen bg-white text-navy">
@@ -50,6 +53,9 @@ export function ServiceView({
           <div>
             <h1 className="font-heading text-[30px] leading-tight font-extrabold tracking-[-0.03em] text-navy md:text-[40px]">{heading}</h1>
             {svc.description && <p className="mt-1 max-w-2xl text-[16px] text-navy/60">{svc.description}</p>}
+            <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-navy/60">
+              Every business here was checked by our team before it was listed. Contact them directly, or <a href="/concierge" className="font-semibold text-navy underline-offset-4 hover:underline">ask a concierge</a> to handle it for you.
+            </p>
           </div>
         </div>
 
@@ -92,6 +98,11 @@ export function ServiceView({
             </div>
           )}
         </div>
+
+        {/* Why these businesses can be trusted, and what to do before committing (issue #38) */}
+        {c && <TrustAndTips checks={c.checks} tips={c.tips} />}
+        {c && <FaqSection items={c.faqs} />}
+        <HelpBand title={`Want someone to find ${svc.name.toLowerCase()} for you?`} />
       </div>
       <Footer />
       <FloatingConcierge />
