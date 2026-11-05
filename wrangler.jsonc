@@ -1,7 +1,10 @@
-// Cloudflare Workers config for the OpenNext build (issue #4).
-// Two Workers: `theplugafrica-staging` (from develop) and `theplugafrica` (from main).
-// Secrets (DATABASE_URL, AUTH_SECRET) are set per Worker in the Cloudflare dashboard or with
-// `wrangler secret put NAME --env <staging|production>`. They are never stored in this file.
+// Cloudflare Workers config for the OpenNext build (issues #4). Hosted in Kenneth's Cloudflare account,
+// deployed by Workers Builds (see docs/DEPLOY.md). Never deploy from a developer's own Wrangler login.
+//
+//   Production: Worker `theplugafrica`          branch main     deploy: npx opennextjs-cloudflare deploy
+//   Staging:    Worker `theplugafrica-staging`  branch develop  deploy: npx opennextjs-cloudflare deploy --env staging
+//
+// Secrets (AUTH_SECRET, and DATABASE_URL if Hyperdrive isn't set up) are set on each Worker in the dashboard.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "main": ".open-next/worker.js",
@@ -11,18 +14,16 @@
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "images": { "binding": "IMAGES" },
   "observability": { "enabled": true },
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "theplugafrica" }],
+  "vars": { "SITE_ENV": "production" },
+  // Add once the production Hyperdrive config exists (its ID is not a secret):
+  // "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "<production-hyperdrive-id>" }],
   "env": {
     "staging": {
-      "name": "theplugafrica-staging",
       "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "theplugafrica-staging" }],
       "images": { "binding": "IMAGES" },
       "vars": { "SITE_ENV": "staging" }
-    },
-    "production": {
-      "name": "theplugafrica",
-      "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "theplugafrica" }],
-      "images": { "binding": "IMAGES" },
-      "vars": { "SITE_ENV": "production" }
+      // "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "<staging-hyperdrive-id>" }]
     }
   }
 }
