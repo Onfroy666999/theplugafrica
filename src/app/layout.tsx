@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { SITE_URL, pageMeta } from "@/lib/site";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -20,9 +21,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "The Plug Africa — Verified businesses and services across Africa",
-  description:
-    "Find verified businesses, homes, schools, events and trusted help across Africa. Contact them directly, or let a Plug concierge handle it.",
+  metadataBase: new URL(SITE_URL),
+  ...pageMeta({
+    title: "The Plug Africa — Verified businesses and services across Africa",
+    description: "Find verified businesses, homes, schools, events and trusted help across Africa. Contact them directly, or let a Plug concierge handle it.",
+  }),
 };
 
 export default function RootLayout({

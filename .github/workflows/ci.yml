@@ -1,0 +1,65 @@
+name: CI
+
+# Runs on every pull request and on pushes to the long-lived branches.
+on:
+  pull_request:
+  push:
+    branches: [develop, main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, type-check, schema and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      # Throwaway Postgres so migrations are applied and checked on every PR.
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: plug
+          POSTGRES_PASSWORD: ci_only
+          POSTGRES_DB: theplugafrica
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U plug -d theplugafrica"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      # Throwaway values for CI only; no real secrets are used here.
+      DATABASE_URL: postgresql://plug:ci_only@localhost:5432/theplugafrica
+      DIRECT_URL: postgresql://plug:ci_only@localhost:5432/theplugafrica
+      AUTH_SECRET: ci-only-secret-not-used-anywhere-real-0000
+      NEXT_TELEMETRY_DISABLED: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Prisma schema is valid
+        run: npx prisma validate
+      - name: Migrations apply to a fresh database
+        run: npx prisma migrate deploy
+      - name: Schema and migrations are in sync
+        # After migrate deploy, the database must exactly match schema.prisma (catches a schema edit without a migration).
+        run: npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
+      - name: Seed runs
+        run: npx prisma db seed
+        env:
+          ADMIN_EMAIL: ci@example.invalid
+          ADMIN_NAME: CI
+          ADMIN_PASSWORD: ci-only-password-0000
+      - name: Lint
+        run: npm run lint
+      - name: Type-check
+        run: npx tsc --noEmit
+      - name: Production build
+        run: npm run build

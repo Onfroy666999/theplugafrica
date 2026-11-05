@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { Button } from "@/components/ui/Button";
+import { Button, LinkButton } from "@/components/ui/Button";
+import { Breadcrumbs } from "@/components/market/Breadcrumbs";
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Check, Star } from "@/components/market/Icons";
 import { ListingCard, StatusBadge } from "@/components/market/ListingCard";
 import { Footer, Header, Reveal } from "@/components/market/Sections";
 import { CATS } from "@/lib/directory";
 import { getPublicListing, getPublicListings } from "@/lib/data";
-import { reviewsFor } from "@/lib/listings";
+import { reviewsFor, type Listing } from "@/lib/listings";
+import { abs, jsonLd, pageMeta } from "@/lib/site";
 import { ContactPanel } from "./ContactPanel";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -17,7 +18,29 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const l = await getPublicListing((await params).slug);
-  return l ? { title: `${l.name} — ${l.kind} in ${l.area}, ${l.city} · The Plug Africa`, description: l.blurb } : {};
+  if (!l) return {};
+  return pageMeta({
+    title: `${l.name} — ${l.kind} in ${l.area}, ${l.city} · The Plug Africa`,
+    description: l.blurb,
+    path: `/listing/${l.slug}`,
+    image: l.images[0],
+    // Example listings are design placeholders, not real businesses: keep them out of search results.
+    noindex: l.isExample,
+  });
+}
+
+/** schema.org LocalBusiness for real listings (issue #13). Ratings are left out until reviews are real (#14). */
+function businessLd(l: Listing) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: l.name,
+    description: l.blurb,
+    url: abs(`/listing/${l.slug}`),
+    image: l.images.map(abs),
+    address: { "@type": "PostalAddress", streetAddress: l.area, addressLocality: l.city, addressCountry: "GH" },
+    ...(l.languages.length && { knowsLanguage: l.languages }),
+  };
 }
 
 export default async function ListingPage({ params }: Props) {
@@ -30,16 +53,17 @@ export default async function ListingPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-white pb-20 text-navy lg:pb-0">
+      {!l.isExample && <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(businessLd(l))} />}
       <Header />
       <div className="mx-auto max-w-[1280px] px-5 pt-6 md:px-8">
-        {/* Breadcrumb */}
-        <nav className="text-[13px] text-navy/55">
-          <Link href="/explore" className="hover:text-navy">Explore</Link>
-          <span className="mx-2">/</span>
-          <Link href={`/explore?cat=${l.cat}`} className="hover:text-navy">{cat.name}</Link>
-          <span className="mx-2">/</span>
-          <span className="text-navy">{l.name}</span>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { label: "Explore", href: "/explore" },
+            { label: cat.name, href: `/explore/${l.cat}` },
+            ...(l.services?.[0] ? [{ label: l.services[0].name, href: `/explore/${l.cat}/${l.services[0].slug}` }] : []),
+            { label: l.name },
+          ]}
+        />
 
         <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -73,6 +97,15 @@ export default async function ListingPage({ params }: Props) {
               <p className="text-[17px] leading-relaxed text-navy/80">{l.blurb}</p>
               <p className="mt-4 text-[15.5px] leading-relaxed text-navy/65">{l.about}</p>
               <p className="mt-4 text-[14px] text-navy/55">Languages: {l.languages.join(", ")}</p>
+              {!!l.services?.length && (
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {l.services.map((sv) => (
+                    <LinkButton key={sv.slug} href={`/explore/${l.cat}/${sv.slug}`} variant="secondary" size="sm">
+                      {sv.name}
+                    </LinkButton>
+                  ))}
+                </div>
+              )}
             </Reveal>
 
             {/* Credentials */}

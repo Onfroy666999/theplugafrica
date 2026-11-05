@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { Lockup } from "@/components/Logo";
 import { CATS, type CatKey } from "@/lib/directory";
 import { LISTINGS, type Listing } from "@/lib/listings";
+import type { ServiceCard } from "@/lib/data";
 import { ListingCard } from "./ListingCard";
 import { Arrow, CatIcon, Chat, Check } from "./Icons";
 import { LinkButton } from "@/components/ui/Button";
@@ -53,8 +54,8 @@ export function Header() {
           })}
         </nav>
         <div className="flex items-center gap-2">
-          <LinkButton href="/businesses" variant="ghost" size="sm" className="hidden sm:inline-flex">List your business</LinkButton>
-          <LinkButton href="#" size="sm" className="hidden sm:inline-flex">Sign in</LinkButton>
+          {/* Customer sign-in arrives with accounts (#20); until then there is no Sign in button. */}
+          <LinkButton href="/businesses" size="sm" className="hidden sm:inline-flex">List your business</LinkButton>
           <button
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
@@ -76,12 +77,12 @@ export function Header() {
             transition={{ duration: DUR.fast, ease: EASE.out }}
             className="border-t border-navy/10 bg-white px-5 pt-2 pb-5 lg:hidden"
           >
-            {[...NAV, { label: "List your business", href: "/businesses" }].map((n) => (
+            {NAV.map((n) => (
               <Link key={n.label} href={n.href} className="block border-b border-navy/[0.06] py-3.5 font-heading text-[17px] font-semibold text-navy">
                 {n.label}
               </Link>
             ))}
-            <LinkButton href="#" full className="mt-4">Sign in</LinkButton>
+            <LinkButton href="/businesses" full className="mt-4">List your business</LinkButton>
           </motion.nav>
         )}
       </AnimatePresence>
@@ -126,10 +127,17 @@ export function TrustChips({ tone = "light" }: { tone?: "light" | "onPhoto" }) {
 
 /* ---------- Category explorer: icon tabs swap a row of photo tiles ---------- */
 
-export function CategoryExplorer({ id = "explore" }: { id?: string }) {
+/** Category tabs; each tab shows that category's services (from the database) linking to their service pages. */
+export function CategoryExplorer({ id = "explore", services }: { id?: string; services?: Record<string, ServiceCard[]> }) {
   const [active, setActive] = useState<CatKey>("rentals");
   const reduce = useReducedMotion();
   const cat = CATS.find((c) => c.key === active)!;
+  const fromDb = services?.[active];
+  // Services from the database when available; Emergency (and the reference page) use the built-in tiles.
+  const tiles = fromDb?.length
+    ? fromDb.slice(0, 8).map((s) => ({ title: s.name, img: s.image, href: `/explore/${active}/${s.slug}`, note: s.count ? `${s.count} ${s.count === 1 ? "business" : "businesses"}` : "Coming soon" }))
+    : cat.tiles.map((t) => ({ ...t, href: active === "emergency" ? "/emergency" : `/explore?cat=${active}`, note: "" }));
+  const seeAll = active === "emergency" ? "/emergency" : `/explore/${active}`;
 
   return (
     <section id={id} className="mx-auto max-w-[1280px] px-5 pt-20 md:px-8">
@@ -169,9 +177,9 @@ export function CategoryExplorer({ id = "explore" }: { id?: string }) {
 
       <div className="relative mt-7 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         <AnimatePresence mode="popLayout" initial={false}>
-          {cat.tiles.map((t, i) => (
+          {tiles.map((t, i) => (
             <motion.a
-              href={`/explore?cat=${active}`}
+              href={t.href}
               key={`${active}-${t.title}`}
               initial={reduce ? { opacity: 0 } : { opacity: 0, transform: "translateY(8px) scale(0.98)" }}
               animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
@@ -181,13 +189,16 @@ export function CategoryExplorer({ id = "explore" }: { id?: string }) {
             >
               <Image src={t.img} alt={t.title} fill sizes="(min-width:768px) 25vw, 50vw" className="object-cover media-zoom" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-              <p className="absolute inset-x-0 bottom-0 p-4 font-heading text-[17px] leading-tight font-bold text-white md:text-[19px]">{t.title}</p>
+              <div className="absolute inset-x-0 bottom-0 p-4">
+                <p className="font-heading text-[17px] leading-tight font-bold text-white md:text-[19px]">{t.title}</p>
+                {t.note && <p className="mt-1 text-[12.5px] font-medium text-white/75">{t.note}</p>}
+              </div>
             </motion.a>
           ))}
         </AnimatePresence>
       </div>
-      <Link href={`/explore?cat=${active}`} className="group mt-5 inline-flex items-center gap-1.5 text-[14px] font-semibold text-navy">
-        See all in {cat.name}
+      <Link href={seeAll} className="group mt-5 inline-flex items-center gap-1.5 text-[14px] font-semibold text-navy">
+        {fromDb && fromDb.length > 8 ? `See all ${fromDb.length} services in ${cat.name}` : `Explore ${cat.name}`}
         <span className="transition-transform duration-200 ease-[var(--ease-out)] group-hover:translate-x-1"><Arrow /></span>
       </Link>
     </section>
@@ -333,8 +344,8 @@ export function BusinessAndEmergency() {
 
 export function Footer() {
   const cols = [
-    { h: "Explore", l: CATS.filter((c) => c.key !== "emergency").slice(0, 5).map((c) => ({ t: c.name, href: `/explore?cat=${c.key}` })) },
-    { h: "The Plug", l: [{ t: "How it works", href: "/#how-it-works" }, { t: "Concierge", href: "/concierge" }, { t: "Emergency", href: "/emergency" }] },
+    { h: "Explore", l: CATS.filter((c) => c.key !== "emergency").slice(0, 5).map((c) => ({ t: c.name, href: `/explore/${c.key}` })) },
+    { h: "The Plug", l: [{ t: "About", href: "/about" }, { t: "How it works", href: "/#how-it-works" }, { t: "Concierge", href: "/concierge" }, { t: "Emergency", href: "/emergency" }, { t: "Contact", href: "/contact" }] },
     { h: "Businesses", l: [{ t: "List your business", href: "/businesses" }, { t: "How verification works", href: "/businesses#verification" }] },
   ];
   return (
