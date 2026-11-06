@@ -1,0 +1,52 @@
+# Nightly database backup (issue #8). Supabase Free has no backups, so this keeps our own.
+#
+# Dumps the app's tables (schema "public") from Supabase, encrypts the file with a passphrase (it contains
+# personal data: names, phone numbers, requests) and keeps it as a private workflow artifact for 30 days.
+# Restore steps: docs/BACKUPS.md.
+#
+# Setup (Settings › Secrets and variables › Actions):
+#   secret   BACKUP_DATABASE_URL  Supabase Session pooler string (port 5432)
+#   secret   BACKUP_PASSPHRASE    a long random passphrase, also kept in a password manager (without it a backup can't be opened)
+#   variable BACKUPS_ENABLED      true
+# Photos live in Supabase Storage and are not part of this backup.
+
+name: Database backup
+
+on:
+  schedule:
+    - cron: "30 2 * * *" # 02:30 UTC daily
+  workflow_dispatch:
+
+jobs:
+  backup:
+    if: vars.BACKUPS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Dump and encrypt
+        id: dump
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DATABASE_URL" ] || [ -z "$PASSPHRASE" ]; then
+            echo "::error::Set the BACKUP_DATABASE_URL and BACKUP_PASSPHRASE secrets."
+            exit 1
+          fi
+          name="theplugafrica-$(date -u +%Y-%m-%dT%H%MZ).dump"
+          # Postgres 17 tools can dump any older server version.
+          docker run --rm -e PGURL="$DATABASE_URL" -v "$PWD:/out" postgres:17 \
+            pg_dump --format=custom --no-owner --no-privileges --schema=public --dbname="$PGURL" --file="/out/$name"
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" --symmetric --cipher-algo AES256 --output "$name.gpg" "$name"
+          rm "$name"
+          echo "file=$name.gpg" >> "$GITHUB_OUTPUT"
+          echo "Backup size: $(du -h "$name.gpg" | cut -f1)"
+
+      - name: Keep for 30 days
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.dump.outputs.file }}
+          path: ${{ steps.dump.outputs.file }}
+          retention-days: 30
+          if-no-files-found: error
