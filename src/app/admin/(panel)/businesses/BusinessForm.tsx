@@ -8,7 +8,7 @@ import { useRef, useState, useTransition } from "react";
 import { Field, Input, Select, Spinner, Textarea } from "@/components/market/Form";
 import { Button } from "@/components/ui/Button";
 import { Sheet, SheetTitle } from "@/components/ui/Sheet";
-import { CATS } from "@/lib/directory";
+import { LISTING_CATS } from "@/lib/directory";
 import { DUR, EASE } from "@/lib/motion";
 import { BUSINESS_STATUS, CREDENTIAL_STATE } from "@/lib/status";
 import { deleteBusiness, saveBusiness, uploadImages } from "../../actions";
@@ -38,7 +38,7 @@ export type BusinessInput = {
 
 export type ServiceOption = { id: string; category: string; name: string; visible: boolean };
 
-const CAT_OPTIONS = CATS.filter((c) => c.key !== "emergency").map((c) => ({ value: c.key, label: c.name }));
+const CAT_OPTIONS = LISTING_CATS.map((c) => ({ value: c.key, label: c.name }));
 const STATUS_OPTIONS = BUSINESS_STATUS.map((s) => ({ value: s.value, label: s.label }));
 const CRED_OPTIONS = CREDENTIAL_STATE.map((s) => ({ value: s.value, label: s.label }));
 const DEFAULT_CREDS = ["Business registration (Registrar-General)", "Owner identity checked", "Address visited by our team"];

@@ -14,7 +14,7 @@ type Props = { params: Promise<Params> };
 async function load(p: Params) {
   const cat = getCat(p.category);
   const city = cityFromSlug(p.city);
-  if (!cat || !city) return null;
+  if (!cat || cat.concierge || !city) return null;
   const [svc, all, siblings] = await Promise.all([getService(p.category, p.service), getServiceListings(p.category, p.service), getCategoryServices(p.category)]);
   if (!svc) return null;
   return { cat, city, svc, all, siblings, listings: all.filter((l) => l.city === city) };

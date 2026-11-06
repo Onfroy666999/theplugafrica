@@ -136,7 +136,8 @@ export function HomeClient({ listings, services }: { listings: Listing[]; servic
       </section>
 
       <CategoryExplorer services={services} />
-      <PopularRail listings={listings} />
+      {/* Hidden until there are businesses to show (the live site hides examples) */}
+      {listings.length > 0 && <PopularRail listings={listings} />}
       <HowItWorks />
       <ConciergeBand />
       <BusinessAndEmergency />

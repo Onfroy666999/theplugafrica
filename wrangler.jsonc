@@ -1,0 +1,34 @@
+// Cloudflare Workers config for the OpenNext build (issues #4). Hosted in Kenneth's Cloudflare account,
+// deployed by Workers Builds (see docs/DEPLOY.md). Never deploy from a developer's own Wrangler login.
+//
+//   Production: Worker `theplugafrica`          branch main     deploy: npx opennextjs-cloudflare deploy
+//   Staging:    Worker `theplugafrica-staging`  branch develop  deploy: npx opennextjs-cloudflare deploy --env staging
+//
+// Secrets (AUTH_SECRET, and DATABASE_URL if Hyperdrive isn't set up) are set on each Worker in the dashboard.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "theplugafrica",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "images": { "binding": "IMAGES" },
+  "observability": { "enabled": true },
+  "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "theplugafrica" }],
+  "vars": { "SITE_ENV": "production" },
+  // Staging and production share one Supabase database for now (decided 2026-11-06), so both use the same Hyperdrive
+  // config. The live site hides example businesses (src/lib/data.ts). Give staging its own database when real users arrive.
+  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "dd99b214f8ec47358ebd2bdf5b1929e9", "localConnectionString": "postgresql://localhost:5433/theplugafrica" }],
+  "env": {
+    "staging": {
+      "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "theplugafrica-staging" }],
+      "images": { "binding": "IMAGES" },
+      "vars": { "SITE_ENV": "staging" },
+      // Hyperdrive config `theplugafrica-staging-db` in Kenneth's account (Supabase staging, Session pooler)
+      // localConnectionString: a placeholder (no password) that `opennextjs-cloudflare deploy` needs while it briefly
+      // emulates the Worker on the build machine; nothing connects to it. Local runs override it with the shell variable
+      // CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE (see docs/DEPLOY.md).
+      "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "dd99b214f8ec47358ebd2bdf5b1929e9", "localConnectionString": "postgresql://localhost:5433/theplugafrica" }]
+    }
+  }
+}

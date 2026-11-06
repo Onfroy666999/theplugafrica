@@ -4,6 +4,7 @@
 // Status fields are strings validated in src/lib/status.ts (kept from the SQLite version).
 
 generator client {
+  // No custom `output`: OpenNext patches the default client for Cloudflare Workers (issue #4).
   provider = "prisma-client-js"
 }
 
@@ -101,6 +102,7 @@ model ConciergeRequest {
   email      String?
   city       String
   category   String
+  service    String? // service name when sent from a service page, e.g. "Licence acquisition" (issue #36)
   details    String
   timing     String
   businessId String?

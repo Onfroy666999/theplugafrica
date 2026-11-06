@@ -4,6 +4,20 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-06
+
+### Added
+- Production setup (#4): the live Worker uses the same Supabase database and Hyperdrive config as staging for now; the live site hides the example businesses (staging keeps them). Supabase CLI added as a dev dependency (`npx supabase`).
+- Cloudflare hosting setup (#4): OpenNext build for Cloudflare Workers, staging and production Workers in `wrangler.jsonc`, deploys by Cloudflare Workers Builds from `develop` and `main` (no tokens in GitHub), setup guide in `docs/DEPLOY.md`. The staging site shows a banner and blocks search engines.
+- New Business category (#36), delivered fully by The Plug's concierge: Set up a new business, Licence acquisition and Compliance services. Each service page explains the steps and has a request form pre-set to that service; requests arrive in Admin › Concierge labelled with the service. New Business is in the header, homepage tabs, footer and sitemap, and is kept out of business listings.
+- Richer category and service pages (#38): every category opens with a welcome and an introduction, then its services, what we check before a business is listed, what to do before you commit, common questions and a concierge band. New Business service pages explain what's included, what you'll need, who it's for and why to trust The Plug, with the other services shown as cards further down. New accordion component for questions.
+
+### Changed
+- The homepage hides the "Popular in Accra" strip when there are no businesses to show.
+- The database client connects through the `pg` driver adapter, with a fresh connection per request on Workers.
+- The admin photo library is listed at build time; photo uploads show a "not available yet" message on the hosted site until Supabase Storage (#3).
+- The share card is a fixed image (`public/images/share-card.png`) instead of being drawn on request.
+
 ## [0.3.0] - 2026-11-05
 
 ### Added

@@ -19,7 +19,7 @@ export default async function Concierge() {
             {rows.map((r) => (
               <InboxItem key={r.id} kind="concierge" id={r.id} status={r.status} notes={r.notes ?? ""} statuses={CONCIERGE_STATUS}>
                 <p className="text-[15px] font-semibold text-navy">
-                  {r.name} <span className="font-normal text-navy/45">· {catName(r.category)} · {r.city}</span>
+                  {r.name} <span className="font-normal text-navy/45">· {catName(r.category)}{r.service && <> › {r.service}</>} · {r.city}</span>
                 </p>
                 <p className="mt-0.5 text-[13px] text-navy/55">
                   <a href={`tel:${r.phone.replace(/\s+/g, "")}`} className="font-medium text-navy hover:underline">{r.phone}</a>
