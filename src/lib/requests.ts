@@ -79,6 +79,9 @@ export function describeRequest(r: {
   const mode = r.serviceMode && r.serviceMode in MODE_LABELS ? MODE_LABELS[r.serviceMode as ServiceMode] : null;
   return {
     place: [mode, r.meetingPlace, where, r.landmark].filter(Boolean).join(" · "),
-    when: [r.preferredDate, r.timeOfDay && r.timeOfDay !== "Any time" ? r.timeOfDay.toLowerCase() : null].filter(Boolean).join(", "),
+    when: (() => {
+      const w = [r.preferredDate, r.timeOfDay && r.timeOfDay !== "Any time" ? r.timeOfDay.toLowerCase() : null].filter(Boolean).join(", ");
+      return w ? w[0].toUpperCase() + w.slice(1) : "";
+    })(),
   };
 }
