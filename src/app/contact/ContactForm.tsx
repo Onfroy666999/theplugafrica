@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
+import { FormGuard } from "@/components/market/FormGuard";
 import { useState } from "react";
 import { sendContactMessage } from "@/app/actions";
 import { Field, Input, Select, Spinner, Success, Textarea, toOptions } from "@/components/market/Form";
@@ -46,7 +47,7 @@ export function ContactForm() {
             <Select label="What's it about?" name="topic" options={TOPIC_OPTIONS} defaultValue={CONTACT_TOPICS[0]} />
           </Field>
           <Field label="Message"><Textarea label="Message" required name="message" rows={5} minLength={10} maxLength={4000} /></Field>
-          <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 opacity-0" />
+          <FormGuard />
           {error && <p role="alert" className="rounded-field bg-ember-soft px-4 py-3 text-[14px] font-medium text-ember">{error}</p>}
           <Button type="submit" size="lg" full disabled={busy}>
             {busy && <Spinner />}
