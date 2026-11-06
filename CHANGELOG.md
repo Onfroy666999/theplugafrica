@@ -4,6 +4,9 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- Nightly encrypted database backups (#8): a GitHub Actions workflow dumps the app tables from Supabase at 02:30 UTC, encrypts them with a passphrase and keeps them for 30 days. Off until `BACKUPS_ENABLED` and two secrets are set. Restore steps, tested, in `docs/BACKUPS.md`.
+
 ## [0.5.0] - 2026-11-06
 
 ### Added
