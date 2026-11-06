@@ -4,6 +4,14 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-06
+
+### Added
+- Photo uploads in Supabase Storage (#3): admin uploads go to the public `business-photos` bucket and appear in the photo library; each file is checked for type, the 6 MB limit and real image content before anything is saved. Uploaded photos are optimised like the site's own. Upload requests may now be up to 25 MB (several photos at once); Next.js previously capped them at 1 MB.
+
+### Fixed
+- On phones the menu showed "List your business" twice; the header copy now hides below tablet width, and the menu copy hides from tablet width up (#46).
+
 ## [0.4.0] - 2026-11-06
 
 ### Added

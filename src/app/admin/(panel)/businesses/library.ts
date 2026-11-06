@@ -1,12 +1,15 @@
 import "server-only";
 import images from "@/lib/photo-library.json";
 import { onWorkers } from "@/lib/runtime";
+import { listStoragePhotos, storageEnabled } from "@/lib/storage";
 
 /**
- * Licensed photos in public/images (listed at build time, see scripts/photo-manifest.mjs) plus, on a local
- * server, anything uploaded to public/uploads. Hosted uploads move to Supabase Storage with issue #3.
+ * Photos for the admin pickers: uploaded photos first (Supabase Storage when configured, otherwise
+ * public/uploads on a local server), then the licensed photos in public/images (listed at build time,
+ * see scripts/photo-manifest.mjs). Issues #3 and #4.
  */
 export async function photoLibrary(): Promise<string[]> {
+  if (storageEnabled()) return [...(await listStoragePhotos()), ...images];
   if (onWorkers) return images;
   try {
     const { readdir } = await import("node:fs/promises");
