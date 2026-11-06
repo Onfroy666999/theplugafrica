@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
+import { FormGuard } from "@/components/market/FormGuard";
 import { useState } from "react";
 import { joinWaitlist } from "@/app/actions";
 import { Field, Input, Select, Spinner, Success, toOptions } from "@/components/market/Form";
@@ -57,7 +58,7 @@ export function WaitlistForm() {
             <Field label="Phone or WhatsApp"><Input label="Phone or WhatsApp" required name="phone" type="tel" autoComplete="tel" /></Field>
           </div>
           <Field label="Email" hint="optional"><Input label="Email" name="email" type="email" autoComplete="email" /></Field>
-          <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 opacity-0" />
+          <FormGuard />
           {error && <p role="alert" className="rounded-field bg-ember-soft px-4 py-3 text-[14px] font-medium text-ember">{error}</p>}
           <Button type="submit" size="lg" full disabled={busy}>
             {busy && <Spinner />}

@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
+import { FormGuard } from "@/components/market/FormGuard";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { submitConcierge } from "@/app/actions";
@@ -91,7 +92,7 @@ export function ConciergeForm({ service }: { service?: { category: string; slug:
           <Field label="How soon?">
             <Select label="When do you need it?" name="when" options={WHEN_OPTIONS} defaultValue="This month" />
           </Field>
-          <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 opacity-0" />
+          <FormGuard />
           {error && <p role="alert" className="rounded-field bg-ember-soft px-4 py-3 text-[14px] font-medium text-ember">{error}</p>}
           <Button type="submit" size="lg" full disabled={busy}>
             {busy && <Spinner />}

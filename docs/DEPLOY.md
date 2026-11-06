@@ -122,3 +122,16 @@ The build applies migrations but doesn't seed. To load the starting services, th
 ## Local testing of the Cloudflare build
 
 `npm run preview` builds the Worker and runs it in Wrangler on http://localhost:8787, reading secrets from `.dev.vars` (git ignores it). Staging has a Hyperdrive binding, so for local runs point it at the local database first: set the shell variable `CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE` to the local `DATABASE_URL` (Wrangler uses it instead of the real Hyperdrive). Docker Desktop must be running for the local database. This computer's Wrangler is signed in to Reginald's own Cloudflare account, so never run `wrangler deploy` from here.
+
+## Spam protection (issue #7)
+
+Every public form has a hidden honeypot, a "too fast" check (bots submit instantly) and a limit of 6 saved submissions per visitor per form per hour; admin sign-in allows 5 failed tries per 15 minutes. These counters live in the database (`RateLimit`), keyed by a salted one-way hash of the visitor's IP, so they work across all Cloudflare isolates.
+
+**Cloudflare Turnstile (optional, recommended before launch):** in Kenneth's Cloudflare › Turnstile › Add widget, add the site's hostnames, then set on **both Workers**:
+
+| Name | Where | Type |
+|---|---|---|
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Settings › Build › Variables (it's needed at build time) | variable |
+| `TURNSTILE_SECRET_KEY` | Settings › Variables & Secrets | secret |
+
+Redeploy; the check then appears above each form's send button. Without these, the forms work as before.
