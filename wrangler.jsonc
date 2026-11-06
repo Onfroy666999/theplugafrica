@@ -16,8 +16,9 @@
   "observability": { "enabled": true },
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "theplugafrica" }],
   "vars": { "SITE_ENV": "production" },
-  // Add once the production Hyperdrive config exists (its ID is not a secret):
-  // "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "<production-hyperdrive-id>" }],
+  // Staging and production share one Supabase database for now (decided 2026-11-06), so both use the same Hyperdrive
+  // config. The live site hides example businesses (src/lib/data.ts). Give staging its own database when real users arrive.
+  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "dd99b214f8ec47358ebd2bdf5b1929e9", "localConnectionString": "postgresql://localhost:5433/theplugafrica" }],
   "env": {
     "staging": {
       "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "theplugafrica-staging" }],
