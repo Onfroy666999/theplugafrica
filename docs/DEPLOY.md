@@ -7,7 +7,9 @@ The site runs on **Cloudflare Workers** (via OpenNext) with a **Supabase** Postg
 | Cloudflare Worker | `theplugafrica-staging` | `theplugafrica` |
 | Git branch | `develop` | `main` |
 | Deploy command | `npx opennextjs-cloudflare deploy --env staging` | `npx opennextjs-cloudflare deploy` |
-| Supabase project | `theplugafrica-staging` (Free) | `theplugafrica` (Pro, so it never pauses) |
+| Supabase project | **one shared project** ("Plug Africa Project", Free) | same project |
+| Hyperdrive config | `theplugafrica-staging-db` | same config |
+| Example businesses | shown | hidden (`SITE_ENV=production`) |
 | Search engines | blocked, "Staging site" banner | allowed |
 
 **Never** paste a password, connection string or token into chat, an issue, a commit or a repo file. They go only into the Cloudflare and Supabase dashboards, or into `.env.staging` / `.dev.vars` on your computer (git ignores both).
@@ -72,7 +74,23 @@ The Node version comes from `.nvmrc` (22); dependencies are installed automatica
 
 6. Select **Save and Deploy**, or push to `develop`. Watch the build log under the Worker's **Deployments**.
 
-Production later: same steps with Worker `theplugafrica`, branch `main`, deploy command `npx opennextjs-cloudflare deploy`, its own Supabase project (Pro) and its own `AUTH_SECRET`.
+**Decided 2026-11-06:** staging and production share one Supabase project and one Hyperdrive config for now, to keep things simple while there are no real users. The live site hides the example businesses. Give staging its own database (Supabase Pro branching, or a second project) once real businesses and users arrive.
+
+### Production Worker
+
+After a release PR merges `develop` into `main`, create a second Worker the same way as staging, with these differences:
+
+| Field | Value |
+|---|---|
+| Worker name | `theplugafrica` |
+| Branch | `main` |
+| Build command | `npx prisma migrate deploy && npx opennextjs-cloudflare build` (same) |
+| Deploy command | `npx opennextjs-cloudflare deploy` (no `--env`) |
+| Build variable `NEXT_PUBLIC_SITE_URL` | `https://theplugafrica.kennethbilson1989.workers.dev` until the domain is connected (#5) |
+| Build secrets `DATABASE_URL`, `DIRECT_URL` | the same Session pooler string as staging |
+| Runtime secret `AUTH_SECRET` | a **new** value, different from staging's |
+
+Then enable **workers.dev** under Settings › Domains & Routes. No seeding is needed: the database is shared. The hosted admin account is the same on both sites.
 
 ## Part E: First data load (once per Supabase project)
 

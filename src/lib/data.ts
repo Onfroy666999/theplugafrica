@@ -47,11 +47,14 @@ export function toListing(b: Row): Listing {
   };
 }
 
-const publicWhere = { status: { in: [...PUBLIC_STATUSES] } };
+// What visitors may see. The live site (SITE_ENV=production) hides the design's example businesses; staging and
+// local keep them. Staging and production share one database for now (decided 2026-11-06), so this is a filter,
+// not a separate dataset. Read per request: Workers expose SITE_ENV from wrangler.jsonc at runtime.
+const publicWhere = () => ({ status: { in: [...PUBLIC_STATUSES] }, ...(process.env.SITE_ENV === "production" && { isExample: false }) });
 
 export async function getPublicListings(): Promise<Listing[]> {
   const rows = await db.business.findMany({
-    where: publicWhere,
+    where: publicWhere(),
     include: { credentials: true, services: true },
     orderBy: [{ status: "desc" }, { rating: "desc" }, { createdAt: "desc" }],
   });
@@ -59,7 +62,7 @@ export async function getPublicListings(): Promise<Listing[]> {
 }
 
 export async function getPublicListing(slug: string): Promise<Listing | null> {
-  const row = await db.business.findFirst({ where: { slug, ...publicWhere }, include: { credentials: true, services: true } });
+  const row = await db.business.findFirst({ where: { slug, ...publicWhere() }, include: { credentials: true, services: true } });
   return row ? toListing(row) : null;
 }
 
@@ -75,31 +78,31 @@ const toCard = (s: Service & { _count: { businesses: number } }): ServiceCard =>
   count: s._count.businesses,
 });
 
-const countPublic = { _count: { select: { businesses: { where: publicWhere } } } } as const;
+const countPublic = () => ({ _count: { select: { businesses: { where: publicWhere() } } } }) as const;
 
 /** Visible services in one category, in admin order, with the number of public businesses. */
 export async function getCategoryServices(category: string): Promise<ServiceCard[]> {
-  const rows = await db.service.findMany({ where: { category, visible: true }, orderBy: [{ position: "asc" }, { name: "asc" }], include: countPublic });
+  const rows = await db.service.findMany({ where: { category, visible: true }, orderBy: [{ position: "asc" }, { name: "asc" }], include: countPublic() });
   return rows.map(toCard);
 }
 
 /** All visible services grouped by category (homepage tabs). */
 export async function getServicesByCategory(): Promise<Record<string, ServiceCard[]>> {
-  const rows = await db.service.findMany({ where: { visible: true }, orderBy: [{ position: "asc" }, { name: "asc" }], include: countPublic });
+  const rows = await db.service.findMany({ where: { visible: true }, orderBy: [{ position: "asc" }, { name: "asc" }], include: countPublic() });
   const out: Record<string, ServiceCard[]> = {};
   for (const r of rows) (out[r.category] ??= []).push(toCard(r));
   return out;
 }
 
 export async function getService(category: string, slug: string): Promise<ServiceCard | null> {
-  const r = await db.service.findFirst({ where: { category, slug, visible: true }, include: countPublic });
+  const r = await db.service.findFirst({ where: { category, slug, visible: true }, include: countPublic() });
   return r ? toCard(r) : null;
 }
 
 /** Public businesses offering one service. */
 export async function getServiceListings(category: string, slug: string): Promise<Listing[]> {
   const rows = await db.business.findMany({
-    where: { ...publicWhere, category, services: { some: { slug, category } } },
+    where: { ...publicWhere(), category, services: { some: { slug, category } } },
     include: { credentials: true, services: true },
     orderBy: [{ status: "desc" }, { rating: "desc" }, { createdAt: "desc" }],
   });
@@ -109,17 +112,17 @@ export async function getServiceListings(category: string, slug: string): Promis
 /* ---------------- Search engines (issue #13) ---------------- */
 
 /** Real (non-example) public businesses: the only ones search engines should see. */
-const realWhere = { ...publicWhere, isExample: false };
+const realWhere = () => ({ ...publicWhere(), isExample: false });
 
 /** Services that list at least one real business, with the cities those businesses are in. */
 export async function getIndexableServices(): Promise<{ category: string; slug: string; updatedAt: Date; cities: string[] }[]> {
   const rows = await db.service.findMany({
-    where: { visible: true, businesses: { some: realWhere } },
-    select: { category: true, slug: true, updatedAt: true, businesses: { where: realWhere, select: { city: true } } },
+    where: { visible: true, businesses: { some: realWhere() } },
+    select: { category: true, slug: true, updatedAt: true, businesses: { where: realWhere(), select: { city: true } } },
   });
   return rows.map((r) => ({ category: r.category, slug: r.slug, updatedAt: r.updatedAt, cities: [...new Set(r.businesses.map((b) => b.city))] }));
 }
 
 export async function getIndexableListings() {
-  return db.business.findMany({ where: realWhere, select: { slug: true, updatedAt: true } });
+  return db.business.findMany({ where: realWhere(), select: { slug: true, updatedAt: true } });
 }
