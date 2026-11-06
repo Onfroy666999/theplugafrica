@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { CONTACT_TOPICS } from "@/lib/contact";
 import { OTHER_AREA, TIMES_OF_DAY } from "@/lib/requests";
+import { notifyBusinessRequest, notifyConcierge, notifyContactMessage, notifyWaitlist } from "@/lib/notify";
 import { limitForm, screenForm } from "@/lib/protect";
 import { PUBLIC_STATUSES } from "@/lib/status";
 
@@ -106,6 +107,7 @@ export async function submitConcierge(fd: FormData): Promise<FormResult> {
   await db.conciergeRequest.create({
     data: { ref, name: d.name, phone: d.phone, email: d.email, city: d.city, category: d.category, service: service?.name, details: d.details, timing: d.when, businessId: business?.id, ...where.data },
   });
+  notifyConcierge({ ref, name: d.name, phone: d.phone, email: d.email, category: d.category, service: service?.name, details: d.details, timing: d.when, city: d.city, ...where.data });
   return { ok: true, ref };
 }
 
@@ -121,7 +123,7 @@ const BusinessRequestSchema = z.object({
 export async function sendBusinessRequest(slug: string, fd: FormData): Promise<FormResult> {
   const blocked = await screen(fd, "PLG");
   if (blocked) return blocked;
-  const b = await db.business.findFirst({ where: { slug, status: { in: [...PUBLIC_STATUSES] } }, select: { id: true } });
+  const b = await db.business.findFirst({ where: { slug, status: { in: [...PUBLIC_STATUSES] } }, select: { id: true, name: true, email: true } });
   if (!b) return { ok: false, error: "This business is no longer listed." };
   const parsed = BusinessRequestSchema.safeParse(Object.fromEntries(fd));
   if (!parsed.success) return { ok: false, error: "Please add your name, phone number and a sentence about what you need." };
@@ -134,6 +136,7 @@ export async function sendBusinessRequest(slug: string, fd: FormData): Promise<F
   await db.enquiry.create({
     data: { ref, businessId: b.id, kind: "request", name: d.name, phone: d.phone, email: d.email, city: d.city, message: d.message, ...where.data },
   });
+  notifyBusinessRequest({ ref, name: d.name, phone: d.phone, email: d.email, message: d.message, city: d.city, business: { name: b.name, email: b.email }, ...where.data });
   return { ok: true, ref };
 }
 
@@ -156,6 +159,7 @@ export async function joinWaitlist(fd: FormData): Promise<FormResult> {
   if (over) return over;
   const ref = makeRef("BIZ");
   await db.waitlistEntry.create({ data: { ref, businessName: d.business, category: d.category, city: d.city, name: d.name, phone: d.phone, email: d.email } });
+  notifyWaitlist({ ref, businessName: d.business, category: d.category, city: d.city, name: d.name, phone: d.phone, email: d.email });
   return { ok: true, ref };
 }
 
@@ -184,5 +188,6 @@ export async function sendContactMessage(fd: FormData): Promise<FormResult> {
   if (over) return over;
   const ref = makeRef("MSG");
   await db.contactMessage.create({ data: { ref, name: d.name, email: d.email, phone: d.phone, topic: d.topic, message: d.message } });
+  notifyContactMessage({ ref, name: d.name, email: d.email, phone: d.phone, topic: d.topic, message: d.message });
   return { ok: true, ref };
 }

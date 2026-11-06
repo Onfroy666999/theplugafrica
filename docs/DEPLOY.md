@@ -135,3 +135,17 @@ Every public form has a hidden honeypot, a "too fast" check (bots submit instant
 | `TURNSTILE_SECRET_KEY` | Settings › Variables & Secrets | secret |
 
 Redeploy; the check then appears above each form's send button. Without these, the forms work as before.
+
+## Email notifications (issue #6)
+
+The site emails the team about every new concierge request, business request, waitlist sign-up and contact message, confirms to visitors who gave an email, and forwards business requests to the business when it has an email address. It's off until a Resend key is set; forms work the same either way, and a failed email never breaks a form.
+
+Set on **both Workers** (Settings › Variables & Secrets):
+
+| Name | Type | Value |
+|---|---|---|
+| `RESEND_API_KEY` | secret | from Resend › API Keys (in Kenneth's Resend account) |
+| `NOTIFY_EMAIL` | text | team address(es) for alerts, comma-separated |
+| `EMAIL_FROM` | text | `The Plug Africa <hello@theplugafrica.com>` once the domain is verified in Resend |
+
+**Before the domain is verified,** leave `EMAIL_FROM` unset (it defaults to Resend's test sender `onboarding@resend.dev`) and set `NOTIFY_EMAIL` to the Resend account's own address: Resend only delivers test-sender mail to that address, so customer confirmations and business emails start working once the domain is verified.
