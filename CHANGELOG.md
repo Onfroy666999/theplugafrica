@@ -4,6 +4,8 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-06
+
 ### Added
 - Production setup (#4): the live Worker uses the same Supabase database and Hyperdrive config as staging for now; the live site hides the example businesses (staging keeps them). Supabase CLI added as a dev dependency (`npx supabase`).
 - Cloudflare hosting setup (#4): OpenNext build for Cloudflare Workers, staging and production Workers in `wrangler.jsonc`, deploys by Cloudflare Workers Builds from `develop` and `main` (no tokens in GitHub), setup guide in `docs/DEPLOY.md`. The staging site shows a banner and blocks search engines.
