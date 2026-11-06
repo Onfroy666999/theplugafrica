@@ -11,6 +11,7 @@ import { z } from "zod";
 import { endSession, requireAdmin, startSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { onWorkers } from "@/lib/runtime";
+import { isAllowedPhoto, storageEnabled, uploadToStorage } from "@/lib/storage";
 import { CATS } from "@/lib/directory";
 import { BUSINESS_STATUS, CONCIERGE_STATUS, CREDENTIAL_STATE, ENQUIRY_STATUS, WAITLIST_STATUS, CONTACT_STATUS, values } from "@/lib/status";
 
@@ -84,7 +85,7 @@ const BusinessSchema = z.object({
   images: z.string().transform((s, ctx) => {
     try {
       const v = JSON.parse(s);
-      if (Array.isArray(v) && v.every((x) => typeof x === "string" && x.startsWith("/"))) return v as string[];
+      if (Array.isArray(v) && v.every((x) => typeof x === "string" && isAllowedPhoto(x))) return v as string[];
     } catch {}
     ctx.addIssue({ code: "custom", message: "Images are invalid" });
     return z.NEVER;
@@ -168,24 +169,42 @@ export async function deleteBusiness(id: string) {
 const MAX_BYTES = 6 * 1024 * 1024;
 const TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 
+/** True when the file's first bytes match its declared type, so a renamed non-image is rejected. */
+function looksLike(ext: string, b: Uint8Array) {
+  if (ext === "jpg") return b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
+  if (ext === "png") return b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47;
+  if (ext === "webp") return String.fromCharCode(...b.slice(0, 4)) === "RIFF" && String.fromCharCode(...b.slice(8, 12)) === "WEBP";
+  return false;
+}
+
+/** Admin photo uploads (issue #3): Supabase Storage when configured, otherwise public/uploads on a local server. */
 export async function uploadImages(fd: FormData): Promise<{ ok: true; paths: string[] } | { ok: false; error: string }> {
   await requireAdmin();
   const files = fd.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
   if (!files.length) return { ok: false, error: "Choose at least one photo." };
-  // The hosted site has no disk to save to; uploads move to Supabase Storage with issue #3.
-  if (onWorkers) return { ok: false, error: "Photo uploads aren't available on the hosted site yet. Choose photos from the library for now." };
-  const dir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(dir, { recursive: true });
-  const paths: string[] = [];
+  if (!storageEnabled() && onWorkers) return { ok: false, error: "Photo storage isn't set up on this site yet. Choose photos from the library for now." };
+
+  // Check every file before saving any.
+  const ready: { name: string; bytes: ArrayBuffer; type: string }[] = [];
   for (const f of files) {
     const ext = TYPES[f.type];
     if (!ext) return { ok: false, error: `${f.name}: use JPG, PNG or WebP.` };
     if (f.size > MAX_BYTES) return { ok: false, error: `${f.name} is over 6 MB.` };
-    const name = `${Date.now().toString(36)}-${randomBytes(6).toString("hex")}.${ext}`;
-    await writeFile(path.join(dir, name), Buffer.from(await f.arrayBuffer()));
-    paths.push(`/uploads/${name}`);
+    const bytes = await f.arrayBuffer();
+    if (!looksLike(ext, new Uint8Array(bytes.slice(0, 12)))) return { ok: false, error: `${f.name} isn't a valid ${ext.toUpperCase()} image.` };
+    ready.push({ name: `${Date.now().toString(36)}-${randomBytes(6).toString("hex")}.${ext}`, bytes, type: f.type });
   }
-  return { ok: true, paths };
+
+  try {
+    if (storageEnabled()) return { ok: true, paths: await Promise.all(ready.map((r) => uploadToStorage(r.name, r.bytes, r.type))) };
+    const dir = path.join(process.cwd(), "public", "uploads");
+    await mkdir(dir, { recursive: true });
+    for (const r of ready) await writeFile(path.join(dir, r.name), Buffer.from(r.bytes));
+    return { ok: true, paths: ready.map((r) => `/uploads/${r.name}`) };
+  } catch (e) {
+    console.error(e);
+    return { ok: false, error: "The upload didn't go through. Try again in a moment." };
+  }
 }
 
 /* ---------------- Inboxes ---------------- */
@@ -222,7 +241,7 @@ const ServiceSchema = z.object({
   name: z.string().trim().min(2, "Add a service name").max(80),
   slug: z.string().trim().max(60).optional(),
   description: z.string().trim().max(240).default(""),
-  image: z.string().trim().max(300).refine((v) => v === "" || v.startsWith("/"), "Choose a photo from the library").default(""),
+  image: z.string().trim().max(300).refine((v) => v === "" || isAllowedPhoto(v), "Choose a photo from the library").default(""),
   visible: z.enum(["true", "false"]).default("true"),
 });
 
