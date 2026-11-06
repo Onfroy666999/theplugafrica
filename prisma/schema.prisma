@@ -162,3 +162,13 @@ model ContactMessage {
 
   @@index([status, createdAt])
 }
+
+/// Shared counters for rate limits (issue #7): admin sign-in attempts and public form submissions.
+/// Keys hold a one-way hash of the visitor's IP, never the IP itself.
+model RateLimit {
+  key     String   @id
+  count   Int      @default(0)
+  resetAt DateTime
+
+  @@index([resetAt])
+}

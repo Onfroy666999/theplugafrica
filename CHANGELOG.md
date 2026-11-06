@@ -4,6 +4,16 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-06
+
+### Added
+- Nightly encrypted database backups (#8): a GitHub Actions workflow dumps the app tables from Supabase at 02:30 UTC, encrypts them with a passphrase and keeps them for 30 days. Off until `BACKUPS_ENABLED` and two secrets are set. Restore steps, tested, in `docs/BACKUPS.md`.
+- Spam protection on every public form (#7): a hidden honeypot, a "too fast" check, and a limit of 6 submissions per visitor per form per hour. Visitors are identified by a salted one-way hash of their IP; the IP is never stored. Cloudflare Turnstile switches on when its two keys are set (`docs/DEPLOY.md`). Migration `20261106150859_rate_limits` adds the `RateLimit` table.
+- Email notifications (#6): the team is emailed about every new concierge request, business request, waitlist sign-up and contact message; visitors who gave an email get a confirmation with their reference; business requests are forwarded to the business when it has an email address. Off until `RESEND_API_KEY` and `NOTIFY_EMAIL` are set; a failed email never breaks a form.
+
+### Fixed
+- The admin sign-in limit (5 failed tries per 15 minutes) now holds across all Cloudflare instances; it was kept in memory before, which Workers don't share.
+
 ## [0.5.0] - 2026-11-06
 
 ### Added

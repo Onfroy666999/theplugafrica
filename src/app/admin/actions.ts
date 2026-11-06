@@ -5,11 +5,11 @@ import { randomBytes } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { endSession, requireAdmin, startSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { clear, hit, peek, visitorId } from "@/lib/protect";
 import { onWorkers } from "@/lib/runtime";
 import { isAllowedPhoto, storageEnabled, uploadToStorage } from "@/lib/storage";
 import { CATS } from "@/lib/directory";
@@ -17,9 +17,9 @@ import { BUSINESS_STATUS, CONCIERGE_STATUS, CREDENTIAL_STATE, ENQUIRY_STATUS, WA
 
 /* ---------------- Sign in / out ---------------- */
 
-// Simple in-memory throttle: 5 failed attempts per email+IP per 15 minutes.
-const attempts = new Map<string, { n: number; until: number }>();
-const WINDOW = 15 * 60 * 1000;
+// Sign-in throttle: 5 failed attempts per email + visitor per 15 minutes, counted in the database so every
+// Cloudflare isolate shares it (issue #7; an in-memory Map reset per isolate).
+const LOGIN_WINDOW_S = 15 * 60;
 // Compared against when an email is unknown, so timing doesn't reveal which emails exist.
 // Created on first use (hashing is deliberately slow; doing it at import slowed every admin page load).
 let dummyHash: string | undefined;
@@ -28,19 +28,16 @@ const getDummyHash = async () => (dummyHash ??= await bcrypt.hash(randomBytes(16
 export async function login(_: unknown, fd: FormData): Promise<{ error: string; email: string } | undefined> {
   const email = String(fd.get("email") ?? "").toLowerCase().trim();
   const password = String(fd.get("password") ?? "");
-  const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-  const key = `${email}|${ip}`;
-  const now = Date.now();
-  const a = attempts.get(key);
-  if (a && a.n >= 5 && a.until > now) return { error: "Too many attempts. Wait 15 minutes and try again.", email };
+  const key = `login:${email}:${await visitorId()}`;
+  if ((await peek(key)) >= 5) return { error: "Too many attempts. Wait 15 minutes and try again.", email };
 
   const admin = email ? await db.admin.findUnique({ where: { email } }) : null;
   const ok = await bcrypt.compare(password, admin?.passwordHash ?? (await getDummyHash()));
   if (!admin || !ok) {
-    attempts.set(key, { n: (a && a.until > now ? a.n : 0) + 1, until: now + WINDOW });
+    await hit(key, LOGIN_WINDOW_S);
     return { error: "That email and password don't match.", email };
   }
-  attempts.delete(key);
+  await clear(key);
   await startSession(admin);
   redirect("/admin");
 }
