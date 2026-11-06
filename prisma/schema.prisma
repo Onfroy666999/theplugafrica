@@ -85,31 +85,52 @@ model Service {
 
 /// Every "Contact this business" creates one: the reference code proves the lead came from The Plug.
 model Enquiry {
-  id         String    @id @default(cuid())
-  ref        String    @unique
-  businessId String?
-  business   Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
-  status     String    @default("new") // new | contacted | converted | closed
-  notes      String?
-  createdAt  DateTime  @default(now())
+  id            String    @id @default(cuid())
+  ref           String    @unique
+  businessId    String?
+  business      Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  // contact = the visitor asked for contact details; request = they sent a request through The Plug (issue #50)
+  kind          String    @default("contact")
+  name          String?
+  phone         String?
+  email         String?
+  city          String?
+  message       String?
+  // Where and when (issue #50)
+  serviceMode   String? // my_place | their_place | elsewhere | remote
+  area          String?
+  landmark      String? // landmark or Ghana Post GPS address
+  meetingPlace  String? // where to meet or be picked up, when serviceMode = elsewhere
+  preferredDate String? // YYYY-MM-DD
+  timeOfDay     String?
+  status        String    @default("new") // new | contacted | converted | closed
+  notes         String?
+  createdAt     DateTime  @default(now())
 }
 
 model ConciergeRequest {
-  id         String    @id @default(cuid())
-  ref        String    @unique
-  name       String
-  phone      String
-  email      String?
-  city       String
-  category   String
-  service    String? // service name when sent from a service page, e.g. "Licence acquisition" (issue #36)
-  details    String
-  timing     String
-  businessId String?
-  business   Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
-  status     String    @default("new") // new | in_progress | done | closed
-  notes      String?
-  createdAt  DateTime  @default(now())
+  id            String    @id @default(cuid())
+  ref           String    @unique
+  name          String
+  phone         String
+  email         String?
+  city          String
+  category      String
+  service       String? // service name when sent from a service page, e.g. "Licence acquisition" (issue #36)
+  details       String
+  timing        String
+  // Where and when (issue #50)
+  serviceMode   String? // my_place | their_place | elsewhere | remote
+  area          String?
+  landmark      String? // landmark or Ghana Post GPS address
+  meetingPlace  String? // where to meet or be picked up, when serviceMode = elsewhere
+  preferredDate String? // YYYY-MM-DD
+  timeOfDay     String?
+  businessId    String?
+  business      Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  status        String    @default("new") // new | in_progress | done | closed
+  notes         String?
+  createdAt     DateTime  @default(now())
 }
 
 model WaitlistEntry {

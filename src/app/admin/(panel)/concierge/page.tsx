@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { CATS } from "@/lib/directory";
+import { describeRequest } from "@/lib/requests";
 import { CONCIERGE_STATUS } from "@/lib/status";
 import { InboxItem } from "../InboxItem";
 import { Empty, PageHeader, Panel, fmtDate } from "../ui";
@@ -26,6 +27,13 @@ export default async function Concierge() {
                   {r.email && <> · <a href={`mailto:${r.email}`} className="font-medium text-navy hover:underline">{r.email}</a></>}
                   {" · "}{r.timing} · {fmtDate(r.createdAt)} · <span className="font-mono">{r.ref}</span>
                 </p>
+                {(() => { const d = describeRequest(r); return (d.place || d.when) && (
+                  <p className="mt-1 text-[13px] text-navy/70">
+                    {d.place && <><span className="text-navy/50">Where:</span> {d.place}</>}
+                    {d.place && d.when && " · "}
+                    {d.when && <><span className="text-navy/50">When:</span> {d.when}</>}
+                  </p>
+                ); })()}
                 {r.business && (
                   <p className="mt-1 text-[13px] text-navy/55">About <Link href={`/admin/businesses/${r.business.id}`} className="font-semibold text-navy hover:underline">{r.business.name}</Link></p>
                 )}

@@ -4,6 +4,14 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-06
+
+### Added
+- Better requests (#50): concierge requests and a new "Send a request" on every listing ask where the service happens (at my place, at their location, somewhere else, online or by phone; choices depend on the category), the city and area (neighbourhood lists for Accra, Kumasi, Takoradi and Tamale, with "Other"), a landmark or Ghana Post GPS address, and a preferred date and time of day. Requests to a business are stored as enquiries with a reference code; the admin shows the details in Enquiries and Concierge.
+
+### Fixed
+- Filter chips inside a form no longer submit the form.
+
 ## [0.4.1] - 2026-11-06
 
 ### Added

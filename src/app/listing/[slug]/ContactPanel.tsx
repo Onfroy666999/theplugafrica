@@ -2,8 +2,9 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
-import { createEnquiry } from "@/app/actions";
-import { RefCode, Spinner } from "@/components/market/Form";
+import { createEnquiry, sendBusinessRequest } from "@/app/actions";
+import { Field, Input, RefCode, Spinner, Textarea } from "@/components/market/Form";
+import { RequestDetails } from "@/components/market/RequestDetails";
 import { Chat, Check, Shield } from "@/components/market/Icons";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Sheet, SheetTitle } from "@/components/ui/Sheet";
@@ -13,6 +14,7 @@ import { DUR, EASE } from "@/lib/motion";
 /** Contact card (desktop), contact bar (phones) and the disclaimer sheet. Contacting creates a reference code. */
 export function ContactPanel({ l }: { l: Listing }) {
   const [open, setOpen] = useState(false);
+  const [requestOpen, setRequestOpen] = useState(false);
   const [session, setSession] = useState(0); // fresh steps on each open, not on close (avoids a flash mid-exit)
   const show = () => {
     setSession((n) => n + 1);
@@ -27,7 +29,10 @@ export function ContactPanel({ l }: { l: Listing }) {
         <Button full size="lg" className="mt-5" onClick={show}>
           <Chat /> Contact this business
         </Button>
-        <LinkButton href={`/concierge?listing=${l.slug}`} variant="secondary" size="lg" full className="mt-3">
+        <Button variant="secondary" full size="lg" className="mt-3" onClick={() => { setSession((n) => n + 1); setRequestOpen(true); }}>
+          Send a request
+        </Button>
+        <LinkButton href={`/concierge?listing=${l.slug}`} variant="ghost" size="lg" full className="mt-1">
           Ask a concierge to handle it
         </LinkButton>
         <p className="mt-4 text-[12.5px] leading-relaxed text-navy/50">
@@ -41,11 +46,18 @@ export function ContactPanel({ l }: { l: Listing }) {
           <p className="truncate font-heading text-[15px] font-bold text-navy">{l.price}</p>
           <p className="truncate text-[12.5px] text-navy/55">{l.responds}</p>
         </div>
-        <Button onClick={show}>Contact</Button>
+        <div className="flex shrink-0 gap-2">
+          <Button variant="secondary" onClick={() => { setSession((n) => n + 1); setRequestOpen(true); }}>Request</Button>
+          <Button onClick={show}>Contact</Button>
+        </div>
       </div>
 
       <Sheet open={open} onOpenChange={setOpen} title={`Contact ${l.name}`}>
         <ContactSteps l={l} key={session} />
+      </Sheet>
+
+      <Sheet open={requestOpen} onOpenChange={setRequestOpen} title={`Send a request to ${l.name}`}>
+        <RequestForm l={l} key={session} />
       </Sheet>
     </>
   );
@@ -140,5 +152,61 @@ function ContactSteps({ l }: { l: Listing }) {
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+/** "Send a request through The Plug" (issue #50): the details are stored with a reference code and passed to the business. */
+function RequestForm({ l }: { l: Listing }) {
+  const [ref, setRef] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  if (ref)
+    return (
+      <motion.div initial={{ opacity: 0, transform: "translateY(6px)" }} animate={{ opacity: 1, transform: "translateY(0px)" }} transition={{ duration: DUR.base, ease: EASE.out }}>
+        <span className="flex h-11 w-11 items-center justify-center rounded-field bg-ok-soft text-ok"><Check className="h-5 w-5" /></span>
+        <SheetTitle className="mt-4 font-heading text-[22px] font-bold text-navy">Request sent</SheetTitle>
+        <p className="mt-2 text-[14.5px] text-navy/65">The Plug will pass your request to {l.name}, and they&apos;ll contact you. Keep this reference in case you need to follow up.</p>
+        <div className="mt-5">
+          <RefCode code={ref} copied={copied} onCopy={() => navigator.clipboard?.writeText(ref).then(() => setCopied(true), () => {})} />
+        </div>
+      </motion.div>
+    );
+
+  return (
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setBusy(true);
+        setError(null);
+        const r = await sendBusinessRequest(l.slug, new FormData(e.currentTarget)).catch(() => ({ ok: false as const, error: "Something went wrong. Please try again." }));
+        setBusy(false);
+        if (r.ok) setRef(r.ref);
+        else setError(r.error);
+      }}
+      className="relative space-y-5"
+    >
+      <div>
+        <SheetTitle className="pr-10 font-heading text-[22px] font-bold text-navy">Send a request to {l.name}</SheetTitle>
+        <p className="mt-2 text-[14px] text-navy/60">The Plug records your request and passes it on, so there&apos;s a record if you need help later.</p>
+      </div>
+      <Field label="What do you need?">
+        <Textarea label="What do you need?" name="message" required minLength={10} maxLength={2000} rows={3} placeholder={`For example: I'd like a quote from ${l.name} for next week.`} />
+      </Field>
+      <RequestDetails category={l.cat} service={l.services?.[0]?.name ?? l.kind} defaultCity={l.city} />
+      <div className="grid gap-5 md:grid-cols-2">
+        <Field label="Your name"><Input label="Your name" required name="name" autoComplete="name" /></Field>
+        <Field label="Phone or WhatsApp"><Input label="Phone or WhatsApp" required name="phone" type="tel" autoComplete="tel" /></Field>
+      </div>
+      <Field label="Email" hint="optional"><Input label="Email" name="email" type="email" autoComplete="email" /></Field>
+      <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 opacity-0" />
+      {error && <p role="alert" className="rounded-field bg-ember-soft px-4 py-3 text-[14px] font-medium text-ember">{error}</p>}
+      <Button type="submit" size="lg" full disabled={busy}>
+        {busy && <Spinner />}
+        {busy ? "Sending" : "Send request"}
+      </Button>
+      <p className="text-center text-[12.5px] text-navy/45">The Plug is a directory: deal with the business directly and never pay before you&apos;ve seen what you&apos;re paying for.</p>
+    </form>
   );
 }
