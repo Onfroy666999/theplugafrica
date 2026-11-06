@@ -56,7 +56,8 @@ export function Header() {
         </nav>
         <div className="flex items-center gap-2">
           {/* Customer sign-in arrives with accounts (#20); until then there is no Sign in button. */}
-          <LinkButton href="/businesses" size="sm" className="hidden sm:inline-flex">List your business</LinkButton>
+          {/* max-sm:hidden, not hidden sm:inline-flex: the kit button's own inline-flex would win over plain hidden (issue #46). */}
+          <LinkButton href="/businesses" size="sm" className="max-sm:hidden">List your business</LinkButton>
           <button
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
@@ -83,7 +84,8 @@ export function Header() {
                 {n.label}
               </Link>
             ))}
-            <LinkButton href="/businesses" full className="mt-4">List your business</LinkButton>
+            {/* Phones only: from sm up the header already shows this button (issue #46). */}
+            <LinkButton href="/businesses" full className="mt-4 sm:hidden">List your business</LinkButton>
           </motion.nav>
         )}
       </AnimatePresence>

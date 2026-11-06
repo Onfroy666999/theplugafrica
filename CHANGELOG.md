@@ -4,6 +4,9 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Fixed
+- On phones the menu showed "List your business" twice; the header copy now hides below tablet width, and the menu copy hides from tablet width up (#46).
+
 ## [0.4.0] - 2026-11-06
 
 ### Added
