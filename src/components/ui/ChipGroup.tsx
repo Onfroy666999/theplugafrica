@@ -20,6 +20,7 @@ export function ChipGroup({ chips, value, onChange, label, className = "" }: { c
         return (
           <button
             key={c.value}
+            type="button"
             role="radio"
             aria-checked={on}
             onClick={() => onChange(c.value)}

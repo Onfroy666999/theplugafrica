@@ -7,11 +7,11 @@ import { submitConcierge } from "@/app/actions";
 import { Field, Input, Select, Spinner, Success, Textarea, toOptions } from "@/components/market/Form";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { CATS } from "@/lib/directory";
-import { CITIES, getListing } from "@/lib/listings";
+import { getListing } from "@/lib/listings";
+import { RequestDetails } from "@/components/market/RequestDetails";
 import { DUR } from "@/lib/motion";
 
 const CATEGORY_OPTIONS = CATS.filter((c) => c.key !== "emergency").map((c) => ({ value: c.key, label: c.name }));
-const CITY_OPTIONS = toOptions([...CITIES, "Somewhere else"]);
 const WHEN_OPTIONS = toOptions(["As soon as possible", "This week", "This month", "In the next few months", "Just exploring"]);
 
 /** `service`: set on a concierge service page (issue #36); fixes the category and names the service. */
@@ -21,6 +21,7 @@ export function ConciergeForm({ service }: { service?: { category: string; slug:
   const [ref, setRef] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [category, setCategory] = useState(service?.category ?? listing?.cat ?? "special-services");
 
   return (
     <AnimatePresence mode="wait" initial={false}>
@@ -71,16 +72,11 @@ export function ConciergeForm({ service }: { service?: { category: string; slug:
             <Field label="Phone or WhatsApp"><Input label="Phone or WhatsApp" required name="phone" type="tel" autoComplete="tel" /></Field>
           </div>
           <Field label="Email" hint="optional"><Input label="Email" name="email" type="email" autoComplete="email" /></Field>
-          <div className="grid gap-5 md:grid-cols-2">
-            <Field label="City">
-              <Select label="City" name="city" options={CITY_OPTIONS} defaultValue={listing?.city ?? "Accra"} />
+          {!service && (
+            <Field label="What is it about?">
+              <Select label="What is it about?" name="category" options={CATEGORY_OPTIONS} value={category} onChange={setCategory} />
             </Field>
-            {!service && (
-              <Field label="What is it about?">
-                <Select label="What is it about?" name="category" options={CATEGORY_OPTIONS} defaultValue={listing?.cat ?? "special-services"} />
-              </Field>
-            )}
-          </div>
+          )}
           <Field label="What do you need?">
             <Textarea
               label="What do you need?"
@@ -90,7 +86,9 @@ export function ConciergeForm({ service }: { service?: { category: string; slug:
               placeholder={service?.category === "new-business" ? "For example: I want to register a small import business in Accra and open a business bank account." : "For example: I'm moving to Accra in March with two children and need a furnished 3-bed near a good school."}
             />
           </Field>
-          <Field label="When do you need it?">
+          {/* Where and when (issue #50); the choices follow the category */}
+          <RequestDetails key={category} category={category} service={service?.name ?? listing?.kind} defaultCity={listing?.city} />
+          <Field label="How soon?">
             <Select label="When do you need it?" name="when" options={WHEN_OPTIONS} defaultValue="This month" />
           </Field>
           <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 opacity-0" />

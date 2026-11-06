@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { CONTACT_TOPICS } from "@/lib/contact";
+import { OTHER_AREA, TIMES_OF_DAY } from "@/lib/requests";
 import { PUBLIC_STATUSES } from "@/lib/status";
 
 // Public form handlers. Each one saves to the admin inboxes and returns a reference code.
@@ -20,6 +21,38 @@ const optional = (max: number) => z.string().trim().max(max).optional().transfor
 
 /** Hidden "website" field: people never fill it, simple bots do. */
 const isBot = (fd: FormData) => String(fd.get("website") ?? "").length > 0;
+
+/** Where and when, shared by the concierge form and requests to a business (issue #50). */
+const DetailsSchema = z
+  .object({
+    serviceMode: z.enum(["my_place", "their_place", "elsewhere", "remote"]).optional(),
+    area: optional(80),
+    areaOther: optional(80),
+    landmark: optional(160),
+    meetingPlace: optional(160),
+    preferredDate: optional(10).pipe(z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional()),
+    timeOfDay: z.enum(TIMES_OF_DAY).optional(),
+  })
+  .refine((d) => d.serviceMode !== "elsewhere" || d.meetingPlace, { message: "Tell us where to meet." });
+
+/** Validated details as database columns; an "Other" area takes the typed name. */
+function details(fd: FormData) {
+  const p = DetailsSchema.safeParse(Object.fromEntries(fd));
+  if (!p.success) return { ok: false as const, error: p.error.issues.find((i) => i.code === "custom")?.message ?? "Check the location and date." };
+  const d = p.data;
+  const area = d.area === OTHER_AREA || !d.area ? d.areaOther : d.area;
+  return {
+    ok: true as const,
+    data: {
+      serviceMode: d.serviceMode,
+      area,
+      landmark: d.landmark,
+      meetingPlace: d.serviceMode === "elsewhere" ? d.meetingPlace : undefined,
+      preferredDate: d.preferredDate,
+      timeOfDay: d.timeOfDay,
+    },
+  };
+}
 
 export async function createEnquiry(slug: string): Promise<
   { ok: true; ref: string; contact: { phone?: string; whatsapp?: string; email?: string } } | { ok: false; error: string }
@@ -48,13 +81,40 @@ export async function submitConcierge(fd: FormData): Promise<FormResult> {
   if (isBot(fd)) return { ok: true, ref: makeRef("CNC") };
   const parsed = ConciergeSchema.safeParse(Object.fromEntries(fd));
   if (!parsed.success) return { ok: false, error: "Please fill in your name, phone and what you need." };
+  const where = details(fd);
+  if (!where.ok) return { ok: false, error: where.error };
   const d = parsed.data;
   const business = d.listing ? await db.business.findUnique({ where: { slug: d.listing }, select: { id: true } }) : null;
   // Store the service name (not the slug) so the request still reads correctly if the service is renamed later.
   const service = d.service ? await db.service.findFirst({ where: { category: d.category, slug: d.service }, select: { name: true } }) : null;
   const ref = makeRef("CNC");
   await db.conciergeRequest.create({
-    data: { ref, name: d.name, phone: d.phone, email: d.email, city: d.city, category: d.category, service: service?.name, details: d.details, timing: d.when, businessId: business?.id },
+    data: { ref, name: d.name, phone: d.phone, email: d.email, city: d.city, category: d.category, service: service?.name, details: d.details, timing: d.when, businessId: business?.id, ...where.data },
+  });
+  return { ok: true, ref };
+}
+
+const BusinessRequestSchema = z.object({
+  name: text(120),
+  phone: text(40),
+  email: optional(160),
+  city: text(60),
+  message: z.string().trim().min(10).max(2000),
+});
+
+/** "Send a request through The Plug" on a listing (issue #50): stored as an enquiry with the visitor's details. */
+export async function sendBusinessRequest(slug: string, fd: FormData): Promise<FormResult> {
+  if (isBot(fd)) return { ok: true, ref: makeRef("PLG") };
+  const b = await db.business.findFirst({ where: { slug, status: { in: [...PUBLIC_STATUSES] } }, select: { id: true } });
+  if (!b) return { ok: false, error: "This business is no longer listed." };
+  const parsed = BusinessRequestSchema.safeParse(Object.fromEntries(fd));
+  if (!parsed.success) return { ok: false, error: "Please add your name, phone number and a sentence about what you need." };
+  const where = details(fd);
+  if (!where.ok) return { ok: false, error: where.error };
+  const d = parsed.data;
+  const ref = makeRef("PLG");
+  await db.enquiry.create({
+    data: { ref, businessId: b.id, kind: "request", name: d.name, phone: d.phone, email: d.email, city: d.city, message: d.message, ...where.data },
   });
   return { ok: true, ref };
 }
