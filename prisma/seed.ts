@@ -13,7 +13,7 @@ async function main() {
     const email = ADMIN_EMAIL.toLowerCase().trim();
     const exists = await db.admin.findUnique({ where: { email } });
     if (!exists) {
-      await db.admin.create({ data: { email, name: ADMIN_NAME || "Admin", passwordHash: await bcrypt.hash(ADMIN_PASSWORD, 12) } });
+      await db.admin.create({ data: { email, name: ADMIN_NAME || "Admin", role: "owner", passwordHash: await bcrypt.hash(ADMIN_PASSWORD, 12) } });
       console.log(`Admin account created for ${ADMIN_NAME || email}.`);
     } else {
       console.log("Admin account already exists (password unchanged).");

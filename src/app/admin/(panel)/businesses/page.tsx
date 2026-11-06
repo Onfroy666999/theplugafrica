@@ -4,7 +4,9 @@ import { Suspense } from "react";
 import type { Prisma } from "@prisma/client";
 import { LinkButton } from "@/components/ui/Button";
 import { parseImages } from "@/lib/data";
+import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { can } from "@/lib/roles";
 import { CATS } from "@/lib/directory";
 import { BusinessFilters } from "./Filters";
 import { StatusSelect } from "./StatusSelect";
@@ -13,7 +15,9 @@ import { Empty, PageHeader, Panel, fmtDate } from "../ui";
 type SP = Promise<{ q?: string; status?: string; category?: string; examples?: string }>;
 
 export default async function Businesses({ searchParams }: { searchParams: SP }) {
-  const sp = await searchParams;
+  const [sp, admin] = await Promise.all([searchParams, requireAdmin()]);
+  const canEdit = can(admin.role, "edit");
+  const add = canEdit ? <LinkButton href="/admin/businesses/new">Add a business</LinkButton> : undefined;
   const where: Prisma.BusinessWhereInput = {
     ...(sp.status ? { status: sp.status } : {}),
     ...(sp.category ? { category: sp.category } : {}),
@@ -30,14 +34,14 @@ export default async function Businesses({ searchParams }: { searchParams: SP })
 
   return (
     <>
-      <PageHeader title="Businesses" sub={`${total} in total. Only In review and Verified appear on the site.`} action={<LinkButton href="/admin/businesses/new">Add a business</LinkButton>} />
+      <PageHeader title="Businesses" sub={`${total} in total. Only In review and Verified appear on the site.`} action={add} />
       <Suspense>
         <BusinessFilters />
       </Suspense>
 
       <Panel>
         {rows.length === 0 ? (
-          <Empty title="No businesses match" body="Try another filter, or add the first real business." action={<LinkButton href="/admin/businesses/new">Add a business</LinkButton>} />
+          <Empty title="No businesses match" body="Try another filter, or add the first real business." action={add} />
         ) : (
           <ul className="divide-y divide-navy/[0.07]">
             {rows.map((b) => {

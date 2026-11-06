@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { requireAdmin } from "@/lib/auth";
 import { BusinessForm } from "../BusinessForm";
 import { allServiceOptions } from "../serviceOptions";
 import { photoLibrary } from "../library";
 import { PageHeader } from "../../ui";
 
 export default async function NewBusiness() {
+  await requireAdmin("edit");
   return (
     <>
       <Link href="/admin/businesses" className="text-[14px] font-medium text-navy/55 hover:text-navy">← Businesses</Link>

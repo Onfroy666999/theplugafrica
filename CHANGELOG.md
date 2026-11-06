@@ -4,6 +4,14 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- Team accounts (#18): owners invite people at Admin › Team as Owner, Editor or Viewer, change roles, send password links and remove accounts. Invitation and password links work once and expire after 7 days; they're emailed when email is on and can always be copied. Editors can't delete or manage the team; viewers can look but not change anything. The server checks the role on every action. Removing someone or changing their password signs them out at once.
+- Activity log (#18): Admin › Activity shows who changed what, filterable by person: sign-ins, business edits (with the fields that changed), status changes, deletions, photo uploads, inbox updates, services and team changes.
+- Migration `20261106161552_team_accounts` adds roles to accounts (the existing account becomes an owner) and the `Invite` and `AuditLog` tables.
+
+### Fixed
+- `npm run lint` no longer scans the Cloudflare build output (`.open-next`, `.wrangler`), which made it run out of memory locally.
+
 ## [0.6.0] - 2026-11-06
 
 ### Added
