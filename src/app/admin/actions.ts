@@ -8,12 +8,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { endSession, requireAdmin, startSession } from "@/lib/auth";
+import { audit } from "@/lib/audit";
 import { db } from "@/lib/db";
 import { clear, hit, peek, visitorId } from "@/lib/protect";
 import { onWorkers } from "@/lib/runtime";
 import { isAllowedPhoto, storageEnabled, uploadToStorage } from "@/lib/storage";
-import { CATS } from "@/lib/directory";
-import { BUSINESS_STATUS, CONCIERGE_STATUS, CREDENTIAL_STATE, ENQUIRY_STATUS, WAITLIST_STATUS, CONTACT_STATUS, values } from "@/lib/status";
+import { CATS, getCat } from "@/lib/directory";
+import { BUSINESS_STATUS, CONCIERGE_STATUS, CREDENTIAL_STATE, ENQUIRY_STATUS, WAITLIST_STATUS, CONTACT_STATUS, canBeVerified, find, values } from "@/lib/status";
 
 /* ---------------- Sign in / out ---------------- */
 
@@ -38,6 +39,8 @@ export async function login(_: unknown, fd: FormData): Promise<{ error: string; 
     return { error: "That email and password don't match.", email };
   }
   await clear(key);
+  await db.admin.update({ where: { id: admin.id }, data: { lastSignInAt: new Date() } });
+  await audit(admin, "auth.sign_in", "Signed in");
   await startSession(admin);
   redirect("/admin");
 }
@@ -109,8 +112,15 @@ const BusinessSchema = z.object({
 
 export type SaveResult = { ok: true; id: string } | { ok: false; error: string; field?: string };
 
+/** Readable names for the fields the activity log reports as changed. */
+const BUSINESS_FIELDS: Record<string, string> = {
+  name: "name", slug: "web address", category: "category", kind: "kind", city: "city", area: "area", blurb: "summary", about: "description",
+  price: "price", responds: "response time", languages: "languages", phone: "phone", whatsapp: "WhatsApp", email: "email", status: "status",
+};
+const statusLabel = (v: string) => find(BUSINESS_STATUS, v).label;
+
 export async function saveBusiness(fd: FormData): Promise<SaveResult> {
-  await requireAdmin();
+  const admin = await requireAdmin("edit");
   const parsed = BusinessSchema.safeParse(Object.fromEntries(fd));
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
@@ -121,7 +131,7 @@ export async function saveBusiness(fd: FormData): Promise<SaveResult> {
   if (!slug) return { ok: false, error: "Add a web address (slug)", field: "slug" };
   const clash = await db.business.findUnique({ where: { slug }, select: { id: true } });
   if (clash && clash.id !== id) return { ok: false, error: `Another business already uses the address /listing/${slug}`, field: "slug" };
-  if (d.status === "verified" && credentials.some((c) => c.state !== "verified"))
+  if (d.status === "verified" && !canBeVerified(credentials))
     return { ok: false, error: "Every credential must be Checked before a business can be marked Verified.", field: "status" };
 
   // Services must belong to the business's category; at least one is required when the category has services.
@@ -130,6 +140,9 @@ export async function saveBusiness(fd: FormData): Promise<SaveResult> {
   if (!valid.length && (await db.service.count({ where: { category: d.category } })) > 0)
     return { ok: false, error: "Choose at least one service so visitors can find this business.", field: "services" };
 
+  const before = id
+    ? await db.business.findUnique({ where: { id }, include: { credentials: { orderBy: { position: "asc" } }, services: { select: { id: true } } } })
+    : null;
   const data = { ...d, slug, images: JSON.stringify(images), services: { set: valid } };
   const saved = id
     ? await db.business.update({ where: { id }, data })
@@ -137,31 +150,47 @@ export async function saveBusiness(fd: FormData): Promise<SaveResult> {
   await db.credential.deleteMany({ where: { businessId: saved.id } });
   if (credentials.length) await db.credential.createMany({ data: credentials.map((c, i) => ({ ...c, businessId: saved.id, position: i })) });
 
+  const target = { type: "business", id: saved.id };
+  if (!before) await audit(admin, "business.create", `Added ${saved.name} (${statusLabel(saved.status)})`, target);
+  else {
+    const after: Record<string, unknown> = { ...d, slug };
+    const changed = Object.entries(BUSINESS_FIELDS)
+      .filter(([k]) => String((before as Record<string, unknown>)[k] ?? "") !== String(after[k] ?? ""))
+      .map(([k, label]) => (k === "status" ? `status (${statusLabel(before.status)} → ${statusLabel(d.status)})` : label));
+    if (before.images !== JSON.stringify(images)) changed.push("photos");
+    if (JSON.stringify(before.credentials.map((c) => [c.label, c.state])) !== JSON.stringify(credentials.map((c) => [c.label, c.state]))) changed.push("credentials");
+    if (before.services.map((x) => x.id).sort().join() !== valid.map((x) => x.id).sort().join()) changed.push("services");
+    if (changed.length) await audit(admin, "business.update", `Edited ${saved.name}: ${changed.join(", ")}`, target);
+  }
+
   revalidatePath("/admin/businesses");
   return { ok: true, id: saved.id };
 }
 
 export async function setBusinessStatus(id: string, status: string) {
-  await requireAdmin();
+  const admin = await requireAdmin("edit");
   z.enum(values(BUSINESS_STATUS)).parse(status);
   if (status === "verified") {
-    const pending = await db.credential.count({ where: { businessId: id, state: { not: "verified" } } });
-    if (pending) return { ok: false as const, error: "Check every credential before marking Verified." };
+    const creds = await db.credential.findMany({ where: { businessId: id }, select: { state: true } });
+    if (!canBeVerified(creds)) return { ok: false as const, error: "Check every credential before marking Verified." };
   }
+  const before = await db.business.findUnique({ where: { id }, select: { name: true, status: true } });
   await db.business.update({ where: { id }, data: { status } });
+  if (before && before.status !== status)
+    await audit(admin, "business.status", `Changed ${before.name} from ${statusLabel(before.status)} to ${statusLabel(status)}`, { type: "business", id });
   revalidatePath("/admin/businesses");
   return { ok: true as const };
 }
 
 export async function deleteBusiness(id: string) {
-  await requireAdmin();
-  await db.business.delete({ where: { id } });
+  const admin = await requireAdmin("delete");
+  const b = await db.business.delete({ where: { id }, select: { name: true } });
+  await audit(admin, "business.delete", `Deleted ${b.name}`, { type: "business", id });
   revalidatePath("/admin/businesses");
   redirect("/admin/businesses");
 }
 
 /* ---------------- Image upload ---------------- */
-// Saved under public/uploads for local use. Hosting needs cloud storage instead (see CLAUDE.md).
 
 const MAX_BYTES = 6 * 1024 * 1024;
 const TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
@@ -176,7 +205,7 @@ function looksLike(ext: string, b: Uint8Array) {
 
 /** Admin photo uploads (issue #3): Supabase Storage when configured, otherwise public/uploads on a local server. */
 export async function uploadImages(fd: FormData): Promise<{ ok: true; paths: string[] } | { ok: false; error: string }> {
-  await requireAdmin();
+  const admin = await requireAdmin("edit");
   const files = fd.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
   if (!files.length) return { ok: false, error: "Choose at least one photo." };
   if (!storageEnabled() && onWorkers) return { ok: false, error: "Photo storage isn't set up on this site yet. Choose photos from the library for now." };
@@ -193,11 +222,16 @@ export async function uploadImages(fd: FormData): Promise<{ ok: true; paths: str
   }
 
   try {
-    if (storageEnabled()) return { ok: true, paths: await Promise.all(ready.map((r) => uploadToStorage(r.name, r.bytes, r.type))) };
-    const dir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(dir, { recursive: true });
-    for (const r of ready) await writeFile(path.join(dir, r.name), Buffer.from(r.bytes));
-    return { ok: true, paths: ready.map((r) => `/uploads/${r.name}`) };
+    let paths: string[];
+    if (storageEnabled()) paths = await Promise.all(ready.map((r) => uploadToStorage(r.name, r.bytes, r.type)));
+    else {
+      const dir = path.join(process.cwd(), "public", "uploads");
+      await mkdir(dir, { recursive: true });
+      for (const r of ready) await writeFile(path.join(dir, r.name), Buffer.from(r.bytes));
+      paths = ready.map((r) => `/uploads/${r.name}`);
+    }
+    await audit(admin, "photos.upload", `Uploaded ${paths.length} ${paths.length === 1 ? "photo" : "photos"}`);
+    return { ok: true, paths };
   } catch (e) {
     console.error(e);
     return { ok: false, error: "The upload didn't go through. Try again in a moment." };
@@ -207,16 +241,26 @@ export async function uploadImages(fd: FormData): Promise<{ ok: true; paths: str
 /* ---------------- Inboxes ---------------- */
 
 const INBOX = {
-  enquiry: { statuses: ENQUIRY_STATUS, path: "/admin/enquiries" },
-  concierge: { statuses: CONCIERGE_STATUS, path: "/admin/concierge" },
-  waitlist: { statuses: WAITLIST_STATUS, path: "/admin/waitlist" },
-  contact: { statuses: CONTACT_STATUS, path: "/admin/messages" },
+  enquiry: { statuses: ENQUIRY_STATUS, path: "/admin/enquiries", label: "Enquiry" },
+  concierge: { statuses: CONCIERGE_STATUS, path: "/admin/concierge", label: "Concierge request" },
+  waitlist: { statuses: WAITLIST_STATUS, path: "/admin/waitlist", label: "Waitlist entry" },
+  contact: { statuses: CONTACT_STATUS, path: "/admin/messages", label: "Message" },
 } as const;
 export type InboxKind = keyof typeof INBOX;
 
+/** Reference and status of an inbox record, for the activity log. */
+function inboxRecord(kind: InboxKind, id: string) {
+  const q = { where: { id }, select: { ref: true, status: true } };
+  if (kind === "enquiry") return db.enquiry.findUnique(q);
+  if (kind === "concierge") return db.conciergeRequest.findUnique(q);
+  if (kind === "waitlist") return db.waitlistEntry.findUnique(q);
+  return db.contactMessage.findUnique(q);
+}
+
 export async function updateInbox(kind: InboxKind, id: string, patch: { status?: string; notes?: string }) {
-  await requireAdmin();
+  const admin = await requireAdmin("edit");
   const cfg = INBOX[kind];
+  const before = await inboxRecord(kind, id);
   const data: { status?: string; notes?: string | null } = {};
   if (patch.status !== undefined) data.status = z.enum(values(cfg.statuses)).parse(patch.status);
   if (patch.notes !== undefined) data.notes = patch.notes.trim().slice(0, 4000) || null;
@@ -224,6 +268,11 @@ export async function updateInbox(kind: InboxKind, id: string, patch: { status?:
   if (kind === "concierge") await db.conciergeRequest.update({ where: { id }, data });
   if (kind === "waitlist") await db.waitlistEntry.update({ where: { id }, data });
   if (kind === "contact") await db.contactMessage.update({ where: { id }, data });
+  const label = (v: string) => cfg.statuses.find((x) => x.value === v)?.label ?? v;
+  const target = { type: kind, id };
+  if (before && data.status && data.status !== before.status)
+    await audit(admin, "inbox.status", `${cfg.label} ${before.ref}: ${label(before.status)} → ${label(data.status)}`, target);
+  if (before && patch.notes !== undefined) await audit(admin, "inbox.notes", `Edited notes on ${cfg.label.toLowerCase()} ${before.ref}`, target);
   revalidatePath(cfg.path);
   revalidatePath("/admin");
 }
@@ -242,8 +291,10 @@ const ServiceSchema = z.object({
   visible: z.enum(["true", "false"]).default("true"),
 });
 
+const catName = (k: string) => getCat(k)?.name ?? k;
+
 export async function saveService(fd: FormData): Promise<SaveResult> {
-  await requireAdmin();
+  const admin = await requireAdmin("edit");
   const parsed = ServiceSchema.safeParse(Object.fromEntries(fd));
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
@@ -259,24 +310,27 @@ export async function saveService(fd: FormData): Promise<SaveResult> {
     const before = await db.service.findUnique({ where: { id }, select: { category: true } });
     if (before && before.category !== d.category) return { ok: false, error: "A service can't move to another category. Create it there instead.", field: "category" };
     await db.service.update({ where: { id }, data: { ...d, slug, visible: visible === "true" } });
+    await audit(admin, "service.update", `Edited service ${d.name} in ${catName(d.category)}`, { type: "service", id });
     revalidatePath("/admin/services");
     return { ok: true, id };
   }
   const last = await db.service.findFirst({ where: { category: d.category }, orderBy: { position: "desc" }, select: { position: true } });
   const created = await db.service.create({ data: { ...d, slug, visible: visible === "true", position: (last?.position ?? -1) + 1 } });
+  await audit(admin, "service.create", `Added service ${d.name} in ${catName(d.category)}`, { type: "service", id: created.id });
   revalidatePath("/admin/services");
   return { ok: true, id: created.id };
 }
 
 export async function setServiceVisible(id: string, visible: boolean) {
-  await requireAdmin();
-  await db.service.update({ where: { id }, data: { visible } });
+  const admin = await requireAdmin("edit");
+  const s = await db.service.update({ where: { id }, data: { visible }, select: { name: true, category: true } });
+  await audit(admin, "service.visible", `${visible ? "Showed" : "Hid"} service ${s.name} in ${catName(s.category)}`, { type: "service", id });
   revalidatePath("/admin/services");
 }
 
 /** Swap a service with its neighbour above (-1) or below (+1) within its category. */
 export async function moveService(id: string, dir: -1 | 1) {
-  await requireAdmin();
+  const admin = await requireAdmin("edit");
   const svc = await db.service.findUnique({ where: { id } });
   if (!svc) return;
   const list = await db.service.findMany({ where: { category: svc.category }, orderBy: [{ position: "asc" }, { name: "asc" }], select: { id: true } });
@@ -285,14 +339,16 @@ export async function moveService(id: string, dir: -1 | 1) {
   if (j < 0 || j >= list.length) return;
   [list[i], list[j]] = [list[j], list[i]];
   await db.$transaction(list.map((s, pos) => db.service.update({ where: { id: s.id }, data: { position: pos } })));
+  await audit(admin, "service.move", `Moved service ${svc.name} ${dir < 0 ? "up" : "down"} in ${catName(svc.category)}`, { type: "service", id });
   revalidatePath("/admin/services");
 }
 
 export async function deleteService(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
-  await requireAdmin();
+  const admin = await requireAdmin("delete");
   const n = await db.business.count({ where: { services: { some: { id } } } });
   if (n > 0) return { ok: false, error: `${n} ${n === 1 ? "business uses" : "businesses use"} this service. Move them to another service or hide it instead.` };
-  await db.service.delete({ where: { id } });
+  const s = await db.service.delete({ where: { id }, select: { name: true, category: true } });
+  await audit(admin, "service.delete", `Deleted service ${s.name} from ${catName(s.category)}`, { type: "service", id });
   revalidatePath("/admin/services");
   return { ok: true };
 }

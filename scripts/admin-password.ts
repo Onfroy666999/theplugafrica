@@ -27,8 +27,8 @@ async function main() {
   const pw = await ask("New password (12+ characters): ", true);
   if (pw.length < 12) throw new Error("Password must be at least 12 characters.");
   if ((await ask("Repeat it: ", true)) !== pw) throw new Error("Passwords did not match.");
-  await db.admin.update({ where: { id: admin.id }, data: { passwordHash: await bcrypt.hash(pw, 12) } });
-  console.log("Password changed. Sign in again at /admin/login.");
+  await db.admin.update({ where: { id: admin.id }, data: { passwordHash: await bcrypt.hash(pw, 12), sessionsSince: new Date() } });
+  console.log("Password changed. Every session is signed out; sign in again at /admin/login.");
   await db.$disconnect();
 }
 
