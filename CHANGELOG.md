@@ -7,7 +7,11 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 ### Added
 - Team accounts (#18): owners invite people at Admin › Team as Owner, Editor or Viewer, change roles, send password links and remove accounts. Invitation and password links work once and expire after 7 days; they're emailed when email is on and can always be copied. Editors can't delete or manage the team; viewers can look but not change anything. The server checks the role on every action. Removing someone or changing their password signs them out at once.
 - Activity log (#18): Admin › Activity shows who changed what, filterable by person: sign-ins, business edits (with the fields that changed), status changes, deletions, photo uploads, inbox updates, services and team changes.
+- Automated tests (#9), run on every pull request: 42 unit tests of the rules (form validation, Verified needs every credential checked, search, roles, emails) with `npm test`, and 42 end-to-end tests that drive the production build against a real database with `npm run test:e2e`: pages, search, the contact sheet reference code, every form and its emails, spam protection, admin sign-in, adding and publishing a business, and team roles. Guide in `docs/TESTING.md`.
 - Migration `20261106161552_team_accounts` adds roles to accounts (the existing account becomes an owner) and the `Invite` and `AuditLog` tables.
+
+### Changed
+- Form validation and search moved into shared modules (`src/lib/validation.ts`, `src/lib/search.ts`) so the app and the tests use one copy; the Verified rule is `canBeVerified` in `src/lib/status.ts`.
 
 ### Fixed
 - `npm run lint` no longer scans the Cloudflare build output (`.open-next`, `.wrangler`), which made it run out of memory locally.

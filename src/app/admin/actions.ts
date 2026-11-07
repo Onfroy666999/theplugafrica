@@ -14,7 +14,7 @@ import { clear, hit, peek, visitorId } from "@/lib/protect";
 import { onWorkers } from "@/lib/runtime";
 import { isAllowedPhoto, storageEnabled, uploadToStorage } from "@/lib/storage";
 import { CATS, getCat } from "@/lib/directory";
-import { BUSINESS_STATUS, CONCIERGE_STATUS, CREDENTIAL_STATE, ENQUIRY_STATUS, WAITLIST_STATUS, CONTACT_STATUS, find, values } from "@/lib/status";
+import { BUSINESS_STATUS, CONCIERGE_STATUS, CREDENTIAL_STATE, ENQUIRY_STATUS, WAITLIST_STATUS, CONTACT_STATUS, canBeVerified, find, values } from "@/lib/status";
 
 /* ---------------- Sign in / out ---------------- */
 
@@ -131,7 +131,7 @@ export async function saveBusiness(fd: FormData): Promise<SaveResult> {
   if (!slug) return { ok: false, error: "Add a web address (slug)", field: "slug" };
   const clash = await db.business.findUnique({ where: { slug }, select: { id: true } });
   if (clash && clash.id !== id) return { ok: false, error: `Another business already uses the address /listing/${slug}`, field: "slug" };
-  if (d.status === "verified" && credentials.some((c) => c.state !== "verified"))
+  if (d.status === "verified" && !canBeVerified(credentials))
     return { ok: false, error: "Every credential must be Checked before a business can be marked Verified.", field: "status" };
 
   // Services must belong to the business's category; at least one is required when the category has services.
@@ -171,8 +171,8 @@ export async function setBusinessStatus(id: string, status: string) {
   const admin = await requireAdmin("edit");
   z.enum(values(BUSINESS_STATUS)).parse(status);
   if (status === "verified") {
-    const pending = await db.credential.count({ where: { businessId: id, state: { not: "verified" } } });
-    if (pending) return { ok: false as const, error: "Check every credential before marking Verified." };
+    const creds = await db.credential.findMany({ where: { businessId: id }, select: { state: true } });
+    if (!canBeVerified(creds)) return { ok: false as const, error: "Check every credential before marking Verified." };
   }
   const before = await db.business.findUnique({ where: { id }, select: { name: true, status: true } });
   await db.business.update({ where: { id }, data: { status } });

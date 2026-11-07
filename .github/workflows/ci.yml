@@ -12,9 +12,9 @@ concurrency:
 
 jobs:
   check:
-    name: Lint, type-check, schema and build
+    name: Lint, type-check, tests and build
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     services:
       # Throwaway Postgres so migrations are applied and checked on every PR.
       postgres:
@@ -35,6 +35,10 @@ jobs:
       DATABASE_URL: postgresql://plug:ci_only@localhost:5432/theplugafrica
       DIRECT_URL: postgresql://plug:ci_only@localhost:5432/theplugafrica
       AUTH_SECRET: ci-only-secret-not-used-anywhere-real-0000
+      # The seeded owner account, also used by the end-to-end tests to sign in.
+      ADMIN_EMAIL: ci@example.invalid
+      ADMIN_NAME: CI
+      ADMIN_PASSWORD: ci-only-password-0000
       NEXT_TELEMETRY_DISABLED: 1
     steps:
       - uses: actions/checkout@v4
@@ -53,13 +57,14 @@ jobs:
         run: npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
       - name: Seed runs
         run: npx prisma db seed
-        env:
-          ADMIN_EMAIL: ci@example.invalid
-          ADMIN_NAME: CI
-          ADMIN_PASSWORD: ci-only-password-0000
       - name: Lint
         run: npm run lint
       - name: Type-check
         run: npx tsc --noEmit
+      - name: Unit tests
+        run: npm test
       - name: Production build
         run: npm run build
+      - name: End-to-end tests
+        # Starts the build above against the CI database, with a stand-in email provider (tests/e2e/setup.ts).
+        run: npm run test:e2e
