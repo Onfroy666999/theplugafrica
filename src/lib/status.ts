@@ -39,6 +39,9 @@ export const WAITLIST_STATUS = def([
 ] as const);
 
 /** Businesses with these statuses appear on the public site. */
+/** A business can be marked Verified only when every credential on it is Checked. */
+export const canBeVerified = (credentials: readonly { state: string }[]) => credentials.every((c) => c.state === "verified");
+
 export const PUBLIC_STATUSES = ["in_review", "verified"] as const;
 
 export const values = (xs: readonly { value: string }[]) => xs.map((x) => x.value) as [string, ...string[]];

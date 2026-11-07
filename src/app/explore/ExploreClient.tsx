@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/Switch";
 import { CATS, LISTING_CATS, type CatKey } from "@/lib/directory";
 import { CITIES, type Listing } from "@/lib/listings";
 import { DUR, EASE } from "@/lib/motion";
+import { searchListings } from "@/lib/search";
 
 const SORT_OPTIONS = [
   { value: "relevant", label: "Most relevant" },
@@ -30,12 +31,6 @@ const CAT_CHIPS = [
     icon: <CatIcon k={c.key} className="h-[18px] w-[18px]" />,
   })),
 ];
-
-/** Rough English word root: strips common endings, keeping at least 3 letters. */
-function root(w: string) {
-  const r = w.replace(/(ies|ers|er|ing|es|s|y)$/, "");
-  return r.length >= 3 ? r : w;
-}
 
 /**
  * `embedded`: used inside a service page, which supplies its own heading and fixes the category.
@@ -69,31 +64,7 @@ export function ExploreClient({
     router.replace(`${path}?${p.toString()}`, { scroll: false });
   };
 
-  const results = useMemo(() => {
-    // Compare word roots so "cleaner" finds "cleaning" and "nanny" finds "nannies".
-    const words = q
-      .trim()
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((w) => w.length > 2)
-      .map(root);
-    let r = listings.filter(
-      (l) =>
-        (!cat || l.cat === cat) &&
-        (!city || l.city === city) &&
-        (!verifiedOnly || l.status === "verified") &&
-        (!words.length ||
-          words.some((w) =>
-            `${l.name} ${l.kind} ${l.area} ${l.blurb}`
-              .toLowerCase()
-              .includes(w),
-          )),
-    );
-    if (sort === "rating") r = [...r].sort((a, b) => b.rating - a.rating);
-    if (sort === "reviews")
-      r = [...r].sort((a, b) => b.reviewCount - a.reviewCount);
-    return r;
-  }, [listings, q, cat, city, verifiedOnly, sort]);
+  const results = useMemo(() => searchListings(listings, { q, cat, city, verifiedOnly, sort }), [listings, q, cat, city, verifiedOnly, sort]);
 
   const catName = CATS.find((c) => c.key === cat)?.name;
 
