@@ -4,6 +4,10 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Fixed
+- Explore filters (category, city, Clear filters) update instantly in the browser instead of asking the server to render the page again, which took about a second on staging and cost Worker CPU (#63). The URL still changes, so filtered views can be shared.
+- An end-to-end test could fail at random depending on which business the database returned first; it now picks one in a fixed order.
+
 ## [0.7.0] - 2026-11-07
 
 ### Added

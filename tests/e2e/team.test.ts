@@ -28,7 +28,8 @@ beforeAll(async () => {
   const { email, password } = adminCredentials();
   owner = (await signIn(email, password, ip)).cookie;
   ownerId = (await db.admin.findUniqueOrThrow({ where: { email } })).id;
-  const b = await db.business.findFirstOrThrow({ where: { status: { in: ["verified", "in_review"] } }, select: { id: true, status: true } });
+  // A Verified business, picked in a fixed order: moving it to In review is always allowed (Verified needs checked credentials).
+  const b = await db.business.findFirstOrThrow({ where: { status: "verified" }, orderBy: { slug: "asc" }, select: { id: true, status: true } });
   bizId = b.id;
   bizStatus = b.status;
 });
@@ -68,8 +69,7 @@ describe("invitations", () => {
 
 describe("roles", () => {
   it("lets an editor edit but not delete or manage the team", async () => {
-    const other = bizStatus === "verified" ? "in_review" : "verified";
-    expect((await act("setBusinessStatus", [bizId, other], { cookie: editor, ip })).result).toMatchObject({ ok: true });
+    expect((await act("setBusinessStatus", [bizId, "in_review"], { cookie: editor, ip })).result).toMatchObject({ ok: true });
     await act("setBusinessStatus", [bizId, bizStatus], { cookie: editor, ip });
     const del = await act("deleteBusiness", [bizId], { cookie: editor, ip });
     expect(del.redirect).toBe("/admin?denied=1");
