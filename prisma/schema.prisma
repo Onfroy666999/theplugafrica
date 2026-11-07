@@ -14,12 +14,52 @@ datasource db {
   directUrl = env("DIRECT_URL") // direct connection used by migrations
 }
 
+// Team accounts (issue #18). Roles and what each may do: src/lib/roles.ts.
 model Admin {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  name         String
-  passwordHash String
-  createdAt    DateTime @default(now())
+  id            String     @id @default(cuid())
+  email         String     @unique
+  name          String
+  passwordHash  String
+  role          String     @default("editor") // owner | editor | viewer (existing accounts became owners)
+  // Sessions signed before this moment stop working (set when the password changes).
+  sessionsSince DateTime   @default(now())
+  lastSignInAt  DateTime?
+  createdAt     DateTime   @default(now())
+  invitesSent   Invite[]   @relation("InvitedBy")
+  activity      AuditLog[]
+}
+
+// A single-use link to join the team (purpose "invite") or set a new password ("reset"). Only a hash is stored.
+model Invite {
+  id          String    @id @default(cuid())
+  tokenHash   String    @unique
+  purpose     String    @default("invite") // invite | reset
+  email       String
+  name        String
+  role        String
+  invitedById String?
+  invitedBy   Admin?    @relation("InvitedBy", fields: [invitedById], references: [id], onDelete: SetNull)
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([email])
+}
+
+// Who changed what in the admin. The actor's name is copied so entries survive the account being removed.
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminId    String?
+  admin      Admin?   @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  actorName  String
+  action     String // e.g. business.update, team.invite (src/lib/audit.ts)
+  summary    String
+  targetType String?
+  targetId   String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([targetType, targetId])
 }
 
 model Business {

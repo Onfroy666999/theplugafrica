@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/Select";
 import { DUR, EASE } from "@/lib/motion";
 import type { Tone } from "@/lib/status";
 import { updateInbox, type InboxKind } from "../actions";
+import { useCan } from "./AdminContext";
 
 /** One row in any inbox: details, a status dropdown that saves instantly, and private notes. */
 export function InboxItem({
@@ -30,13 +31,14 @@ export function InboxItem({
   const [open, setOpen] = useState(false);
   const [saved, setSaved] = useState(false);
   const [pending, start] = useTransition();
+  const canEdit = useCan("edit");
 
   return (
     <li className="px-4 py-4 md:px-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-6">
         <div className="min-w-0 flex-1">{children}</div>
         <div className="flex items-center gap-2 md:w-[230px] md:shrink-0">
-          <div className="flex-1">
+          <div className="flex-1" inert={!canEdit}>
             <Select
               variant="pill"
               label="Status"
@@ -65,6 +67,7 @@ export function InboxItem({
             <div className="pt-3">
               <textarea
                 aria-label="Private notes"
+                readOnly={!canEdit}
                 value={text}
                 onChange={(e) => {
                   setText(e.target.value);
@@ -73,6 +76,7 @@ export function InboxItem({
                 placeholder="Private notes: who you spoke to, what was agreed, commission…"
                 className="min-h-[96px] w-full resize-y rounded-field border border-navy/15 bg-white px-4 py-3 text-[14.5px] text-navy outline-none placeholder:text-navy/35 hover:border-navy/30 focus:border-navy/40"
               />
+              {canEdit && (
               <div className="mt-2 flex items-center gap-3">
                 <Button
                   size="sm"
@@ -89,6 +93,7 @@ export function InboxItem({
                 </Button>
                 {saved && <span role="status" className="text-[13px] font-medium text-ok">Saved</span>}
               </div>
+              )}
             </div>
           </motion.div>
         )}

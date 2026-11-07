@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { LinkButton } from "@/components/ui/Button";
+import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { can } from "@/lib/roles";
 import { CONCIERGE_STATUS, ENQUIRY_STATUS, WAITLIST_STATUS, find } from "@/lib/status";
 import { PageHeader, Panel, StatCard, fmtDate } from "./ui";
 
-export default async function Dashboard() {
+export default async function Dashboard({ searchParams }: { searchParams: Promise<{ denied?: string }> }) {
+  const [admin, sp] = await Promise.all([requireAdmin(), searchParams]);
   const [byStatus, examples, newEnq, newCnc, newWl, newMsg, enquiries, concierge, waitlist] = await Promise.all([
     db.business.groupBy({ by: ["status"], _count: true }),
     db.business.count({ where: { isExample: true } }),
@@ -31,7 +34,8 @@ export default async function Dashboard() {
 
   return (
     <>
-      <PageHeader title="Dashboard" sub="What's live, and what needs you." action={<LinkButton href="/admin/businesses/new">Add a business</LinkButton>} />
+      <PageHeader title="Dashboard" sub="What's live, and what needs you." action={can(admin.role, "edit") ? <LinkButton href="/admin/businesses/new">Add a business</LinkButton> : undefined} />
+      {sp.denied && <p role="alert" className="mb-6 rounded-field bg-warn-soft px-4 py-3 text-[14px] font-medium text-warn">Your role doesn&apos;t allow that. Ask an owner if you need access.</p>}
 
       <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard label="Live on the site" value={live} href="/admin/businesses" note={`${count("verified")} verified · ${count("in_review")} in review`} />

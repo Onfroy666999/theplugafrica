@@ -12,6 +12,7 @@ import { LISTING_CATS } from "@/lib/directory";
 import { DUR, EASE } from "@/lib/motion";
 import { BUSINESS_STATUS, CREDENTIAL_STATE } from "@/lib/status";
 import { deleteBusiness, saveBusiness, uploadImages } from "../../actions";
+import { useCan } from "../AdminContext";
 
 export type BusinessInput = {
   id?: string;
@@ -46,6 +47,8 @@ const DEFAULT_CREDS = ["Business registration (Registrar-General)", "Owner ident
 export function BusinessForm({ initial, library, allServices }: { initial?: BusinessInput; library: string[]; allServices: ServiceOption[] }) {
   const router = useRouter();
   const reduce = useReducedMotion();
+  const canEdit = useCan("edit");
+  const canDelete = useCan("delete");
   const formRef = useRef<HTMLFormElement>(null);
   const [images, setImages] = useState<string[]>(initial?.images ?? []);
   const [category, setCategory] = useState(initial?.category || "rentals");
@@ -108,7 +111,8 @@ export function BusinessForm({ initial, library, allServices }: { initial?: Busi
 
   return (
     <form ref={formRef} onSubmit={submit} className="grid gap-6 xl:grid-cols-[1fr_340px]">
-      <div className="space-y-6">
+      {/* inert: viewers can read every field but not change it */}
+      <div className="space-y-6" inert={!canEdit}>
         <Section title="Details">
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="Business name"><Input label="Business name" name="name" defaultValue={v("name")} required /></Field>
@@ -196,6 +200,7 @@ export function BusinessForm({ initial, library, allServices }: { initial?: Busi
                 >
                   <Image src={src} alt="" fill sizes="200px" className="object-cover" />
                   {i === 0 && <span className="absolute top-2 left-2 rounded-full bg-white/95 px-2 py-0.5 text-[11px] font-semibold text-navy">Cover</span>}
+                  {canEdit && (
                   <div className="absolute inset-x-2 bottom-2 flex justify-between gap-1">
                     <span className="flex gap-1">
                       <IconBtn label="Move earlier" onClick={() => move(i, -1)} disabled={i === 0}>←</IconBtn>
@@ -203,10 +208,12 @@ export function BusinessForm({ initial, library, allServices }: { initial?: Busi
                     </span>
                     <IconBtn label="Remove photo" onClick={() => setImages((xs) => xs.filter((x) => x !== src))}>✕</IconBtn>
                   </div>
+                  )}
                 </motion.li>
               ))}
             </AnimatePresence>
           </ul>
+          {canEdit && (
           <div className="mt-4 flex flex-wrap gap-2">
             <label className="press inline-flex h-10 cursor-pointer items-center gap-2 rounded-full bg-navy px-4 text-[14px] font-semibold text-white hover:bg-navy-hover">
               {uploading && <Spinner />}
@@ -215,6 +222,7 @@ export function BusinessForm({ initial, library, allServices }: { initial?: Busi
             </label>
             <Button type="button" variant="secondary" size="sm" onClick={() => setPickerOpen(true)}>Choose from library</Button>
           </div>
+          )}
         </Section>
 
         <Section title="Credentials" sub="What our team has checked. Every item must be Checked before the business can be Verified.">
@@ -232,23 +240,27 @@ export function BusinessForm({ initial, library, allServices }: { initial?: Busi
                   <div className="w-[160px]">
                     <Select variant="pill" label="Credential state" options={CRED_OPTIONS} value={c.state} onChange={(s) => setCreds((xs) => xs.map((x, j) => (j === i ? { ...x, state: s } : x)))} />
                   </div>
-                  <IconBtn label="Remove credential" onClick={() => setCreds((xs) => xs.filter((_, j) => j !== i))} tone="light">✕</IconBtn>
+                  {canEdit && <IconBtn label="Remove credential" onClick={() => setCreds((xs) => xs.filter((_, j) => j !== i))} tone="light">✕</IconBtn>}
                 </div>
               </li>
             ))}
           </ul>
-          <Button type="button" variant="secondary" size="sm" className="mt-3" onClick={() => setCreds((xs) => [...xs, { label: "", state: "pending" }])}>
-            Add credential
-          </Button>
+          {canEdit && (
+            <Button type="button" variant="secondary" size="sm" className="mt-3" onClick={() => setCreds((xs) => [...xs, { label: "", state: "pending" }])}>
+              Add credential
+            </Button>
+          )}
         </Section>
       </div>
 
       {/* Publish panel */}
       <aside className="xl:sticky xl:top-8 xl:self-start">
         <div className="rounded-panel border border-navy/10 bg-white p-5 shadow-card">
-          <Field label="Status">
-            <Select label="Status" name="status" options={STATUS_OPTIONS} defaultValue={v("status") || "draft"} />
-          </Field>
+          <div inert={!canEdit}>
+            <Field label="Status">
+              <Select label="Status" name="status" options={STATUS_OPTIONS} defaultValue={v("status") || "draft"} />
+            </Field>
+          </div>
           <p className="mt-2 text-[12.5px] leading-relaxed text-navy/50">Draft and Hidden stay off the site. In review shows with a &ldquo;Verification in review&rdquo; badge.</p>
           <AnimatePresence>
             {error && (
@@ -262,18 +274,24 @@ export function BusinessForm({ initial, library, allServices }: { initial?: Busi
               </motion.p>
             )}
           </AnimatePresence>
-          <Button type="submit" size="lg" full className="mt-4" disabled={pending}>
-            {pending && <Spinner />}
-            {pending ? "Saving" : isNew ? "Create business" : "Save changes"}
-          </Button>
+          {canEdit ? (
+            <Button type="submit" size="lg" full className="mt-4" disabled={pending}>
+              {pending && <Spinner />}
+              {pending ? "Saving" : isNew ? "Create business" : "Save changes"}
+            </Button>
+          ) : (
+            <p className="mt-4 rounded-field bg-navy/[0.04] px-4 py-3 text-[13.5px] text-navy/60">You have view-only access. Ask an owner if something needs changing.</p>
+          )}
           {!isNew && (
             <>
               <Link href={`/listing/${initial?.slug}`} target="_blank" className="press mt-2 flex h-12 items-center justify-center rounded-full text-[14px] font-semibold text-navy hover:bg-navy/[0.05]">
                 View on site ↗
               </Link>
-              <button type="button" onClick={() => setConfirmDelete(true)} className="press mt-1 flex h-10 w-full items-center justify-center rounded-full text-[13px] font-semibold text-ember hover:bg-ember-soft">
-                Delete business
-              </button>
+              {canDelete && (
+                <button type="button" onClick={() => setConfirmDelete(true)} className="press mt-1 flex h-10 w-full items-center justify-center rounded-full text-[13px] font-semibold text-ember hover:bg-ember-soft">
+                  Delete business
+                </button>
+              )}
             </>
           )}
         </div>

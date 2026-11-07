@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/Switch";
 import { DUR, EASE } from "@/lib/motion";
 import { deleteService, moveService, saveService, setServiceVisible } from "../../actions";
 import { Empty, Panel } from "../ui";
+import { useCan } from "../AdminContext";
 
 type Svc = { id: string; slug: string; name: string; description: string; image: string; visible: boolean; count: number };
 
@@ -23,6 +24,8 @@ export function CategoryPicker({ cats, value }: { cats: { value: string; label: 
 
 export function ServicesManager({ category, services, library }: { category: { key: string; name: string }; services: Svc[]; library: string[] }) {
   const reduce = useReducedMotion();
+  const canEdit = useCan("edit");
+  const canDelete = useCan("delete");
   const [editing, setEditing] = useState<Svc | "new" | null>(null);
   const [deleting, setDeleting] = useState<Svc | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,12 +37,12 @@ export function ServicesManager({ category, services, library }: { category: { k
         <p className="text-[14px] text-navy/55">
           {services.length} {services.length === 1 ? "service" : "services"} in {category.name}. Hidden services stay off the site.
         </p>
-        <Button size="sm" onClick={() => setEditing("new")}>Add a service</Button>
+        {canEdit && <Button size="sm" onClick={() => setEditing("new")}>Add a service</Button>}
       </div>
 
       <Panel>
         {services.length === 0 ? (
-          <Empty title={`No services in ${category.name} yet`} body="Add the first one, for example “Cars” in Rentals." action={<Button onClick={() => setEditing("new")}>Add a service</Button>} />
+          <Empty title={`No services in ${category.name} yet`} body="Add the first one, for example “Cars” in Rentals." action={canEdit ? <Button onClick={() => setEditing("new")}>Add a service</Button> : undefined} />
         ) : (
           <ul className={`divide-y divide-navy/[0.07] ${pending ? "opacity-70" : ""}`}>
             <AnimatePresence initial={false}>
@@ -61,13 +64,17 @@ export function ServicesManager({ category, services, library }: { category: { k
                       </span>
                     </span>
                   </div>
+                  {!canEdit ? (
+                    <span className="text-[13px] font-medium text-navy/55">{s.visible ? "Visible" : "Hidden"}</span>
+                  ) : (
                   <div className="flex flex-wrap items-center gap-2">
                     <Switch checked={s.visible} label={s.visible ? "Visible" : "Hidden"} onChange={(v) => start(() => setServiceVisible(s.id, v))} />
                     <IconBtn label="Move up" disabled={i === 0} onClick={() => start(() => moveService(s.id, -1))}>↑</IconBtn>
                     <IconBtn label="Move down" disabled={i === services.length - 1} onClick={() => start(() => moveService(s.id, 1))}>↓</IconBtn>
                     <Button variant="secondary" size="sm" onClick={() => setEditing(s)}>Edit</Button>
-                    <button type="button" onClick={() => { setError(null); setDeleting(s); }} className="press h-10 rounded-full px-4 text-[14px] font-semibold text-ember hover:bg-ember-soft">Delete</button>
+                    {canDelete && <button type="button" onClick={() => { setError(null); setDeleting(s); }} className="press h-10 rounded-full px-4 text-[14px] font-semibold text-ember hover:bg-ember-soft">Delete</button>}
                   </div>
+                  )}
                 </motion.li>
               ))}
             </AnimatePresence>
