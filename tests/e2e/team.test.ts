@@ -19,7 +19,7 @@ async function join(name: string, email: string, role: string, password = pw()) 
   expect(inv.result).toMatchObject({ ok: true, emailed: true });
   const t = token(inv.result?.url);
   const acc = await act("acceptInvite", [t, undefined, form({ name, password, confirm: password }, { human: false })], { at: `/admin/invite/${t}`, ip });
-  expect(acc.redirect).toBe("/admin");
+  expect(acc.result).toEqual({ ok: true });
   return { cookie: acc.cookie, token: t, password };
 }
 

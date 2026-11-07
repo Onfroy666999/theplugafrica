@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/Select";
 import { DUR, EASE } from "@/lib/motion";
 import type { Tone } from "@/lib/status";
 import { updateInbox, type InboxKind } from "../actions";
+import { call } from "@/lib/call";
 import { useCan } from "./AdminContext";
 
 /** One row in any inbox: details, a status dropdown that saves instantly, and private notes. */
@@ -30,6 +31,7 @@ export function InboxItem({
   const [text, setText] = useState(notes);
   const [open, setOpen] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const canEdit = useCan("edit");
 
@@ -46,7 +48,15 @@ export function InboxItem({
               value={value}
               onChange={(v) => {
                 setValue(v);
-                start(() => updateInbox(kind, id, { status: v }));
+                const prev = value;
+                setFailed(null);
+                start(async () => {
+                  const r = await call(updateInbox(kind, id, { status: v }));
+                  if (r) {
+                    setValue(prev);
+                    setFailed(r.error);
+                  }
+                });
               }}
             />
           </div>
@@ -55,6 +65,7 @@ export function InboxItem({
           </Button>
         </div>
       </div>
+      {failed && <p role="alert" className="mt-2 text-[13px] font-medium text-ember">{failed}</p>}
       <AnimatePresence initial={false}>
         {open && (
           <motion.div
@@ -83,8 +94,10 @@ export function InboxItem({
                   disabled={pending}
                   onClick={() =>
                     start(async () => {
-                      await updateInbox(kind, id, { notes: text });
-                      setSaved(true);
+                      setFailed(null);
+                      const r = await call(updateInbox(kind, id, { notes: text }));
+                      if (r) setFailed(r.error);
+                      else setSaved(true);
                     })
                   }
                 >

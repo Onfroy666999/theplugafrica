@@ -21,19 +21,19 @@ import { BUSINESS_STATUS, CONCIERGE_STATUS, CREDENTIAL_STATE, ENQUIRY_STATUS, WA
 // Sign-in throttle: 5 failed attempts per email + visitor per 15 minutes, counted in the database so every
 // Cloudflare isolate shares it (issue #7; an in-memory Map reset per isolate).
 const LOGIN_WINDOW_S = 15 * 60;
-// Compared against when an email is unknown, so timing doesn't reveal which emails exist.
-// Created on first use (hashing is deliberately slow; doing it at import slowed every admin page load).
-let dummyHash: string | undefined;
-const getDummyHash = async () => (dummyHash ??= await bcrypt.hash(randomBytes(16).toString("hex"), 12));
+// Compared against when an email is unknown, so timing doesn't reveal which emails exist. A fixed hash of a random,
+// discarded string: hashing one at runtime cost a second slow bcrypt run in every new Worker instance (issue #65).
+const DUMMY_HASH = "$2b$12$maf4o8ehDUChsltPClrNCOw/UF/hbJTA.ucl2JXvmNRl7J5APlC4u";
 
-export async function login(_: unknown, fd: FormData): Promise<{ error: string; email: string } | undefined> {
+/** Signs in. Returns { ok: true } and the browser then opens the admin, or an error to show (issue #65). */
+export async function login(_: unknown, fd: FormData): Promise<{ ok: true } | { ok?: false; error: string; email: string }> {
   const email = String(fd.get("email") ?? "").toLowerCase().trim();
   const password = String(fd.get("password") ?? "");
   const key = `login:${email}:${await visitorId()}`;
   if ((await peek(key)) >= 5) return { error: "Too many attempts. Wait 15 minutes and try again.", email };
 
   const admin = email ? await db.admin.findUnique({ where: { email } }) : null;
-  const ok = await bcrypt.compare(password, admin?.passwordHash ?? (await getDummyHash()));
+  const ok = await bcrypt.compare(password, admin?.passwordHash ?? DUMMY_HASH);
   if (!admin || !ok) {
     await hit(key, LOGIN_WINDOW_S);
     return { error: "That email and password don't match.", email };
@@ -42,7 +42,7 @@ export async function login(_: unknown, fd: FormData): Promise<{ error: string; 
   await db.admin.update({ where: { id: admin.id }, data: { lastSignInAt: new Date() } });
   await audit(admin, "auth.sign_in", "Signed in");
   await startSession(admin);
-  redirect("/admin");
+  return { ok: true };
 }
 
 export async function logout() {

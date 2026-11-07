@@ -12,6 +12,7 @@ import { LISTING_CATS } from "@/lib/directory";
 import { DUR, EASE } from "@/lib/motion";
 import { BUSINESS_STATUS, CREDENTIAL_STATE } from "@/lib/status";
 import { deleteBusiness, saveBusiness, uploadImages } from "../../actions";
+import { call } from "@/lib/call";
 import { useCan } from "../AdminContext";
 
 export type BusinessInput = {
@@ -93,10 +94,11 @@ export function BusinessForm({ initial, library, allServices }: { initial?: Busi
     fd.set("services", JSON.stringify(serviceIds));
     if (initial?.id) fd.set("id", initial.id);
     start(async () => {
-      const r = await saveBusiness(fd);
+      const r = await call(saveBusiness(fd));
       if (!r.ok) {
-        setError({ msg: r.error, field: r.field });
-        formRef.current?.querySelector<HTMLElement>(`[name="${r.field}"]`)?.focus();
+        const field = "field" in r ? r.field : undefined;
+        setError({ msg: r.error, field });
+        if (field) formRef.current?.querySelector<HTMLElement>(`[name="${field}"]`)?.focus();
         return;
       }
       if (isNew) router.replace(`/admin/businesses/${r.id}?created=1`);
@@ -328,7 +330,7 @@ export function BusinessForm({ initial, library, allServices }: { initial?: Busi
         <p className="mt-2 text-[14.5px] text-navy/65">This removes the listing and its credentials. Enquiries keep their reference codes but lose the link to this business. This can&apos;t be undone; choose Hidden instead if you may need it again.</p>
         <div className="mt-6 grid grid-cols-2 gap-2">
           <Button type="button" variant="secondary" onClick={() => setConfirmDelete(false)}>Keep it</Button>
-          <Button type="button" variant="danger" onClick={() => initial?.id && start(() => deleteBusiness(initial.id!))}>
+          <Button type="button" variant="danger" onClick={() => initial?.id && start(async () => { const r = await call(deleteBusiness(initial.id!)); if (r) { setConfirmDelete(false); setError({ msg: r.error }); } })}>
             Delete
           </Button>
         </div>
