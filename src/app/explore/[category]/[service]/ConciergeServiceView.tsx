@@ -90,12 +90,10 @@ export function ConciergeServiceView({ cat, svc, siblings }: { cat: { key: strin
           <h2 className="font-heading text-[26px] font-bold tracking-[-0.02em] md:text-[32px]">How it works</h2>
           <ol className="mt-7 grid gap-4 md:grid-cols-3">
             {STEPS.map((s, i) => (
-              <Reveal key={s.t} delay={i * STAGGER}>
-                <li className="h-full rounded-panel bg-cream p-7">
+              <Reveal as="li" key={s.t} delay={i * STAGGER} className="h-full rounded-panel bg-cream p-7">
                   <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy font-heading text-[15px] font-bold text-white">{i + 1}</span>
                   <h3 className="mt-5 font-heading text-[18px] font-bold text-navy">{s.t}</h3>
                   <p className="mt-2 text-[15px] leading-relaxed text-navy/65">{s.d}</p>
-                </li>
               </Reveal>
             ))}
           </ol>

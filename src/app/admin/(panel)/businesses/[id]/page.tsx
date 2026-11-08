@@ -17,7 +17,7 @@ export default async function EditBusiness({ params, searchParams }: { params: P
 
   return (
     <>
-      <Link href="/admin/businesses" className="text-[14px] font-medium text-navy/55 hover:text-navy">← Businesses</Link>
+      <Link href="/admin/businesses" className="text-[14px] font-medium text-navy/65 hover:text-navy">← Businesses</Link>
       <div className="mt-3">
         <PageHeader
           title={b.name}

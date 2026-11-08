@@ -78,9 +78,9 @@ export default async function ListingPage({ params }: Props) {
             <h1 className="font-heading text-[28px] leading-tight font-extrabold tracking-[-0.03em] text-navy md:text-[38px]">{l.name}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-navy/65">
               {l.reviewCount > 0 ? (
-                <span className="flex items-center gap-1 font-semibold text-navy"><Star className="h-4 w-4 text-gold" /> {l.rating.toFixed(1)} <span className="font-normal text-navy/55">({l.reviewCount} reviews)</span></span>
+                <span className="flex items-center gap-1 font-semibold text-navy"><Star className="h-4 w-4 text-gold" /> {l.rating.toFixed(1)} <span className="font-normal text-navy/65">({l.reviewCount} reviews)</span></span>
               ) : (
-                <span className="rounded-full bg-gold/15 px-2.5 py-0.5 text-[12px] font-semibold text-gold">New on The Plug</span>
+                <span className="rounded-full bg-gold/15 px-2.5 py-0.5 text-[12px] font-semibold text-gold-ink">New on The Plug</span>
               )}
               <span>{l.kind}</span>
               <span>{l.area}, {l.city}</span>
@@ -104,7 +104,7 @@ export default async function ListingPage({ params }: Props) {
             <Reveal>
               <p className="text-[17px] leading-relaxed text-navy/80">{l.blurb}</p>
               <p className="mt-4 text-[15.5px] leading-relaxed text-navy/65">{l.about}</p>
-              <p className="mt-4 text-[14px] text-navy/55">Languages: {l.languages.join(", ")}</p>
+              <p className="mt-4 text-[14px] text-navy/65">Languages: {l.languages.join(", ")}</p>
               {!!l.services?.length && (
                 <div className="mt-5 flex flex-wrap gap-2">
                   {l.services.map((sv) => (
@@ -119,7 +119,7 @@ export default async function ListingPage({ params }: Props) {
             {/* Credentials */}
             <Reveal className="mt-10 border-t border-navy/10 pt-10">
               <h2 className="font-heading text-[22px] font-bold text-navy">What we&apos;ve checked</h2>
-              <p className="mt-1 text-[14px] text-navy/55">Our team reviews documents before a business is marked Verified.</p>
+              <p className="mt-1 text-[14px] text-navy/65">Our team reviews documents before a business is marked Verified.</p>
               <ul className="mt-5 divide-y divide-navy/[0.07] rounded-card border border-navy/10">
                 {l.credentials.map((c) => (
                   <li key={c.label} className="flex items-center justify-between gap-4 px-5 py-4 text-[15px]">
@@ -139,7 +139,7 @@ export default async function ListingPage({ params }: Props) {
               <h2 className="flex items-center gap-2 font-heading text-[22px] font-bold text-navy">
                 {l.reviewCount > 0 ? <><Star className="h-5 w-5 text-gold" /> {l.rating.toFixed(1)} · {l.reviewCount} reviews</> : "Reviews"}
               </h2>
-              <p className="mt-1 text-[14px] text-navy/55">{l.isExample ? "Example reviews. Real reviews are moderated before they appear." : reviews.length ? "Reviews are moderated before they appear." : "No reviews yet. Reviews are moderated before they appear."}</p>
+              <p className="mt-1 text-[14px] text-navy/65">{l.isExample ? "Example reviews. Real reviews are moderated before they appear." : reviews.length ? "Reviews are moderated before they appear." : "No reviews yet. Reviews are moderated before they appear."}</p>
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 {reviews.map((r, i) => (
                   <figure key={i} className="rounded-card bg-cream p-5">
@@ -147,7 +147,7 @@ export default async function ListingPage({ params }: Props) {
                       <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy font-heading text-[14px] font-bold text-white">{r.name.trim().charAt(0).toUpperCase()}</span>
                       <div>
                         <p className="text-[14px] font-semibold text-navy">{r.name}</p>
-                        <p className="text-[12.5px] text-navy/50">{r.when}</p>
+                        <p className="text-[12.5px] text-navy/65">{r.when}</p>
                       </div>
                       <span className="ml-auto flex">
                         {Array.from({ length: 5 }, (_, k) => <Star key={k} className={`h-3.5 w-3.5 ${k < r.rating ? "text-gold" : "text-navy/15"}`} />)}

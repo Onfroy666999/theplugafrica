@@ -42,7 +42,7 @@ export function ReviewItem({ review: r, business }: { review: Review; business: 
               {Array.from({ length: 5 }, (_, k) => <Star key={k} className={`h-4 w-4 ${k < r.rating ? "text-gold" : "text-navy/15"}`} />)}
             </span>
             <span className="text-[15px] font-semibold text-navy">{r.name}</span>
-            <span className="text-[13px] text-navy/45">
+            <span className="text-[13px] text-navy/65">
               on <Link href={`/admin/businesses/${business.id}`} className="font-medium text-navy hover:underline">{business.name}</Link> · {r.when} · <span className="font-mono">{r.ref}</span>
             </span>
           </p>

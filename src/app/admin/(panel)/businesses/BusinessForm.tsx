@@ -121,7 +121,7 @@ export function BusinessForm({ initial, library, allServices, fromWaitlist }: { 
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="Business name"><Input label="Business name" name="name" defaultValue={v("name")} required /></Field>
             <Field label="Web address" hint="optional, made from the name">
-              <div className="flex items-center rounded-field border border-navy/15 bg-white pl-4 text-[15px] text-navy/45 focus-within:border-navy/40">
+              <div className="flex items-center rounded-field border border-navy/15 bg-white pl-4 text-[15px] text-navy/65 focus-within:border-navy/40">
                 <span className="shrink-0">/listing/</span>
                 <input name="slug" aria-label="Web address" defaultValue={v("slug")} placeholder="business-name" className="h-12 w-full min-w-0 bg-transparent pr-4 text-navy outline-none placeholder:text-navy/30 focus-visible:shadow-none" />
               </div>
@@ -169,13 +169,13 @@ export function BusinessForm({ initial, library, allServices, fromWaitlist }: { 
                   >
                     {on && <span aria-hidden="true">✓</span>}
                     {sv.name}
-                    {!sv.visible && <span className={`text-[11px] ${on ? "text-white/70" : "text-navy/45"}`}>(hidden)</span>}
+                    {!sv.visible && <span className={`text-[11px] ${on ? "text-white/70" : "text-navy/65"}`}>(hidden)</span>}
                   </button>
                 );
               })}
             </div>
           ) : (
-            <p className="text-[14px] text-navy/55">
+            <p className="text-[14px] text-navy/65">
               This category has no services yet. <Link href="/admin/services" className="font-semibold text-navy underline-offset-4 hover:underline">Add services</Link> first.
             </p>
           )}
@@ -265,7 +265,7 @@ export function BusinessForm({ initial, library, allServices, fromWaitlist }: { 
               <Select label="Status" name="status" options={STATUS_OPTIONS} defaultValue={v("status") || "draft"} />
             </Field>
           </div>
-          <p className="mt-2 text-[12.5px] leading-relaxed text-navy/50">Draft and Hidden stay off the site. In review shows with a &ldquo;Verification in review&rdquo; badge.</p>
+          <p className="mt-2 text-[12.5px] leading-relaxed text-navy/65">Draft and Hidden stay off the site. In review shows with a &ldquo;Verification in review&rdquo; badge.</p>
           <AnimatePresence>
             {error && (
               <motion.p key={error.msg} role="alert" initial={{ opacity: 0, transform: "translateY(-4px)" }} animate={{ opacity: 1, transform: "translateY(0px)" }} exit={{ opacity: 0 }} transition={{ duration: DUR.fast, ease: EASE.out }} className="mt-4 rounded-field bg-ember-soft px-4 py-3 text-[14px] font-medium text-ember">
@@ -304,7 +304,7 @@ export function BusinessForm({ initial, library, allServices, fromWaitlist }: { 
       {/* Library picker */}
       <Sheet open={pickerOpen} onOpenChange={setPickerOpen} title="Choose photos">
         <SheetTitle className="font-heading text-[22px] font-bold text-navy">Photo library</SheetTitle>
-        <p className="mt-1 text-[14px] text-navy/55">Tap to add. Licensed photos already on the site.</p>
+        <p className="mt-1 text-[14px] text-navy/65">Tap to add. Licensed photos already on the site.</p>
         <ul className="mt-5 grid grid-cols-3 gap-2">
           {library.map((src) => {
             const on = images.includes(src);
@@ -345,7 +345,7 @@ function Section({ title, sub, children }: { title: string; sub?: string; childr
   return (
     <section className="rounded-panel border border-navy/10 bg-white p-5 shadow-card md:p-7">
       <h2 className="font-heading text-[18px] font-bold text-navy">{title}</h2>
-      {sub && <p className="mt-1 text-[13.5px] text-navy/55">{sub}</p>}
+      {sub && <p className="mt-1 text-[13.5px] text-navy/65">{sub}</p>}
       <div className="mt-5">{children}</div>
     </section>
   );
@@ -359,7 +359,7 @@ function IconBtn({ label, onClick, disabled, children, tone = "dark" }: { label:
       title={label}
       onClick={onClick}
       disabled={disabled}
-      className={`press flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[14px] font-bold disabled:opacity-30 ${tone === "dark" ? "bg-black/55 text-white backdrop-blur-sm hover:bg-black/70" : "text-navy/50 hover:bg-navy/[0.05] hover:text-navy"}`}
+      className={`press flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[14px] font-bold disabled:opacity-30 ${tone === "dark" ? "bg-black/55 text-white backdrop-blur-sm hover:bg-black/70" : "text-navy/65 hover:bg-navy/[0.05] hover:text-navy"}`}
     >
       {children}
     </button>

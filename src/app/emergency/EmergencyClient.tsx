@@ -35,7 +35,7 @@ export function EmergencyClient({ contacts }: { contacts: PublicContact[] }) {
             return (
               <li key={s.value} className="rounded-card border border-navy/10 bg-white p-5">
                 <p className="font-heading text-[17px] font-bold text-navy">{s.label}</p>
-                <p className="mt-1 text-[14px] text-navy/55">{s.hint} · {city}</p>
+                <p className="mt-1 text-[14px] text-navy/65">{s.hint} · {city}</p>
                 {list.length === 0 ? (
                   <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-warn-soft px-3 py-1.5 text-[12.5px] font-semibold text-warn">
                     <span className="h-1.5 w-1.5 rounded-full bg-warn-dot" /> Number being verified
@@ -59,7 +59,7 @@ export function EmergencyClient({ contacts }: { contacts: PublicContact[] }) {
                           )}
                         </p>
                         {(c.address || c.notes) && <p className="mt-2 text-[13.5px] text-navy/65">{[c.address, c.notes].filter(Boolean).join(" · ")}</p>}
-                        <p className="mt-1.5 text-[12px] text-navy/45">
+                        <p className="mt-1.5 text-[12px] text-navy/65">
                           Verified {c.verifiedOn}
                           {c.source && (
                             <>

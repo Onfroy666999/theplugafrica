@@ -9,7 +9,7 @@ export function Breadcrumbs({ items }: { items: { label: string; href?: string }
     itemListElement: items.map((it, i) => ({ "@type": "ListItem", position: i + 1, name: it.label, ...(it.href && { item: abs(it.href) }) })),
   };
   return (
-    <nav aria-label="Breadcrumb" className="text-[13px] text-navy/55">
+    <nav aria-label="Breadcrumb" className="text-[13px] text-navy/65">
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(ld)} />
       <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
         {items.map((it, i) => (

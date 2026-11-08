@@ -10,14 +10,16 @@
   --color-navy-hover: #1f2350;
   --color-gold: #b4913f;
   --color-gold-light: #d9be7a;
+  /* Gold for small text on white or cream: the brand gold is too light for text under 18px (WCAG AA, issue #30). */
+  --color-gold-ink: #86692a;
   --color-cream: #faf7f0;
   --color-line: #e4ddcb;
   --color-muted: #6e7180;
-  --color-ember: #c8501f;
+  --color-ember: #b8481a; /* slightly deeper than #c8501f so text on it and on ember-soft passes WCAG AA */
   --color-ember-soft: #fbf1ec;
   --color-ok: #2f7a4e;
   --color-ok-soft: #e8f3ec;
-  --color-warn: #9a6a12;
+  --color-warn: #8a5e0f; /* passes WCAG AA on warn-soft */
   --color-warn-soft: #fbf3e2;
   --color-warn-dot: #d9a23a;
   --color-info: #2b4c9b;

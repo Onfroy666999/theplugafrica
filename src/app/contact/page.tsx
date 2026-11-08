@@ -24,7 +24,7 @@ export default function ContactPage() {
     <main className="min-h-screen bg-white text-navy">
       <Header />
       <section className="mx-auto max-w-[1280px] px-5 pt-10 md:px-8 md:pt-16">
-        <p className="text-[13px] font-semibold tracking-[0.14em] text-gold uppercase">Contact</p>
+        <p className="text-[13px] font-semibold tracking-[0.14em] text-gold-ink uppercase">Contact</p>
         <h1 className="mt-3 max-w-2xl font-heading text-[34px] leading-[1.08] font-extrabold tracking-[-0.03em] md:text-[50px]">Talk to The Plug team</h1>
         <p className="mt-4 max-w-xl text-[17px] leading-relaxed text-navy/65">
           Questions, feedback, a listing that doesn&apos;t look right, or an idea for working together. We read every message and reply by email or phone.
@@ -47,7 +47,7 @@ export default function ContactPage() {
                       <span className="block font-heading text-[16.5px] font-bold text-navy">{r.title}</span>
                       <span className="mt-1 block text-[14.5px] leading-relaxed text-navy/65">{r.body}</span>
                     </span>
-                    <Arrow className="mt-1 h-4 w-4 shrink-0 text-navy/40 transition-transform duration-200 group-hover:translate-x-0.5" />
+                    <Arrow className="mt-1 h-4 w-4 shrink-0 text-navy/65 transition-transform duration-200 group-hover:translate-x-0.5" />
                   </Link>
                 </Reveal>
               </li>

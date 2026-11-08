@@ -25,7 +25,7 @@ export default function ConciergePage() {
       <Header />
       <section className="mx-auto grid max-w-[1280px] gap-10 px-5 pt-10 md:px-8 lg:grid-cols-[1fr_520px] lg:gap-16 lg:pt-16">
         <div>
-          <p className="text-[13px] font-semibold tracking-[0.14em] text-gold uppercase">Special Services</p>
+          <p className="text-[13px] font-semibold tracking-[0.14em] text-gold-ink uppercase">Special Services</p>
           <h1 className="mt-3 font-heading text-[36px] leading-[1.08] font-extrabold tracking-[-0.03em] text-navy md:text-[52px]">
             Tell us what you need. We&apos;ll handle it.
           </h1>
@@ -67,7 +67,7 @@ export default function ConciergePage() {
                 <div key={p.t} className="rounded-card bg-white p-6">
                   <p className="font-heading text-[18px] font-bold text-navy">{p.t}</p>
                   <p className="mt-2 text-[14.5px] text-navy/60">{p.d}</p>
-                  <p className="mt-4 text-[13px] font-semibold text-gold">Fee: to be confirmed</p>
+                  <p className="mt-4 text-[13px] font-semibold text-gold-ink">Fee: to be confirmed</p>
                 </div>
               ))}
             </div>

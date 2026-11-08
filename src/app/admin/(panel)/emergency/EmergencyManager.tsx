@@ -72,14 +72,14 @@ export function EmergencyManager({ contacts }: { contacts: Contact[] }) {
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-2 text-[15px] font-semibold text-navy">
                     {c.name}
-                    <span className="font-normal text-navy/45">· {serviceLabel(c.service)} · {cityLabel(c.city)}</span>
+                    <span className="font-normal text-navy/65">· {serviceLabel(c.service)} · {cityLabel(c.city)}</span>
                   </p>
                   <p className="mt-0.5 text-[14px]">
                     <a href={telHref(c.phone)} className="font-semibold text-navy hover:underline">{c.phone}</a>
                     {c.altPhone && <> · <a href={telHref(c.altPhone)} className="font-semibold text-navy hover:underline">{c.altPhone}</a></>}
-                    {c.notes && <span className="text-navy/55"> · {c.notes}</span>}
+                    {c.notes && <span className="text-navy/65"> · {c.notes}</span>}
                   </p>
-                  <p className="mt-1 text-[12.5px] text-navy/50">{c.source ? `Source: ${c.source}` : "No source yet"}</p>
+                  <p className="mt-1 text-[12.5px] text-navy/65">{c.source ? `Source: ${c.source}` : "No source yet"}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   {!c.verified ? (
@@ -188,7 +188,7 @@ function ContactForm({ initial, defaultCity, onDone }: { initial?: Contact; defa
       <Field label="Source link" hint="optional"><Input label="Source link" name="sourceUrl" type="url" defaultValue={initial?.sourceUrl} maxLength={300} placeholder="https://" /></Field>
       <div className="rounded-field bg-cream px-4 py-3.5">
         <Switch checked={verified} onChange={setVerified} label={verified ? "Verified: shown on the Emergency page" : "Not verified yet: hidden from the public"} />
-        <p className="mt-2 text-[12.5px] text-navy/55">Only mark it verified once you&apos;ve confirmed it from an official source or by calling it. Changing the number resets the verified date.</p>
+        <p className="mt-2 text-[12.5px] text-navy/65">Only mark it verified once you&apos;ve confirmed it from an official source or by calling it. Changing the number resets the verified date.</p>
       </div>
       {error && <p role="alert" className="rounded-field bg-ember-soft px-4 py-3 text-[14px] font-medium text-ember">{error}</p>}
       <Button type="submit" size="lg" full disabled={pending}>

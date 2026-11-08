@@ -46,10 +46,10 @@ export default async function Enquiries({ searchParams }: { searchParams: SP }) 
                   ) : (
                     "Business removed"
                   )}
-                  <span className="text-navy/45"> · {fmtDate(e.createdAt)}</span>
+                  <span className="text-navy/65"> · {fmtDate(e.createdAt)}</span>
                 </p>
                 {e.kind === "request" && <RequestLines e={e} />}
-                <p className="mt-1 text-[12.5px] text-navy/45">{e.kind === "request" ? "Pass this request to the business with its reference." : "Tell the business this reference so the introduction is on record."}</p>
+                <p className="mt-1 text-[12.5px] text-navy/65">{e.kind === "request" ? "Pass this request to the business with its reference." : "Tell the business this reference so the introduction is on record."}</p>
               </InboxItem>
             ))}
           </ul>
@@ -70,8 +70,8 @@ function RequestLines({ e }: { e: Parameters<typeof describeRequest>[0] & { name
         {e.email && <> · <a href={`mailto:${e.email}`} className="font-medium text-navy hover:underline">{e.email}</a></>}
       </p>
       {e.message && <p className="whitespace-pre-line">{e.message}</p>}
-      {d.place && <p><span className="text-navy/50">Where:</span> {d.place}</p>}
-      {d.when && <p><span className="text-navy/50">When:</span> {d.when}</p>}
+      {d.place && <p><span className="text-navy/65">Where:</span> {d.place}</p>}
+      {d.when && <p><span className="text-navy/65">When:</span> {d.when}</p>}
     </div>
   );
 }
