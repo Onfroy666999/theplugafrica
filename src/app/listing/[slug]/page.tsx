@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Button, LinkButton } from "@/components/ui/Button";
+import { LinkButton } from "@/components/ui/Button";
 import { Breadcrumbs } from "@/components/market/Breadcrumbs";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -7,10 +7,13 @@ import { Check, Star } from "@/components/market/Icons";
 import { ListingCard, StatusBadge } from "@/components/market/ListingCard";
 import { Footer, Header, Reveal } from "@/components/market/Sections";
 import { CATS } from "@/lib/directory";
-import { getPublicListing, getPublicListings } from "@/lib/data";
+import { getApprovedReviews, getPublicListing, getPublicListings } from "@/lib/data";
 import { reviewsFor, type Listing } from "@/lib/listings";
 import { abs, jsonLd, pageMeta } from "@/lib/site";
 import { ContactPanel } from "./ContactPanel";
+import { WriteReview } from "./WriteReview";
+
+const reviewDate = (d: Date) => new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric", timeZone: "Africa/Accra" }).format(d);
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -40,6 +43,8 @@ function businessLd(l: Listing) {
     image: l.images.map(abs),
     address: { "@type": "PostalAddress", streetAddress: l.area, addressLocality: l.city, addressCountry: "GH" },
     ...(l.languages.length && { knowsLanguage: l.languages }),
+    // Only from approved reviews (issue #14).
+    ...(l.reviewCount > 0 && { aggregateRating: { "@type": "AggregateRating", ratingValue: l.rating, reviewCount: l.reviewCount, bestRating: 5, worstRating: 1 } }),
   };
 }
 
@@ -47,7 +52,10 @@ export default async function ListingPage({ params }: Props) {
   const l = await getPublicListing((await params).slug);
   if (!l) notFound();
   const cat = CATS.find((c) => c.key === l.cat)!;
-  const reviews = l.isExample ? reviewsFor(l) : [];
+  // Example listings keep their example reviews; real ones show approved reviews (issue #14).
+  const reviews = l.isExample
+    ? reviewsFor(l).map((r) => ({ name: r.name, when: r.when, rating: r.rating, text: r.text, response: null as string | null }))
+    : (await getApprovedReviews(l.slug)).map((r) => ({ name: r.name, when: reviewDate(r.date), rating: r.rating, text: r.body, response: r.response }));
   const similar = (await getPublicListings()).filter((x) => x.cat === l.cat && x.slug !== l.slug).slice(0, 4);
   const imgs = l.images.length >= 3 ? l.images.slice(0, 3) : [...l.images, ...cat.tiles.map((t) => t.img).filter((i) => !l.images.includes(i))].slice(0, 3);
 
@@ -136,7 +144,7 @@ export default async function ListingPage({ params }: Props) {
                 {reviews.map((r, i) => (
                   <figure key={i} className="rounded-card bg-cream p-5">
                     <div className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy font-heading text-[14px] font-bold text-white">E</span>
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy font-heading text-[14px] font-bold text-white">{r.name.trim().charAt(0).toUpperCase()}</span>
                       <div>
                         <p className="text-[14px] font-semibold text-navy">{r.name}</p>
                         <p className="text-[12.5px] text-navy/50">{r.when}</p>
@@ -145,11 +153,17 @@ export default async function ListingPage({ params }: Props) {
                         {Array.from({ length: 5 }, (_, k) => <Star key={k} className={`h-3.5 w-3.5 ${k < r.rating ? "text-gold" : "text-navy/15"}`} />)}
                       </span>
                     </div>
-                    <blockquote className="mt-3 text-[15px] leading-relaxed text-navy/75">{r.text}</blockquote>
+                    <blockquote className="mt-3 text-[15px] leading-relaxed whitespace-pre-line text-navy/75">{r.text}</blockquote>
+                    {r.response && (
+                      <figcaption className="mt-3 rounded-field bg-white/70 px-4 py-3 text-[13.5px] leading-relaxed text-navy/70">
+                        <span className="font-semibold text-navy">Reply from The Plug: </span>
+                        {r.response}
+                      </figcaption>
+                    )}
                   </figure>
                 ))}
               </div>
-              <Button variant="secondary" className="mt-5">Write a review</Button>
+              {!l.isExample && <WriteReview slug={l.slug} name={l.name} />}
             </Reveal>
           </div>
 

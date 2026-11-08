@@ -5,6 +5,7 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 ## [Unreleased]
 
 ### Added
+- Reviews (#14): "Write a review" on business pages now works (it did nothing before). A review needs the reference code from contacting that business through The Plug (or a concierge request about it), one review per code, and stays hidden until approved in Admin › Reviews, which shows how many are waiting. Ratings and counts are calculated from approved reviews only, and appear in search results data. The team can post a public reply; editors approve, reject and reply, owners delete; businesses can't change reviews. New reviews email the team. Example listings keep their example reviews. Migration `20261108191536_reviews`.
 - Emergency numbers (#11): Admin › Emergency lists numbers for the whole of Ghana or a city, by service. A number appears on the public Emergency page only once someone marks it verified, which needs a note of where it was confirmed; the page shows that source and the date, with a Call button. Changing a number resets its verified date, and numbers verified more than 6 months ago are flagged to check again. National numbers show in every city. Editors add and check numbers; owners delete them. Migration `20261108185753_emergency_contacts`.
 - Admin essentials (#67):
   - My account: everyone can change their own name and password (the current password is checked, and other sessions are signed out).

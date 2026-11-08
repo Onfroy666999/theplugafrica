@@ -90,6 +90,7 @@ model Business {
 
   credentials       Credential[]
   enquiries         Enquiry[]
+  reviews     Review[]
   conciergeRequests ConciergeRequest[]
   services          Service[] // one or more services within its category (issue #26)
 
@@ -237,4 +238,24 @@ model EmergencyContact {
   updatedAt  DateTime  @updatedAt
 
   @@index([country, city])
+}
+
+// Customer reviews (issue #14). Tied to a reference code from contacting the business through The Plug, one review per
+// code, and shown only after the team approves them. Businesses can't edit or delete reviews.
+model Review {
+  id          String    @id @default(cuid())
+  businessId  String
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  ref         String    @unique // the PLG- or CNC- reference that proves the contact
+  name        String // shown with the review
+  rating      Int // 1 to 5
+  body        String
+  status      String    @default("pending") // pending | approved | rejected
+  response    String? // public reply from The Plug
+  respondedAt DateTime?
+  moderatedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([businessId, status])
+  @@index([status, createdAt])
 }
