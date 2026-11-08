@@ -5,6 +5,7 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 ## [Unreleased]
 
 ### Added
+- Emergency numbers (#11): Admin › Emergency lists numbers for the whole of Ghana or a city, by service. A number appears on the public Emergency page only once someone marks it verified, which needs a note of where it was confirmed; the page shows that source and the date, with a Call button. Changing a number resets its verified date, and numbers verified more than 6 months ago are flagged to check again. National numbers show in every city. Editors add and check numbers; owners delete them. Migration `20261108185753_emergency_contacts`.
 - Admin essentials (#67):
   - My account: everyone can change their own name and password (the current password is checked, and other sessions are signed out).
   - Inboxes can be filtered by status and month, searched by name, phone, email or reference, and are paged 50 at a time instead of showing the latest 200.

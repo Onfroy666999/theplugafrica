@@ -3,7 +3,12 @@ import { pageMeta } from "@/lib/site";
 import Image from "next/image";
 import { CatIcon } from "@/components/market/Icons";
 import { Footer, Header } from "@/components/market/Sections";
-import { EmergencyClient } from "./EmergencyClient";
+import { db } from "@/lib/db";
+import { EmergencyClient, type PublicContact } from "./EmergencyClient";
+
+export const dynamic = "force-dynamic";
+
+const day = (d: Date) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Africa/Accra" }).format(d);
 
 export const metadata: Metadata = pageMeta({
   title: "Emergency contacts — The Plug Africa",
@@ -11,7 +16,13 @@ export const metadata: Metadata = pageMeta({
   path: "/emergency",
 });
 
-export default function EmergencyPage() {
+export default async function EmergencyPage() {
+  // Only numbers the team has verified (issue #11).
+  const rows = await db.emergencyContact.findMany({ where: { verifiedAt: { not: null } }, orderBy: [{ city: "asc" }, { name: "asc" }] });
+  const contacts: PublicContact[] = rows.map((c) => ({
+    id: c.id, city: c.city ?? "", service: c.service, name: c.name, phone: c.phone, altPhone: c.altPhone, address: c.address,
+    notes: c.notes, source: c.source, sourceUrl: c.sourceUrl, verifiedOn: day(c.verifiedAt!),
+  }));
   return (
     <main className="min-h-screen bg-white text-navy">
       <Header />
@@ -29,10 +40,18 @@ export default function EmergencyPage() {
 
       <section className="mx-auto max-w-[1280px] px-5 pt-10 md:px-8">
         <div role="note" className="rounded-card border border-ember/30 bg-ember-soft p-5 text-[15px] leading-relaxed text-navy md:p-6">
-          <strong>We&apos;re verifying every number before we publish it.</strong> Until then, use official government sources or ask your hotel, landlord or embassy. In a life-threatening emergency, call your local emergency number straight away.
+          {contacts.length ? (
+            <>
+              <strong>In a life-threatening emergency, call straight away.</strong> Every number here was checked by our team; each shows where we confirmed it and when. Where a number is still being verified, use official government sources or ask your hotel, landlord or embassy.
+            </>
+          ) : (
+            <>
+              <strong>We&apos;re verifying every number before we publish it.</strong> Until then, use official government sources or ask your hotel, landlord or embassy. In a life-threatening emergency, call your local emergency number straight away.
+            </>
+          )}
         </div>
         <div className="mt-10">
-          <EmergencyClient />
+          <EmergencyClient contacts={contacts} />
         </div>
       </section>
       <Footer />
