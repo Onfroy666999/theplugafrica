@@ -13,6 +13,9 @@ export type AuditAction =
   | "photos.upload"
   | "inbox.status"
   | "inbox.notes"
+  | "inbox.assign"
+  | "inbox.delete"
+  | "inbox.export"
   | "service.create"
   | "service.update"
   | "service.visible"
@@ -24,7 +27,8 @@ export type AuditAction =
   | "team.role"
   | "team.remove"
   | "team.join"
-  | "account.password";
+  | "account.password"
+  | "account.name";
 
 /** Records one entry. Never throws: a logging hiccup must not undo the change it describes. */
 export async function audit(actor: { id: string; name: string }, action: AuditAction, summary: string, target?: { type: string; id: string }) {

@@ -100,6 +100,8 @@ const BusinessSchema = z.object({
       ctx.addIssue({ code: "custom", message: "Services are invalid" });
       return z.NEVER;
     }),
+  /** Waitlist entry this business was created from (issue #67); marked Listed once the business exists. */
+  fromWaitlist: z.string().max(40).optional(),
   credentials: z.string().transform((s, ctx) => {
     try {
       const v = z.array(z.object({ label: z.string().trim().min(1).max(160), state: z.enum(values(CREDENTIAL_STATE)) })).parse(JSON.parse(s));
@@ -126,7 +128,7 @@ export async function saveBusiness(fd: FormData): Promise<SaveResult> {
     const issue = parsed.error.issues[0];
     return { ok: false, error: issue.message, field: String(issue.path[0] ?? "") };
   }
-  const { id, credentials, images, services: serviceIds, slug: rawSlug, ...d } = parsed.data;
+  const { id, credentials, images, services: serviceIds, slug: rawSlug, fromWaitlist, ...d } = parsed.data;
   const slug = slugify(rawSlug || d.name);
   if (!slug) return { ok: false, error: "Add a web address (slug)", field: "slug" };
   const clash = await db.business.findUnique({ where: { slug }, select: { id: true } });
@@ -151,7 +153,14 @@ export async function saveBusiness(fd: FormData): Promise<SaveResult> {
   if (credentials.length) await db.credential.createMany({ data: credentials.map((c, i) => ({ ...c, businessId: saved.id, position: i })) });
 
   const target = { type: "business", id: saved.id };
-  if (!before) await audit(admin, "business.create", `Added ${saved.name} (${statusLabel(saved.status)})`, target);
+  if (!before) {
+    await audit(admin, "business.create", `Added ${saved.name} (${statusLabel(saved.status)})${fromWaitlist ? " from the waitlist" : ""}`, target);
+    if (fromWaitlist) {
+      const w = await db.waitlistEntry.updateMany({ where: { id: fromWaitlist, status: { not: "onboarded" } }, data: { status: "onboarded" } });
+      if (w.count) await audit(admin, "inbox.status", `Waitlist: ${saved.name} marked Listed`, { type: "waitlist", id: fromWaitlist });
+      revalidatePath("/admin/waitlist");
+    }
+  }
   else {
     const after: Record<string, unknown> = { ...d, slug };
     const changed = Object.entries(BUSINESS_FIELDS)
@@ -275,6 +284,34 @@ export async function updateInbox(kind: InboxKind, id: string, patch: { status?:
   if (before && patch.notes !== undefined) await audit(admin, "inbox.notes", `Edited notes on ${cfg.label.toLowerCase()} ${before.ref}`, target);
   revalidatePath(cfg.path);
   revalidatePath("/admin");
+}
+
+/** Owners can delete an inbox entry, for spam and tests (issue #67). */
+export async function deleteInboxItem(kind: InboxKind, id: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const admin = await requireAdmin("delete");
+  const cfg = INBOX[kind];
+  if (!cfg) return { ok: false, error: "Unknown inbox." };
+  const before = await inboxRecord(kind, id);
+  if (!before) return { ok: true };
+  if (kind === "enquiry") await db.enquiry.delete({ where: { id } });
+  if (kind === "concierge") await db.conciergeRequest.delete({ where: { id } });
+  if (kind === "waitlist") await db.waitlistEntry.delete({ where: { id } });
+  if (kind === "contact") await db.contactMessage.delete({ where: { id } });
+  await audit(admin, "inbox.delete", `Deleted ${cfg.label.toLowerCase()} ${before.ref}`, { type: kind, id });
+  revalidatePath(cfg.path);
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+/** Assigns a concierge request to a team member, or clears it with an empty id (issue #67). */
+export async function assignConcierge(id: string, adminId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const admin = await requireAdmin("edit");
+  const to = adminId ? await db.admin.findUnique({ where: { id: adminId }, select: { id: true, name: true } }) : null;
+  if (adminId && !to) return { ok: false, error: "That team member no longer exists." };
+  const r = await db.conciergeRequest.update({ where: { id }, data: { assignedToId: to?.id ?? null }, select: { ref: true } });
+  await audit(admin, "inbox.assign", to ? `Assigned concierge request ${r.ref} to ${to.name}` : `Unassigned concierge request ${r.ref}`, { type: "concierge", id });
+  revalidatePath("/admin/concierge");
+  return { ok: true };
 }
 
 /* ---------------- Services (sub-categories, issue #26) ---------------- */

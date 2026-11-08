@@ -45,7 +45,8 @@ const STATUS_OPTIONS = BUSINESS_STATUS.map((s) => ({ value: s.value, label: s.la
 const CRED_OPTIONS = CREDENTIAL_STATE.map((s) => ({ value: s.value, label: s.label }));
 const DEFAULT_CREDS = ["Business registration (Registrar-General)", "Owner identity checked", "Address visited by our team"];
 
-export function BusinessForm({ initial, library, allServices }: { initial?: BusinessInput; library: string[]; allServices: ServiceOption[] }) {
+/** `initial` is a saved business, or a few fields to start a new one with (from the waitlist, issue #67). */
+export function BusinessForm({ initial, library, allServices, fromWaitlist }: { initial?: Partial<BusinessInput>; library: string[]; allServices: ServiceOption[]; fromWaitlist?: string }) {
   const router = useRouter();
   const reduce = useReducedMotion();
   const canEdit = useCan("edit");
@@ -113,6 +114,7 @@ export function BusinessForm({ initial, library, allServices }: { initial?: Busi
 
   return (
     <form ref={formRef} onSubmit={submit} className="grid gap-6 xl:grid-cols-[1fr_340px]">
+      {fromWaitlist && <input type="hidden" name="fromWaitlist" value={fromWaitlist} />}
       {/* inert: viewers can read every field but not change it */}
       <div className="space-y-6" inert={!canEdit}>
         <Section title="Details">

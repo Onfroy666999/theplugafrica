@@ -1,24 +1,56 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { CATS } from "@/lib/directory";
+import { inboxWhere, pageArgs } from "@/lib/inbox";
+import { PAGE_SIZE, filterQuery, parseInboxFilters, recentMonths } from "@/lib/inbox-filters";
 import { describeRequest } from "@/lib/requests";
-import { CONCIERGE_STATUS } from "@/lib/status";
+import { CONCIERGE_STATUS, values } from "@/lib/status";
 import { InboxItem } from "../InboxItem";
-import { Empty, PageHeader, Panel, fmtDate } from "../ui";
+import { InboxToolbar } from "../InboxToolbar";
+import { Empty, PageHeader, Pager, Panel, fmtDate } from "../ui";
 
-export default async function Concierge() {
-  const rows = await db.conciergeRequest.findMany({ orderBy: { createdAt: "desc" }, take: 200, include: { business: { select: { id: true, name: true } } } });
+type SP = Promise<Record<string, string | string[] | undefined>>;
+
+export default async function Concierge({ searchParams }: { searchParams: SP }) {
+  const [admin, sp] = await Promise.all([requireAdmin(), searchParams]);
+  const f = parseInboxFilters(sp, values(CONCIERGE_STATUS));
+  const where = inboxWhere("concierge", f, admin.id);
+  const [rows, total, team] = await Promise.all([
+    db.conciergeRequest.findMany({ where, ...pageArgs(f), include: { business: { select: { id: true, name: true } }, assignedTo: { select: { id: true, name: true } } } }),
+    db.conciergeRequest.count({ where }),
+    // Owners and editors can handle requests; viewers can't change anything.
+    db.admin.findMany({ where: { role: { in: ["owner", "editor"] } }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+  ]);
+  const filtered = Boolean(f.status || f.q || f.month || f.assigned);
   const catName = (k: string) => CATS.find((c) => c.key === k)?.name ?? k;
+  const options = (current: { id: string; name: string } | null) => {
+    const list = team.map((t) => ({ value: t.id, label: t.id === admin.id ? `${t.name} (you)` : t.name }));
+    return current && !team.some((t) => t.id === current.id) ? [...list, { value: current.id, label: current.name }] : list;
+  };
   return (
     <>
       <PageHeader title="Concierge requests" sub="Paid, hands-on requests. Agree the fee before any work starts." />
+      <Suspense>
+        <InboxToolbar kind="concierge" statuses={CONCIERGE_STATUS} months={recentMonths()} placeholder="Search by name, phone, email, city or reference" assignable />
+      </Suspense>
       <Panel>
         {rows.length === 0 ? (
-          <Empty title="No requests yet" body="Requests from the Concierge page, and from “Ask a concierge to handle it” on listings, arrive here." />
+          filtered ? <Empty title="Nothing matches" body="Try another status, month or assignment, or clear the search." /> : <Empty title="No requests yet" body="Requests from the Concierge page, and from “Ask a concierge to handle it” on listings, arrive here." />
         ) : (
           <ul className="divide-y divide-navy/[0.07]">
             {rows.map((r) => (
-              <InboxItem key={r.id} kind="concierge" id={r.id} status={r.status} notes={r.notes ?? ""} statuses={CONCIERGE_STATUS}>
+              <InboxItem
+                key={r.id}
+                kind="concierge"
+                id={r.id}
+                refCode={r.ref}
+                status={r.status}
+                notes={r.notes ?? ""}
+                statuses={CONCIERGE_STATUS}
+                assign={{ options: options(r.assignedTo), value: r.assignedTo?.id ?? "" }}
+              >
                 <p className="text-[15px] font-semibold text-navy">
                   {r.name} <span className="font-normal text-navy/45">· {catName(r.category)}{r.service && <> › {r.service}</>} · {r.city}</span>
                 </p>
@@ -43,6 +75,7 @@ export default async function Concierge() {
           </ul>
         )}
       </Panel>
+      <Pager page={f.page} pageSize={PAGE_SIZE} total={total} query={filterQuery(f)} path="/admin/concierge" />
     </>
   );
 }
