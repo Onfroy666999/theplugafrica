@@ -33,6 +33,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           { href: "/admin/activity", label: "Activity" },
         ]
       : []),
+    { href: "/admin/account", label: "My account" },
   ];
   const first = admin.name.split(" ")[0];
   const role = roleLabel(admin.role);

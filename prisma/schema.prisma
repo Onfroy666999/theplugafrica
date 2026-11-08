@@ -27,6 +27,7 @@ model Admin {
   createdAt     DateTime   @default(now())
   invitesSent   Invite[]   @relation("InvitedBy")
   activity      AuditLog[]
+  assigned      ConciergeRequest[]
 }
 
 // A single-use link to join the team (purpose "invite") or set a new password ("reset"). Only a hash is stored.
@@ -170,7 +171,12 @@ model ConciergeRequest {
   business      Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
   status        String    @default("new") // new | in_progress | done | closed
   notes         String?
+  // Team member handling it (issue #67); cleared if their account is removed.
+  assignedToId  String?
+  assignedTo    Admin?    @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
   createdAt     DateTime  @default(now())
+
+  @@index([assignedToId])
 }
 
 model WaitlistEntry {

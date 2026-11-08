@@ -39,3 +39,26 @@ export function StatCard({ label, value, href, note }: { label: string; value: n
 
 export const fmtDate = (d: Date) =>
   new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Africa/Accra" }).format(d);
+
+/** "51–100 of 230" with Newer / Older links that keep the current filters (issue #67). */
+export function Pager({ page, pageSize, total, query, path }: { page: number; pageSize: number; total: number; query: string; path: string }) {
+  if (total <= pageSize && page === 1) return null;
+  const from = Math.min((page - 1) * pageSize + 1, total);
+  const to = Math.min(page * pageSize, total);
+  const href = (p: number) => {
+    const q = new URLSearchParams(query);
+    if (p > 1) q.set("page", String(p));
+    else q.delete("page");
+    return q.size ? `${path}?${q}` : path;
+  };
+  const link = "press flex h-10 items-center rounded-full border border-navy/15 bg-white px-4 text-[14px] font-medium text-navy hover:border-navy/35";
+  return (
+    <nav aria-label="Pages" className="mt-4 flex items-center justify-between gap-3">
+      <p className="text-[13px] text-navy/55 tabular-nums">{total ? `${from}–${to} of ${total}` : "Nothing on this page"}</p>
+      <div className="flex gap-2">
+        {page > 1 && <Link href={href(page - 1)} className={link}>Newer</Link>}
+        {to < total && <Link href={href(page + 1)} className={link}>Older</Link>}
+      </div>
+    </nav>
+  );
+}

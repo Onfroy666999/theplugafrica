@@ -4,7 +4,18 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- Admin essentials (#67):
+  - My account: everyone can change their own name and password (the current password is checked, and other sessions are signed out).
+  - Inboxes can be filtered by status and month, searched by name, phone, email or reference, and are paged 50 at a time instead of showing the latest 200.
+  - Owners can delete inbox entries (spam, tests) after confirming.
+  - Concierge requests can be assigned to a team member, with an "Assigned to me" filter.
+  - Waitlist entries have "Create business from this", which pre-fills the business form and marks the entry Listed once the business is created.
+  - Owners can download any inbox as a spreadsheet with the current filters, for reconciling introductions and commission.
+  - All of this is recorded in the activity log. Migration `20261107215723_concierge_assignment` adds the assignment.
+
 ### Fixed
+- Enquiries: phone links work when the number has spaces (#67).
 - When a request fails (for example when Cloudflare's free plan cuts it off with error 1102), the sign-in and invitation forms, inbox status and notes, business saves, services and team actions now say "We couldn't reach the server" instead of showing the "This page didn't load" page (#65). Failed sign-ins with an unknown email no longer hash a dummy password at runtime.
 - Explore filters (category, city, Clear filters) update instantly in the browser instead of asking the server to render the page again, which took about a second on staging and cost Worker CPU (#63). The URL still changes, so filtered views can be shared.
 - An end-to-end test could fail at random depending on which business the database returned first; it now picks one in a fixed order.
