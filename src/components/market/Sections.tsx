@@ -95,18 +95,23 @@ export function Header() {
 
 /* ---------- Reveal on scroll ---------- */
 
-export function Reveal({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+/**
+ * Fades content up as it scrolls into view. `as="li"` keeps lists valid for screen readers (issue #30).
+ * With reduced motion, content is simply shown: nothing waits, invisible, for an animation.
+ */
+export function Reveal({ children, delay = 0, className = "", as = "div" }: { children: React.ReactNode; delay?: number; className?: string; as?: "div" | "li" }) {
   const reduce = useReducedMotion();
+  const Tag = as === "li" ? motion.li : motion.div;
   return (
-    <motion.div
+    <Tag
       className={className}
-      initial={reduce ? { opacity: 0 } : fadeUp.hidden}
+      initial={reduce ? false : fadeUp.hidden}
       whileInView={fadeUp.shown}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ delay, duration: DUR.enter, ease: EASE.out }}
     >
       {children}
-    </motion.div>
+    </Tag>
   );
 }
 
@@ -159,7 +164,7 @@ export function CategoryExplorer({ id = "explore", services }: { id?: string; se
               aria-selected={on}
               onClick={() => setActive(c.key)}
               className={`group relative flex min-w-[96px] shrink-0 flex-col items-center gap-2 px-3 pt-2 pb-3.5 text-[13px] font-medium transition-colors duration-200 ${
-                on ? "text-navy" : "text-navy/50 hover:text-navy/80"
+                on ? "text-navy" : "text-navy/65 hover:text-navy/80"
               }`}
             >
               <span className={`flex h-11 w-11 items-center justify-center rounded-card transition-colors duration-200 ${on ? "bg-gold/15 text-gold" : "bg-transparent group-hover:bg-navy/[0.04]"}`}>
@@ -226,7 +231,7 @@ export function PopularRail({ title = "Popular in Accra", listings = LISTINGS }:
       <div className="flex items-end justify-between">
         <Reveal>
           <h2 className="font-heading text-[24px] font-bold tracking-[-0.02em] text-navy md:text-[28px]">{title}</h2>
-          {listings.some((l) => l.isExample) && <p className="mt-1 text-[14px] text-navy/55">Example listings. Real businesses are being added now.</p>}
+          {listings.some((l) => l.isExample) && <p className="mt-1 text-[14px] text-navy/65">Example listings. Real businesses are being added now.</p>}
         </Reveal>
         <div className="hidden gap-2 md:flex">
           {([-1, 1] as const).map((d) => (
@@ -333,7 +338,7 @@ export function BusinessAndEmergency() {
           <span className="flex h-11 w-11 items-center justify-center rounded-card bg-ember text-white"><CatIcon k="emergency" /></span>
           <h3 className="mt-5 font-heading text-[22px] font-bold text-navy">In an emergency</h3>
           <p className="mt-2 text-[15px] text-navy/70">Hospitals, police, fire and embassies for your city.</p>
-          <p className="mt-auto pt-6 text-[13px] text-navy/55">Verified numbers per city are being collected. Until then, check local official sources.</p>
+          <p className="mt-auto pt-6 text-[13px] text-navy/65">Verified numbers per city are being collected. Until then, check local official sources.</p>
           <Link href="/emergency" className="group mt-4 inline-flex items-center gap-1.5 text-[14px] font-semibold text-ember">
             Open emergency page <span className="transition-transform duration-200 ease-[var(--ease-out)] group-hover:translate-x-1"><Arrow /></span>
           </Link>
@@ -371,7 +376,7 @@ export function Footer() {
           </div>
         ))}
       </div>
-      <div className="border-t border-navy/10 py-5 text-center text-[12px] text-navy/45">© The Plug Africa · Photos: Unsplash</div>
+      <div className="border-t border-navy/10 py-5 text-center text-[12px] text-navy/65">© The Plug Africa · Photos: Unsplash</div>
     </footer>
   );
 }

@@ -16,7 +16,7 @@ export default async function AdminLogin() {
         </div>
         <div className="mt-8 rounded-hero border border-navy/10 bg-white p-7 shadow-card md:p-9">
           <h1 className="font-heading text-[24px] font-bold text-navy">Admin sign in</h1>
-          <p className="mt-1 mb-7 text-[14px] text-navy/55">For The Plug Africa team only.</p>
+          <p className="mt-1 mb-7 text-[14px] text-navy/65">For The Plug Africa team only.</p>
           <LoginForm />
         </div>
       </div>

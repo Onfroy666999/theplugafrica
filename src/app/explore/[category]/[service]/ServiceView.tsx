@@ -62,7 +62,7 @@ export function ServiceView({
         {/* Cities with this service: real links, so people and search engines can reach each city page */}
         {cities.length > 0 && (
           <nav aria-label="Cities" className="mt-6 flex flex-wrap items-center gap-2">
-            <span className="mr-1 text-[14px] font-semibold text-navy/55">City</span>
+            <span className="mr-1 text-[14px] font-semibold text-navy/65">City</span>
             <CityLink href={base} on={!city}>All cities</CityLink>
             {cities.map((c) => (
               <CityLink key={c} href={`${base}/${citySlug(c)}`} on={c === city}>

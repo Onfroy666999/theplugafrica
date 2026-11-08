@@ -39,7 +39,7 @@ export function TeamManager({ meId, emailOn, inviteDays, members, invites }: { m
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-3">
-        <p className="text-[14px] text-navy/55">
+        <p className="text-[14px] text-navy/65">
           {members.length} {members.length === 1 ? "person" : "people"} on the team.
         </p>
         <Button size="sm" onClick={() => { setError(null); setInviting(true); }}>Invite someone</Button>
@@ -56,10 +56,10 @@ export function TeamManager({ meId, emailOn, inviteDays, members, invites }: { m
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[15px] font-semibold text-navy">
                     {m.name}
-                    {me && <span className="ml-2 text-[13px] font-medium text-navy/45">(you)</span>}
+                    {me && <span className="ml-2 text-[13px] font-medium text-navy/65">(you)</span>}
                   </p>
-                  <p className="truncate text-[13px] text-navy/55">{m.email}</p>
-                  <p className="text-[12px] text-navy/40">{m.lastSignIn ? `Last signed in ${m.lastSignIn}` : "Hasn't signed in yet"}</p>
+                  <p className="truncate text-[13px] text-navy/65">{m.email}</p>
+                  <p className="text-[12px] text-navy/65">{m.lastSignIn ? `Last signed in ${m.lastSignIn}` : "Hasn't signed in yet"}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="min-w-0 flex-1 md:w-[150px] md:flex-none">
@@ -97,7 +97,7 @@ export function TeamManager({ meId, emailOn, inviteDays, members, invites }: { m
                     <span className="truncate">{i.name}</span>
                     <Badge tone={i.purpose === "reset" ? "warn" : "info"}>{i.purpose === "reset" ? "Password link" : `Invited as ${roleLabel(i.role).toLowerCase()}`}</Badge>
                   </p>
-                  <p className="truncate text-[13px] text-navy/55">{i.email} · expires {i.expires}</p>
+                  <p className="truncate text-[13px] text-navy/65">{i.email} · expires {i.expires}</p>
                 </div>
                 <button type="button" disabled={pending} onClick={() => run(() => cancelInvite(i.id))} className="press h-10 self-start rounded-full px-4 text-[14px] font-semibold text-navy/70 hover:bg-navy/[0.05] sm:self-auto">
                   Cancel link
@@ -187,7 +187,7 @@ function InviteForm({ emailOn, onDone }: { emailOn: boolean; onDone: (name: stri
       <Field label="Email"><Input label="Email" name="email" type="email" required maxLength={160} placeholder="name@example.com" /></Field>
       <Field label="Role">
         <Select label="Role" options={ROLE_OPTIONS} value={role} onChange={setRole} />
-        <p className="mt-2 text-[13px] text-navy/55">{ROLES.find((r) => r.value === role)?.hint}</p>
+        <p className="mt-2 text-[13px] text-navy/65">{ROLES.find((r) => r.value === role)?.hint}</p>
       </Field>
       {error && <p role="alert" className="rounded-field bg-ember-soft px-4 py-3 text-[14px] font-medium text-ember">{error}</p>}
       <Button type="submit" size="lg" full disabled={pending}>

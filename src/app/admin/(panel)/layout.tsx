@@ -46,12 +46,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen flex-col border-r border-navy/10 bg-white px-4 py-6 lg:flex">
         <Link href="/admin" className="px-2"><Lockup tone="light" /></Link>
-        <p className="mt-2 px-2 text-[11px] font-semibold tracking-[0.16em] text-gold uppercase">Admin</p>
+        <p className="mt-2 px-2 text-[11px] font-semibold tracking-[0.16em] text-gold-ink uppercase">Admin</p>
         <div className="mt-8 min-h-0 overflow-y-auto"><AdminNav items={items} layout="side" /></div>
         <div className="mt-auto space-y-1 border-t border-navy/10 pt-4">
           <Link href="/" target="_blank" className="press flex h-10 items-center rounded-full px-4 text-[14px] text-navy/60 hover:text-navy">View site ↗</Link>
           <p className="px-4 pt-2 text-[13px] font-semibold text-navy">{admin.name}</p>
-          <p className="px-4 text-[12px] text-navy/50">{role}</p>
+          <p className="px-4 text-[12px] text-navy/65">{role}</p>
           <form action={logout}>
             <button className="press flex h-10 items-center rounded-full px-4 text-[14px] text-navy/60 hover:text-navy">Sign out</button>
           </form>
@@ -70,7 +70,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </header>
 
       <main className="min-w-0 px-4 py-6 md:px-8 md:py-10">
-        <p className="mb-1 text-[13px] text-navy/50">
+        <p className="mb-1 text-[13px] text-navy/65">
           Signed in as {first} · {role}
           {admin.role === "viewer" && " (view only)"}
         </p>

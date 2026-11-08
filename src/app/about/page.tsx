@@ -38,7 +38,7 @@ export default function AboutPage() {
 
       <section className="mx-auto grid max-w-[1280px] items-center gap-10 px-5 pt-10 md:px-8 md:pt-16 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
         <div>
-          <p className="text-[13px] font-semibold tracking-[0.14em] text-gold uppercase">About The Plug</p>
+          <p className="text-[13px] font-semibold tracking-[0.14em] text-gold-ink uppercase">About The Plug</p>
           <h1 className="mt-3 font-heading text-[36px] leading-[1.06] font-extrabold tracking-[-0.03em] md:text-[54px]">The trusted way to find people who get things done.</h1>
           <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-navy/65">
             Finding a good landlord, school, driver or supplier usually depends on who you know. The Plug Africa is a directory of businesses we&apos;ve checked, so anyone can find them, starting in Ghana.
@@ -71,12 +71,10 @@ export default function AboutPage() {
         <h2 className="font-heading text-[26px] font-bold tracking-[-0.02em] md:text-[32px]">How it works</h2>
         <ol className="mt-8 grid gap-4 md:grid-cols-3">
           {HOW.map((h, i) => (
-            <Reveal key={h.t} delay={i * STAGGER}>
-              <li className="h-full rounded-panel border border-navy/10 p-7">
+            <Reveal as="li" key={h.t} delay={i * STAGGER} className="h-full rounded-panel border border-navy/10 p-7">
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy font-heading text-[15px] font-bold text-white">{i + 1}</span>
                 <h3 className="mt-5 font-heading text-[18px] font-bold text-navy">{h.t}</h3>
                 <p className="mt-2 text-[15px] leading-relaxed text-navy/65">{h.d}</p>
-              </li>
             </Reveal>
           ))}
         </ol>

@@ -15,7 +15,7 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
     <div>
       <span className="block text-[14px] font-semibold text-navy">
         {label}
-        {hint && <span className="ml-2 font-normal text-navy/45">{hint}</span>}
+        {hint && <span className="ml-2 font-normal text-navy/65">{hint}</span>}
       </span>
       <div className="mt-2">{children}</div>
     </div>
@@ -28,12 +28,6 @@ export function Input({ label, ...props }: React.InputHTMLAttributes<HTMLInputEl
 
 export function Textarea({ label, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string }) {
   return <textarea aria-label={label} {...props} className={`${base} min-h-[120px] resize-y py-3 ${props.className ?? ""}`} />;
-}
-
-export function makeRef(prefix: string) {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const pick = (n: number) => Array.from({ length: n }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-  return `${prefix}-${pick(4)}-${pick(4)}`;
 }
 
 /** Spinner used inside submit buttons while "sending". */
@@ -50,7 +44,7 @@ export function RefCode({ code, onCopy, copied }: { code: string; onCopy?: () =>
       className="press mx-auto flex w-full max-w-sm items-center justify-between gap-4 rounded-field border-2 border-dashed border-gold/50 bg-cream px-5 py-4"
     >
       <span className="font-mono text-[20px] font-bold tracking-[0.12em] text-navy">{code}</span>
-      {onCopy && <span className="text-[13px] font-semibold text-gold">{copied ? "Copied" : "Copy"}</span>}
+      {onCopy && <span className="text-[13px] font-semibold text-gold-ink">{copied ? "Copied" : "Copy"}</span>}
     </button>
   );
 }
@@ -70,7 +64,7 @@ export function Success({ title, body, refCode, children }: { title: string; bod
       <div className="mt-6">
         <RefCode code={refCode} onCopy={() => navigator.clipboard?.writeText(refCode).catch(() => {})} />
       </div>
-      <p className="mt-4 text-[12.5px] text-navy/45">Keep this reference. Quote it if you contact us about this request.</p>
+      <p className="mt-4 text-[12.5px] text-navy/65">Keep this reference. Quote it if you contact us about this request.</p>
       {children}
     </motion.div>
   );

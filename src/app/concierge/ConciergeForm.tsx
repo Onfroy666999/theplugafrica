@@ -65,7 +65,7 @@ export function ConciergeForm({ service }: { service?: { category: string; slug:
           {listing && (
             <div className="flex items-center justify-between gap-3 rounded-field bg-cream px-4 py-3 text-[14px]">
               <span className="text-navy/70">About: <strong className="text-navy">{listing.name}</strong></span>
-              <span className="text-[12px] text-navy/45">{listing.kind}</span>
+              <span className="text-[12px] text-navy/65">{listing.kind}</span>
             </div>
           )}
           <div className="grid gap-5 md:grid-cols-2">
@@ -98,7 +98,7 @@ export function ConciergeForm({ service }: { service?: { category: string; slug:
             {busy && <Spinner />}
             {busy ? "Sending" : "Send request"}
           </Button>
-          <p className="text-center text-[12.5px] text-navy/45">We&apos;ll only use your details to respond to this request.</p>
+          <p className="text-center text-[12.5px] text-navy/65">We&apos;ll only use your details to respond to this request.</p>
         </motion.form>
       )}
     </AnimatePresence>

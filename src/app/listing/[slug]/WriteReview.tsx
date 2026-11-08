@@ -101,7 +101,7 @@ function ReviewForm({ slug, name, onDone }: { slug: string; name: string; onDone
         {busy && <Spinner />}
         {busy ? "Sending" : "Send review"}
       </Button>
-      <p className="text-center text-[12.5px] text-navy/45">Be fair and specific. We don&apos;t publish personal details, abuse, or reviews about anything other than the service.</p>
+      <p className="text-center text-[12.5px] text-navy/65">Be fair and specific. We don&apos;t publish personal details, abuse, or reviews about anything other than the service.</p>
     </form>
   );
 }

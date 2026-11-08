@@ -12,12 +12,12 @@ export default async function Account() {
       <div className="grid max-w-3xl gap-6">
         <Panel className="p-5 md:p-7">
           <h2 className="font-heading text-[18px] font-bold text-navy">Your name</h2>
-          <p className="mt-1 mb-5 text-[14px] text-navy/55">Shown in the activity log and to the rest of the team.</p>
+          <p className="mt-1 mb-5 text-[14px] text-navy/65">Shown in the activity log and to the rest of the team.</p>
           <NameForm name={me.name} />
         </Panel>
         <Panel className="p-5 md:p-7">
           <h2 className="font-heading text-[18px] font-bold text-navy">Password</h2>
-          <p className="mt-1 mb-5 text-[14px] text-navy/55">Changing it signs you out on every other device. Forgotten it? Ask an owner for a password link.</p>
+          <p className="mt-1 mb-5 text-[14px] text-navy/65">Changing it signs you out on every other device. Forgotten it? Ask an owner for a password link.</p>
           <PasswordForm email={me.email} />
         </Panel>
       </div>

@@ -37,7 +37,7 @@ export function BusinessFilters() {
     <div className="mb-5 space-y-3">
       <div className="flex flex-col gap-3 md:flex-row">
         <label className="flex h-11 shrink-0 items-center gap-3 rounded-full border border-navy/15 bg-white px-4 transition-[border-color,box-shadow] duration-200 hover:border-navy/35 focus-within:border-navy/40 focus-within:shadow-[0_0_0_4px_rgb(180_145_63/0.15)] md:flex-1">
-          <Search className="h-5 w-5 text-navy/45" />
+          <Search className="h-5 w-5 text-navy/65" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name, city or area" aria-label="Search businesses" className="w-full bg-transparent text-[15px] text-navy outline-none placeholder:text-navy/40 focus-visible:shadow-none" />
         </label>
         <div className="md:w-[220px]">

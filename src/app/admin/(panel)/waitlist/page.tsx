@@ -39,9 +39,9 @@ export default async function Waitlist({ searchParams }: { searchParams: SP }) {
             {rows.map((w) => (
               <InboxItem key={w.id} kind="waitlist" id={w.id} refCode={w.ref} status={w.status} notes={w.notes ?? ""} statuses={WAITLIST_STATUS}>
                 <p className="text-[15px] font-semibold text-navy">
-                  {w.businessName} <span className="font-normal text-navy/45">· {catName(w.category)} · {w.city}</span>
+                  {w.businessName} <span className="font-normal text-navy/65">· {catName(w.category)} · {w.city}</span>
                 </p>
-                <p className="mt-0.5 text-[13px] text-navy/55">
+                <p className="mt-0.5 text-[13px] text-navy/65">
                   {w.name} · <a href={`tel:${w.phone.replace(/\s+/g, "")}`} className="font-medium text-navy hover:underline">{w.phone}</a>
                   {w.email && <> · <a href={`mailto:${w.email}`} className="font-medium text-navy hover:underline">{w.email}</a></>}
                   {" · "}{fmtDate(w.createdAt)} · <span className="font-mono">{w.ref}</span>

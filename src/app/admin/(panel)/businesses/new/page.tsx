@@ -15,7 +15,7 @@ export default async function NewBusiness({ searchParams }: { searchParams: Prom
   const listingCategory = w && LISTING_CATS.some((c) => c.key === w.category) ? w.category : undefined;
   return (
     <>
-      <Link href={w ? "/admin/waitlist" : "/admin/businesses"} className="text-[14px] font-medium text-navy/55 hover:text-navy">← {w ? "Waitlist" : "Businesses"}</Link>
+      <Link href={w ? "/admin/waitlist" : "/admin/businesses"} className="text-[14px] font-medium text-navy/65 hover:text-navy">← {w ? "Waitlist" : "Businesses"}</Link>
       <div className="mt-3">
         <PageHeader
           title={w ? `Add ${w.businessName}` : "Add a business"}

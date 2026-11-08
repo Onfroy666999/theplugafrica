@@ -4,6 +4,9 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Fixed
+- Accessibility (#30): secondary text, small gold labels, and ember and amber text now meet WCAG AA contrast (faded navy raised to 65%; a deeper `gold-ink` for small gold text, with the brand gold kept for icons and the logo; ember and amber slightly deeper). "How it works" lists are valid lists for screen readers. With reduced motion, content shows straight away instead of staying invisible until scrolled into view. The first listing photos on Explore load straight away. Unused code removed.
+
 ## [0.8.0] - 2026-11-08
 
 ### Added

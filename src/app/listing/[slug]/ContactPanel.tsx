@@ -36,7 +36,7 @@ export function ContactPanel({ l }: { l: Listing }) {
         <LinkButton href={`/concierge?listing=${l.slug}`} variant="ghost" size="lg" full className="mt-1">
           Ask a concierge to handle it
         </LinkButton>
-        <p className="mt-4 text-[12.5px] leading-relaxed text-navy/50">
+        <p className="mt-4 text-[12.5px] leading-relaxed text-navy/65">
           You deal with the business directly. The Plug never takes payments for them.
         </p>
       </div>
@@ -45,7 +45,7 @@ export function ContactPanel({ l }: { l: Listing }) {
       <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-4 border-t border-navy/10 bg-white/95 px-5 py-3 backdrop-blur-md lg:hidden">
         <div className="min-w-0">
           <p className="truncate font-heading text-[15px] font-bold text-navy">{l.price}</p>
-          <p className="truncate text-[12.5px] text-navy/55">{l.responds}</p>
+          <p className="truncate text-[12.5px] text-navy/65">{l.responds}</p>
         </div>
         <div className="flex shrink-0 gap-2">
           <Button variant="secondary" onClick={() => { setSession((n) => n + 1); setRequestOpen(true); }}>Request</Button>
@@ -146,7 +146,7 @@ function ContactSteps({ l }: { l: Listing }) {
             )}
           </div>
           {!hasAny && (
-            <p className="mt-3 text-[12.5px] leading-relaxed text-navy/50">
+            <p className="mt-3 text-[12.5px] leading-relaxed text-navy/65">
               This business&apos;s contact details are being added. A Plug concierge can reach them for you meanwhile.
             </p>
           )}
@@ -207,7 +207,7 @@ function RequestForm({ l }: { l: Listing }) {
         {busy && <Spinner />}
         {busy ? "Sending" : "Send request"}
       </Button>
-      <p className="text-center text-[12.5px] text-navy/45">The Plug is a directory: deal with the business directly and never pay before you&apos;ve seen what you&apos;re paying for.</p>
+      <p className="text-center text-[12.5px] text-navy/65">The Plug is a directory: deal with the business directly and never pay before you&apos;ve seen what you&apos;re paying for.</p>
     </form>
   );
 }
