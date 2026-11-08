@@ -85,3 +85,24 @@ export const ContactSchema = z
     message: z.string().trim().min(10).max(4000),
   })
   .refine((d) => d.email || d.phone, { message: "Add an email or a phone number so we can reply." });
+
+/** A reference code from contacting a business (PLG-…) or a concierge request about it (CNC-…). */
+export const REF_PATTERN = /^(PLG|CNC)-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/;
+
+/** Customer reviews (issue #14). */
+export const ReviewSchema = z.object({
+  ref: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(REF_PATTERN, "Enter the reference you were given, like PLG-7KQ2-M9XA."),
+  name: z.string().trim().min(2, "Add the name to show with your review.").max(60),
+  rating: z.coerce.number().int().min(1, "Choose a rating from 1 to 5 stars.").max(5, "Choose a rating from 1 to 5 stars."),
+  body: z.string().trim().min(20, "Write at least a sentence or two about your experience.").max(2000),
+});
+
+/** Average of approved ratings to one decimal place, and how many there are. */
+export function summariseRatings(ratings: number[]) {
+  if (!ratings.length) return { rating: null, reviewCount: 0 };
+  return { rating: Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10, reviewCount: ratings.length };
+}

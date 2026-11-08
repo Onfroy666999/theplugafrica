@@ -13,26 +13,30 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const admin = await requireAdmin();
-  const [enq, cnc, wl, msg] = await Promise.all([
+  const [enq, cnc, wl, msg, rev] = await Promise.all([
     db.enquiry.count({ where: { status: "new" } }),
     db.conciergeRequest.count({ where: { status: "new" } }),
     db.waitlistEntry.count({ where: { status: "new" } }),
     db.contactMessage.count({ where: { status: "new" } }),
+    db.review.count({ where: { status: "pending" } }),
   ]);
   const items: NavItem[] = [
     { href: "/admin", label: "Dashboard" },
     { href: "/admin/businesses", label: "Businesses" },
     { href: "/admin/services", label: "Services" },
+    { href: "/admin/emergency", label: "Emergency" },
     { href: "/admin/enquiries", label: "Enquiries", count: enq },
     { href: "/admin/concierge", label: "Concierge", count: cnc },
     { href: "/admin/waitlist", label: "Waitlist", count: wl },
     { href: "/admin/messages", label: "Messages", count: msg },
+    { href: "/admin/reviews", label: "Reviews", count: rev },
     ...(can(admin.role, "team")
       ? [
           { href: "/admin/team", label: "Team" },
           { href: "/admin/activity", label: "Activity" },
         ]
       : []),
+    { href: "/admin/account", label: "My account" },
   ];
   const first = admin.name.split(" ")[0];
   const role = roleLabel(admin.role);

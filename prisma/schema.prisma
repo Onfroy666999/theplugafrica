@@ -27,6 +27,7 @@ model Admin {
   createdAt     DateTime   @default(now())
   invitesSent   Invite[]   @relation("InvitedBy")
   activity      AuditLog[]
+  assigned      ConciergeRequest[]
 }
 
 // A single-use link to join the team (purpose "invite") or set a new password ("reset"). Only a hash is stored.
@@ -89,6 +90,7 @@ model Business {
 
   credentials       Credential[]
   enquiries         Enquiry[]
+  reviews     Review[]
   conciergeRequests ConciergeRequest[]
   services          Service[] // one or more services within its category (issue #26)
 
@@ -170,7 +172,12 @@ model ConciergeRequest {
   business      Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
   status        String    @default("new") // new | in_progress | done | closed
   notes         String?
+  // Team member handling it (issue #67); cleared if their account is removed.
+  assignedToId  String?
+  assignedTo    Admin?    @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
   createdAt     DateTime  @default(now())
+
+  @@index([assignedToId])
 }
 
 model WaitlistEntry {
@@ -211,4 +218,44 @@ model RateLimit {
   resetAt DateTime
 
   @@index([resetAt])
+}
+
+// Emergency numbers (issue #11). Shown on /emergency only once verified, with their source and date.
+model EmergencyContact {
+  id         String    @id @default(cuid())
+  country    String    @default("Ghana")
+  city       String? // null = the whole country (e.g. 112)
+  service    String // ambulance | police | fire | hospital | embassy | pharmacy | other (src/lib/emergency.ts)
+  name       String // e.g. "National Ambulance Service", "Korle Bu Teaching Hospital"
+  phone      String
+  altPhone   String?
+  address    String?
+  notes      String? // e.g. "24 hours", "Emergency unit at the main gate"
+  source     String? // where the number was confirmed, e.g. "Called on 3 Nov" or the official website
+  sourceUrl  String?
+  verifiedAt DateTime? // null = not verified, so not public
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([country, city])
+}
+
+// Customer reviews (issue #14). Tied to a reference code from contacting the business through The Plug, one review per
+// code, and shown only after the team approves them. Businesses can't edit or delete reviews.
+model Review {
+  id          String    @id @default(cuid())
+  businessId  String
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  ref         String    @unique // the PLG- or CNC- reference that proves the contact
+  name        String // shown with the review
+  rating      Int // 1 to 5
+  body        String
+  status      String    @default("pending") // pending | approved | rejected
+  response    String? // public reply from The Plug
+  respondedAt DateTime?
+  moderatedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([businessId, status])
+  @@index([status, createdAt])
 }

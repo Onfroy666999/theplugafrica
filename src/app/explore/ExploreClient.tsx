@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { CatIcon, Search } from "@/components/market/Icons";
 import { ListingCard } from "@/components/market/ListingCard";
@@ -46,7 +46,6 @@ export function ExploreClient({
   lockCity?: boolean;
 }) {
   const params = useSearchParams();
-  const router = useRouter();
   const path = usePathname();
   const reduce = useReducedMotion();
 
@@ -57,11 +56,14 @@ export function ExploreClient({
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [sort, setSort] = useState("relevant");
 
+  // Filters only change the URL in the browser (issue #63): every listing is already here, so there's no need to ask the
+  // server to render the page again. Next.js keeps useSearchParams in sync with history.replaceState.
+  const setUrl = (search: string) => window.history.replaceState(null, "", search ? `${path}?${search}` : path);
   const setParam = (k: string, v: string | null) => {
     const p = new URLSearchParams(params.toString());
     if (v) p.set(k, v);
     else p.delete(k);
-    router.replace(`${path}?${p.toString()}`, { scroll: false });
+    setUrl(p.toString());
   };
 
   const results = useMemo(() => searchListings(listings, { q, cat, city, verifiedOnly, sort }), [listings, q, cat, city, verifiedOnly, sort]);
@@ -179,7 +181,7 @@ export function ExploreClient({
               onClick={() => {
                 setQ("");
                 setVerifiedOnly(false);
-                router.replace(path, { scroll: false });
+                setUrl("");
               }}
             >
               Clear filters

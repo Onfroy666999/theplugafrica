@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/Select";
 import { Sheet, SheetTitle } from "@/components/ui/Sheet";
 import { ROLES, roleLabel } from "@/lib/roles";
 import { cancelInvite, changeRole, inviteMember, passwordLink, removeMember, type LinkResult } from "../../team-actions";
+import { call } from "@/lib/call";
 import { Empty, Panel } from "../ui";
 
 type Member = { id: string; name: string; email: string; role: string; lastSignIn: string | null };
@@ -26,7 +27,7 @@ export function TeamManager({ meId, emailOn, inviteDays, members, invites }: { m
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>) =>
     start(async () => {
       setError(null);
-      const r = await fn();
+      const r = await call(fn());
       if (!r.ok) setError(r.error ?? "That didn't work. Try again.");
     });
 
@@ -68,7 +69,7 @@ export function TeamManager({ meId, emailOn, inviteDays, members, invites }: { m
                       <Select variant="pill" label={`Role for ${m.name}`} options={ROLE_OPTIONS} value={m.role} onChange={(v) => run(() => changeRole(m.id, v))} />
                     )}
                   </div>
-                  <Button variant="secondary" size="sm" disabled={pending} onClick={() => start(async () => { setError(null); showLink(m.name, "reset", await passwordLink(m.id)); })}>
+                  <Button variant="secondary" size="sm" disabled={pending} onClick={() => start(async () => { setError(null); showLink(m.name, "reset", await call(passwordLink(m.id))); })}>
                     Password link
                   </Button>
                   {!me && (
@@ -144,7 +145,7 @@ export function TeamManager({ meId, emailOn, inviteDays, members, invites }: { m
             onClick={() =>
               removing &&
               start(async () => {
-                const r = await removeMember(removing.id);
+                const r = await call(removeMember(removing.id));
                 setRemoving(null);
                 setError(r.ok ? null : r.error);
               })
@@ -171,7 +172,7 @@ function InviteForm({ emailOn, onDone }: { emailOn: boolean; onDone: (name: stri
         fd.set("role", role);
         setError(null);
         start(async () => {
-          const r = await inviteMember(fd);
+          const r = await call(inviteMember(fd));
           if (r.ok) onDone(String(fd.get("name")), r);
           else setError(r.error);
         });

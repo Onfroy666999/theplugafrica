@@ -41,7 +41,7 @@ describe("sign-in", () => {
 
   it("signs the owner in", async () => {
     const r = await signIn(adminCredentials().email, adminCredentials().password, ip);
-    expect(r.redirect).toBe("/admin");
+    expect(r.result).toEqual({ ok: true });
     expect(r.cookie).not.toBeNull();
     cookie = r.cookie;
     expect((await page("/admin", cookie)).status).toBe(200);

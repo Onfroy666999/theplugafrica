@@ -4,6 +4,26 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-08
+
+### Added
+- Reviews (#14): "Write a review" on business pages now works (it did nothing before). A review needs the reference code from contacting that business through The Plug (or a concierge request about it), one review per code, and stays hidden until approved in Admin › Reviews, which shows how many are waiting. Ratings and counts are calculated from approved reviews only, and appear in search results data. The team can post a public reply; editors approve, reject and reply, owners delete; businesses can't change reviews. New reviews email the team. Example listings keep their example reviews. Migration `20261108191536_reviews`.
+- Emergency numbers (#11): Admin › Emergency lists numbers for the whole of Ghana or a city, by service. A number appears on the public Emergency page only once someone marks it verified, which needs a note of where it was confirmed; the page shows that source and the date, with a Call button. Changing a number resets its verified date, and numbers verified more than 6 months ago are flagged to check again. National numbers show in every city. Editors add and check numbers; owners delete them. Migration `20261108185753_emergency_contacts`.
+- Admin essentials (#67):
+  - My account: everyone can change their own name and password (the current password is checked, and other sessions are signed out).
+  - Inboxes can be filtered by status and month, searched by name, phone, email or reference, and are paged 50 at a time instead of showing the latest 200.
+  - Owners can delete inbox entries (spam, tests) after confirming.
+  - Concierge requests can be assigned to a team member, with an "Assigned to me" filter.
+  - Waitlist entries have "Create business from this", which pre-fills the business form and marks the entry Listed once the business is created.
+  - Owners can download any inbox as a spreadsheet with the current filters, for reconciling introductions and commission.
+  - All of this is recorded in the activity log. Migration `20261107215723_concierge_assignment` adds the assignment.
+
+### Fixed
+- Enquiries: phone links work when the number has spaces (#67).
+- When a request fails (for example when Cloudflare's free plan cuts it off with error 1102), the sign-in and invitation forms, inbox status and notes, business saves, services and team actions now say "We couldn't reach the server" instead of showing the "This page didn't load" page (#65). Failed sign-ins with an unknown email no longer hash a dummy password at runtime.
+- Explore filters (category, city, Clear filters) update instantly in the browser instead of asking the server to render the page again, which took about a second on staging and cost Worker CPU (#63). The URL still changes, so filtered views can be shared.
+- An end-to-end test could fail at random depending on which business the database returned first; it now picks one in a fixed order.
+
 ## [0.7.0] - 2026-11-07
 
 ### Added

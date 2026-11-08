@@ -126,3 +126,18 @@ export async function getIndexableServices(): Promise<{ category: string; slug: 
 export async function getIndexableListings() {
   return db.business.findMany({ where: realWhere(), select: { slug: true, updatedAt: true } });
 }
+
+/* ---------------- Reviews (issue #14) ---------------- */
+
+export type PublicReview = { name: string; rating: number; body: string; date: Date; response: string | null };
+
+/** Approved reviews for a listing, newest first. */
+export async function getApprovedReviews(slug: string, take = 30): Promise<PublicReview[]> {
+  const rows = await db.review.findMany({
+    where: { status: "approved", business: { slug } },
+    orderBy: { createdAt: "desc" },
+    take,
+    select: { name: true, rating: true, body: true, createdAt: true, response: true },
+  });
+  return rows.map((r) => ({ name: r.name, rating: r.rating, body: r.body, date: r.createdAt, response: r.response }));
+}
