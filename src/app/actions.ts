@@ -1,10 +1,10 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { notifyBusinessRequest, notifyConcierge, notifyContactMessage, notifyWaitlist } from "@/lib/notify";
+import { notifyBusinessRequest, notifyConcierge, notifyContactMessage, notifyReview, notifyWaitlist } from "@/lib/notify";
 import { limitForm, screenForm } from "@/lib/protect";
 import { PUBLIC_STATUSES } from "@/lib/status";
-import { BusinessRequestSchema, ConciergeSchema, ContactSchema, WaitlistSchema, makeRef, parseDetails } from "@/lib/validation";
+import { BusinessRequestSchema, ConciergeSchema, ContactSchema, ReviewSchema, WaitlistSchema, makeRef, parseDetails } from "@/lib/validation";
 
 // Public form handlers. Each one saves to the admin inboxes and returns a reference code.
 
@@ -106,4 +106,31 @@ export async function sendContactMessage(fd: FormData): Promise<FormResult> {
   await db.contactMessage.create({ data: { ref, name: d.name, email: d.email, phone: d.phone, topic: d.topic, message: d.message } });
   notifyContactMessage({ ref, name: d.name, email: d.email, phone: d.phone, topic: d.topic, message: d.message });
   return { ok: true, ref };
+}
+
+/**
+ * A review of a business (issue #14). It needs a reference code from contacting that business through The Plug (or a
+ * concierge request about it), allows one review per code, and stays hidden until the team approves it.
+ */
+export async function submitReview(slug: string, fd: FormData): Promise<FormResult> {
+  const blocked = await screen(fd, "REV");
+  if (blocked) return blocked;
+  const b = await db.business.findFirst({ where: { slug, status: { in: [...PUBLIC_STATUSES] }, isExample: false }, select: { id: true, name: true } });
+  if (!b) return { ok: false, error: "Reviews aren't open for this listing." };
+  const parsed = ReviewSchema.safeParse(Object.fromEntries(fd));
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+  const d = parsed.data;
+  // Counted before the reference is checked, so codes can't be guessed at speed.
+  const over = await limit("review");
+  if (over) return over;
+  const [enquiry, concierge] = await Promise.all([
+    db.enquiry.findFirst({ where: { ref: d.ref, businessId: b.id }, select: { id: true } }),
+    db.conciergeRequest.findFirst({ where: { ref: d.ref, businessId: b.id }, select: { id: true } }),
+  ]);
+  if (!enquiry && !concierge)
+    return { ok: false, error: `We couldn't find that reference for ${b.name}. It's the code you were shown when you contacted them through The Plug.` };
+  if (await db.review.findUnique({ where: { ref: d.ref }, select: { id: true } })) return { ok: false, error: "A review has already been sent with this reference." };
+  await db.review.create({ data: { businessId: b.id, ref: d.ref, name: d.name, rating: d.rating, body: d.body } });
+  notifyReview({ business: b.name, name: d.name, rating: d.rating, body: d.body, ref: d.ref });
+  return { ok: true, ref: d.ref };
 }

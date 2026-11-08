@@ -32,7 +32,11 @@ export type AuditAction =
   | "emergency.create"
   | "emergency.update"
   | "emergency.verify"
-  | "emergency.delete";
+  | "emergency.delete"
+  | "review.approve"
+  | "review.reject"
+  | "review.respond"
+  | "review.delete";
 
 /** Records one entry. Never throws: a logging hiccup must not undo the change it describes. */
 export async function audit(actor: { id: string; name: string }, action: AuditAction, summary: string, target?: { type: string; id: string }) {

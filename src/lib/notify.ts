@@ -111,3 +111,11 @@ export function notifyContactMessage(r: { ref: string; name: string; email?: str
       });
   });
 }
+
+export function notifyReview(r: { business: string; name: string; rating: number; body: string; ref: string }) {
+  later(async () => {
+    await teamAlert(`New review to check: ${r.business} (${r.rating}/5)`, "A review is waiting for approval", `${r.name} reviewed ${r.business}. It stays hidden until someone approves it.`, [
+      ["Business", r.business], ["Rating", `${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)} (${r.rating}/5)`], ["Name", r.name], ["Reference", r.ref], ["Review", r.body],
+    ], "/admin/reviews");
+  });
+}
