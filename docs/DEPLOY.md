@@ -123,6 +123,14 @@ The build applies migrations but doesn't seed. To load the starting services, th
 
 `npm run preview` builds the Worker and runs it in Wrangler on http://localhost:8787, reading secrets from `.dev.vars` (git ignores it). Staging has a Hyperdrive binding, so for local runs point it at the local database first: set the shell variable `CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE` to the local `DATABASE_URL` (Wrangler uses it instead of the real Hyperdrive). Docker Desktop must be running for the local database. This computer's Wrangler is signed in to Reginald's own Cloudflare account, so never run `wrangler deploy` from here.
 
+## Error alerts (issue #8)
+
+When the site hits a server error (a page, a form or a button fails), the team gets an email with the page, the first line of the error and an **error ID**. It never includes what visitors typed or the address's query string. The same error on the same page is emailed once an hour, and at most 10 alerts go out an hour.
+
+It uses the email setup below, so it starts working once `RESEND_API_KEY` is set. Alerts go to `ALERT_EMAIL` (text, comma-separated) if set on the Worker, otherwise to `NOTIFY_EMAIL`.
+
+To see the full error: Cloudflare › Workers & Pages › the Worker › **Logs**, and search for the error ID. These logs also show requests Cloudflare itself stopped (for example error 1102, CPU limit exceeded), which the site can't email about because the Worker was cut off.
+
 ## Spam protection (issue #7)
 
 Every public form has a hidden honeypot, a "too fast" check (bots submit instantly) and a limit of 6 saved submissions per visitor per form per hour; admin sign-in allows 5 failed tries per 15 minutes. These counters live in the database (`RateLimit`), keyed by a salted one-way hash of the visitor's IP, so they work across all Cloudflare isolates.
