@@ -55,12 +55,12 @@ export default async function Businesses({ searchParams }: { searchParams: SP })
                     <span className="min-w-0">
                       <span className="flex items-center gap-2">
                         <span className="truncate text-[15px] font-semibold text-navy group-hover:underline group-hover:underline-offset-4">{b.name}</span>
-                        {b.isExample && <span className="shrink-0 rounded-full bg-navy/[0.06] px-2 py-0.5 text-[11px] font-semibold text-navy/55">Example</span>}
+                        {b.isExample && <span className="shrink-0 rounded-full bg-navy/[0.06] px-2 py-0.5 text-[11px] font-semibold text-navy/65">Example</span>}
                       </span>
-                      <span className="block truncate text-[13px] text-navy/55">
+                      <span className="block truncate text-[13px] text-navy/65">
                         {catName(b.category)} · {b.kind} · {b.area}, {b.city}
                       </span>
-                      <span className="block text-[12px] text-navy/40">
+                      <span className="block text-[12px] text-navy/65">
                         Updated {fmtDate(b.updatedAt)} · {b._count.enquiries} {b._count.enquiries === 1 ? "enquiry" : "enquiries"}
                       </span>
                     </span>

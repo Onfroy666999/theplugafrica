@@ -64,13 +64,11 @@ export default function BusinessesPage() {
         </Reveal>
         <ol className="mt-10 grid gap-6 md:grid-cols-4">
           {STEPS.map((s, i) => (
-            <Reveal key={s.t} delay={i * 0.06}>
-              <li className="relative">
+            <Reveal as="li" key={s.t} delay={i * 0.06} className="relative">
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy font-heading text-[15px] font-bold text-white">{i + 1}</span>
                 {i < STEPS.length - 1 && <span className="absolute top-5 left-14 hidden h-px w-[calc(100%-56px)] bg-navy/15 md:block" />}
                 <h3 className="mt-5 font-heading text-[18px] font-bold text-navy">{s.t}</h3>
                 <p className="mt-2 text-[14.5px] leading-relaxed text-navy/60">{s.d}</p>
-              </li>
             </Reveal>
           ))}
         </ol>
@@ -86,7 +84,7 @@ export default function BusinessesPage() {
             {["Standard listing", "Featured placement", "Business subscription"].map((p) => (
               <div key={p} className="flex items-center justify-between rounded-card border border-navy/10 px-5 py-4">
                 <span className="font-semibold text-navy">{p}</span>
-                <span className="text-[13px] font-semibold text-gold">To be announced</span>
+                <span className="text-[13px] font-semibold text-gold-ink">To be announced</span>
               </div>
             ))}
           </div>

@@ -57,10 +57,10 @@ export default async function Activity({ searchParams }: { searchParams: SP }) {
               const to = r.targetType && r.targetId && !r.action.endsWith(".delete") && r.action !== "team.remove" ? TARGET_PATH[r.targetType]?.(r.targetId) : undefined;
               return (
                 <li key={r.id} className="flex flex-col gap-1 px-4 py-3.5 md:flex-row md:items-baseline md:gap-5 md:px-6">
-                  <time dateTime={r.createdAt.toISOString()} className="shrink-0 text-[13px] text-navy/45 tabular-nums md:w-[120px]">{fmtDate(r.createdAt)}</time>
+                  <time dateTime={r.createdAt.toISOString()} className="shrink-0 text-[13px] text-navy/65 tabular-nums md:w-[120px]">{fmtDate(r.createdAt)}</time>
                   <p className="min-w-0 flex-1 text-[14.5px] text-navy">
                     <span className="font-semibold">{r.actorName}</span>
-                    <span className="text-navy/40"> · </span>
+                    <span className="text-navy/65"> · </span>
                     {to ? <Link href={to} className="hover:underline hover:underline-offset-4">{r.summary}</Link> : r.summary}
                   </p>
                 </li>

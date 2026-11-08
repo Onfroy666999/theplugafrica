@@ -43,7 +43,7 @@ export function ServicesManager({ category, services, library }: { category: { k
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-3">
-        <p className="text-[14px] text-navy/55">
+        <p className="text-[14px] text-navy/65">
           {services.length} {services.length === 1 ? "service" : "services"} in {category.name}. Hidden services stay off the site.
         </p>
         {canEdit && <Button size="sm" onClick={() => setEditing("new")}>Add a service</Button>}
@@ -68,14 +68,14 @@ export function ServicesManager({ category, services, library }: { category: { k
                       {s.image && <Image src={s.image} alt="" fill sizes="56px" className="object-cover" />}
                     </span>
                     <span className="min-w-0">
-                      <span className={`block truncate text-[15px] font-semibold ${s.visible ? "text-navy" : "text-navy/45"}`}>{s.name}</span>
-                      <span className="block truncate text-[13px] text-navy/50">
+                      <span className={`block truncate text-[15px] font-semibold ${s.visible ? "text-navy" : "text-navy/65"}`}>{s.name}</span>
+                      <span className="block truncate text-[13px] text-navy/65">
                         /explore/{category.key}/{s.slug} · {s.count} {s.count === 1 ? "business" : "businesses"}
                       </span>
                     </span>
                   </div>
                   {!canEdit ? (
-                    <span className="text-[13px] font-medium text-navy/55">{s.visible ? "Visible" : "Hidden"}</span>
+                    <span className="text-[13px] font-medium text-navy/65">{s.visible ? "Visible" : "Hidden"}</span>
                   ) : (
                   <div className="flex flex-wrap items-center gap-2">
                     <Switch checked={s.visible} label={s.visible ? "Visible" : "Hidden"} onChange={(v) => quick(() => setServiceVisible(s.id, v))} />
@@ -150,7 +150,7 @@ function ServiceForm({ category, initial, library, onDone }: { category: { key: 
       <SheetTitle className="pr-10 font-heading text-[22px] font-bold text-navy">{initial ? `Edit ${initial.name}` : `Add a service to ${category.name}`}</SheetTitle>
       <Field label="Name"><Input label="Name" name="name" defaultValue={initial?.name} placeholder="e.g. Cars" required autoFocus /></Field>
       <Field label="Web address" hint="optional, made from the name">
-        <div className="flex items-center rounded-field border border-navy/15 bg-white pl-4 text-[15px] text-navy/45 focus-within:border-navy/40">
+        <div className="flex items-center rounded-field border border-navy/15 bg-white pl-4 text-[15px] text-navy/65 focus-within:border-navy/40">
           <span className="shrink-0">/{category.key}/</span>
           <input name="slug" aria-label="Web address" defaultValue={initial?.slug} placeholder="cars" className="h-12 w-full min-w-0 bg-transparent pr-4 text-navy outline-none placeholder:text-navy/30 focus-visible:shadow-none" />
         </div>

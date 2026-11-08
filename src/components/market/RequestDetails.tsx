@@ -26,7 +26,7 @@ export function RequestDetails({ category, service, defaultCity = "Accra" }: { c
     <div className="space-y-5">
       <Field label="Where will the service happen?">
         <ChipGroup label="Where will the service happen?" chips={modes.map((m) => ({ value: m, label: MODE_LABELS[m] }))} value={mode} onChange={(v) => setMode(v as ServiceMode)} className="flex-wrap" />
-        <p className="mt-2 text-[13px] text-navy/55">{MODE_HINTS[mode]}</p>
+        <p className="mt-2 text-[13px] text-navy/65">{MODE_HINTS[mode]}</p>
         <input type="hidden" name="serviceMode" value={mode} />
       </Field>
 

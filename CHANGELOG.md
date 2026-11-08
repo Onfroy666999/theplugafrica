@@ -7,6 +7,9 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 ### Added
 - Error alerts (#8): server errors email the team (`ALERT_EMAIL`, or `NOTIFY_EMAIL`) with the page, the first line of the error and an error ID to find it in Cloudflare's logs; never what visitors typed or query strings. The same error is emailed once an hour, at most 10 alerts an hour. Works on Cloudflare Workers (the alert is kept alive after the response with `waitUntil`, without which Cloudflare cancels it). Off until email is set up.
 
+### Fixed
+- Accessibility (#30): secondary text, small gold labels, and ember and amber text now meet WCAG AA contrast (faded navy raised to 65%; a deeper `gold-ink` for small gold text, with the brand gold kept for icons and the logo; ember and amber slightly deeper). "How it works" lists are valid lists for screen readers. With reduced motion, content shows straight away instead of staying invisible until scrolled into view. The first listing photos on Explore load straight away. Unused code removed.
+
 ## [0.8.0] - 2026-11-08
 
 ### Added

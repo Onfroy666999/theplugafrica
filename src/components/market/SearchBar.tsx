@@ -43,7 +43,7 @@ export function SearchBar({ size = "lg", initialQ = "", initialCity = "Accra" }:
       }`}
     >
       <label className={`relative flex h-14 min-w-0 flex-1 items-center gap-3 px-4 ${h}`}>
-        <Search className="h-5 w-5 shrink-0 text-navy/45" />
+        <Search className="h-5 w-5 shrink-0 text-navy/65" />
         <span className="relative min-w-0 flex-1">
           <input
             value={q}
@@ -54,7 +54,7 @@ export function SearchBar({ size = "lg", initialQ = "", initialCity = "Accra" }:
             className="w-full bg-transparent text-[16px] text-navy outline-none"
           />
           {!q && (
-            <span className="pointer-events-none absolute inset-0 flex items-center overflow-hidden text-[16px] whitespace-nowrap text-navy/45">
+            <span className="pointer-events-none absolute inset-0 flex items-center overflow-hidden text-[16px] whitespace-nowrap text-navy/65">
               <span className="mr-1">Find</span>
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.span

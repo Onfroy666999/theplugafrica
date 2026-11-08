@@ -72,7 +72,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
                 <Link href={a.href} className="flex items-center justify-between gap-4 px-5 py-3.5 transition-colors duration-200 hover:bg-navy/[0.02] md:px-6">
                   <span className="min-w-0">
                     <span className="block truncate text-[14.5px] font-semibold text-navy">{a.title}</span>
-                    <span className="block truncate text-[13px] text-navy/50">{a.sub} · {fmtDate(a.when)}</span>
+                    <span className="block truncate text-[13px] text-navy/65">{a.sub} · {fmtDate(a.when)}</span>
                   </span>
                   <Badge tone={a.badge.tone}>{a.badge.label}</Badge>
                 </Link>
@@ -80,7 +80,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             ))}
           </ul>
         ) : (
-          <p className="px-5 pt-2 pb-6 text-[14px] text-navy/55 md:px-6">Nothing yet. Enquiries, concierge requests and waitlist sign-ups will appear here as they come in.</p>
+          <p className="px-5 pt-2 pb-6 text-[14px] text-navy/65 md:px-6">Nothing yet. Enquiries, concierge requests and waitlist sign-ups will appear here as they come in.</p>
         )}
       </Panel>
     </>

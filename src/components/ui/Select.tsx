@@ -44,10 +44,10 @@ export function Select({ options, value, defaultValue, onChange, name, label, va
     >
       <S.Trigger aria-label={label} className={clsx(trigger({ variant }), className)}>
         <span className="flex min-w-0 items-center gap-2.5">
-          {icon && <span className="shrink-0 text-navy/45">{icon}</span>}
+          {icon && <span className="shrink-0 text-navy/65">{icon}</span>}
           <S.Value className="truncate" />
         </span>
-        <S.Icon className="shrink-0 text-navy/45 transition-transform duration-200 ease-[var(--ease-out)] group-data-[popup-open]/sel:rotate-180">
+        <S.Icon className="shrink-0 text-navy/65 transition-transform duration-200 ease-[var(--ease-out)] group-data-[popup-open]/sel:rotate-180">
           <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
             <path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
           </svg>

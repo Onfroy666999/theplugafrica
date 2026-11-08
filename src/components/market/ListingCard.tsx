@@ -18,12 +18,13 @@ export function StatusBadge({ status, className = "" }: { status: Listing["statu
   );
 }
 
-export function ListingCard({ l, sizes = "(min-width:1024px) 25vw, (min-width:640px) 50vw, 90vw" }: { l: Listing; sizes?: string }) {
+/** `priority`: load the photo straight away; set it for the first cards on a page, which are usually the largest thing on screen (issue #30). */
+export function ListingCard({ l, sizes = "(min-width:1024px) 25vw, (min-width:640px) 50vw, 90vw", priority = false }: { l: Listing; sizes?: string; priority?: boolean }) {
   const [saved, setSaved] = useState(false);
   return (
     <Link href={`/listing/${l.slug}`} className="group block">
       <div className="relative aspect-square overflow-hidden rounded-card bg-navy/5">
-        <Image src={l.images[0]} alt={l.name} fill sizes={sizes} className="object-cover media-zoom" />
+        <Image src={l.images[0]} alt={l.name} fill sizes={sizes} priority={priority} className="object-cover media-zoom" />
         {l.isExample && <span className="absolute top-3 left-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-navy shadow-sm">Example</span>}
         <button
           aria-label={saved ? "Remove from saved" : "Save"}
@@ -45,7 +46,7 @@ export function ListingCard({ l, sizes = "(min-width:1024px) 25vw, (min-width:64
               <Star className="h-3.5 w-3.5 text-gold" /> {l.rating.toFixed(1)}
             </>
           ) : (
-            <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[11px] font-semibold text-gold">New</span>
+            <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[11px] font-semibold text-gold-ink">New</span>
           )}
         </span>
       </div>

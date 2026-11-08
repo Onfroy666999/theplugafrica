@@ -14,7 +14,7 @@ export default function NotFound() {
     <main className="min-h-screen bg-white text-navy">
       <Header />
       <section className="mx-auto max-w-[880px] px-5 pt-16 pb-20 text-center md:pt-24">
-        <p className="text-[14px] font-semibold tracking-[0.12em] text-gold uppercase">Page not found</p>
+        <p className="text-[14px] font-semibold tracking-[0.12em] text-gold-ink uppercase">Page not found</p>
         <h1 className="mt-3 font-heading text-[32px] leading-tight font-extrabold tracking-[-0.03em] md:text-[46px]">We couldn&apos;t find that page</h1>
         <p className="mx-auto mt-3 max-w-lg text-[16px] text-navy/60">The link may be old, or the listing may have moved. Search for what you need, or start from a category.</p>
         <div className="mt-8 text-left">

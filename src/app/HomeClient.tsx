@@ -93,7 +93,7 @@ export function HomeClient({ listings, services }: { listings: Listing[]; servic
               className="w-full rounded-panel bg-white px-2 pt-6 pb-2 md:max-w-[600px] md:p-9 md:shadow-float"
             >
               <h1 className="font-heading text-[36px] leading-[1.06] font-extrabold tracking-[-0.03em] text-navy md:text-[52px]">
-                Find people you can <span className="text-gold">trust</span>, anywhere in Africa.
+                Find people you can <span className="text-gold-ink">trust</span>, anywhere in Africa.
               </h1>
               <p className="mt-4 text-[16px] leading-relaxed text-navy/65 md:text-[17px]">
                 Homes, schools, drivers, recruiters, places to eat. Every business is checked before it&apos;s listed.

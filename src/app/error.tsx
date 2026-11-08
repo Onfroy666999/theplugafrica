@@ -26,7 +26,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
           <LinkButton href="/" variant="secondary">Back to the homepage</LinkButton>
           <LinkButton href="/concierge" variant="ghost">Ask a concierge</LinkButton>
         </div>
-        {error.digest && <p className="mt-8 text-[13px] text-navy/40">Reference: {error.digest}</p>}
+        {error.digest && <p className="mt-8 text-[13px] text-navy/65">Reference: {error.digest}</p>}
       </section>
       <Footer />
     </main>

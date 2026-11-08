@@ -86,7 +86,7 @@ export function InboxItem({
       </div>
       {assign && (
         <div className="mt-3 flex items-center gap-2 md:justify-end">
-          <span className="text-[13px] text-navy/55">Handled by</span>
+          <span className="text-[13px] text-navy/65">Handled by</span>
           <div className="w-[200px]" inert={!canEdit}>
             <Select
               variant="pill"
