@@ -28,7 +28,11 @@ export type AuditAction =
   | "team.remove"
   | "team.join"
   | "account.password"
-  | "account.name";
+  | "account.name"
+  | "emergency.create"
+  | "emergency.update"
+  | "emergency.verify"
+  | "emergency.delete";
 
 /** Records one entry. Never throws: a logging hiccup must not undo the change it describes. */
 export async function audit(actor: { id: string; name: string }, action: AuditAction, summary: string, target?: { type: string; id: string }) {

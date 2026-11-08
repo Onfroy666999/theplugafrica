@@ -52,7 +52,7 @@ This sequencing is from the partner deck. The owner's stated priority list is br
 - Verified, rated listings with credentials. Comments and ratings on every listing.
 - Disclaimer shown before direct contact: The Plug is a directory, does not handle payments or guarantee outcomes, and users should verify credentials.
 - Key risks to design for: **disintermediation/leakage** (parties move off-platform after the intro), fake listings, review abuse, liability for outcomes. Masked contact routing (Twilio-style) and recorded introductions address leakage.
-- **[Open]** Emergency numbers: only 112 appears in the prototype and it is not verified per country. Verified numbers per city must be sourced before launch.
+- **[Open]** Emergency numbers: only 112 appears in the prototype and it is not verified per country. Verified numbers per city must be sourced before launch. **Built (#11):** Admin › Emergency holds the numbers; only verified ones (with a source) are public. The numbers themselves still have to be sourced and entered.
 - **[Open]** Data protection and consumer-law review for Ghana and each launch country.
 
 ## 5. Brand

@@ -218,3 +218,23 @@ model RateLimit {
 
   @@index([resetAt])
 }
+
+// Emergency numbers (issue #11). Shown on /emergency only once verified, with their source and date.
+model EmergencyContact {
+  id         String    @id @default(cuid())
+  country    String    @default("Ghana")
+  city       String? // null = the whole country (e.g. 112)
+  service    String // ambulance | police | fire | hospital | embassy | pharmacy | other (src/lib/emergency.ts)
+  name       String // e.g. "National Ambulance Service", "Korle Bu Teaching Hospital"
+  phone      String
+  altPhone   String?
+  address    String?
+  notes      String? // e.g. "24 hours", "Emergency unit at the main gate"
+  source     String? // where the number was confirmed, e.g. "Called on 3 Nov" or the official website
+  sourceUrl  String?
+  verifiedAt DateTime? // null = not verified, so not public
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([country, city])
+}
