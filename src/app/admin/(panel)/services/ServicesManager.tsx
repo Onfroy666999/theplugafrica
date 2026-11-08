@@ -11,6 +11,7 @@ import { Sheet, SheetTitle } from "@/components/ui/Sheet";
 import { Switch } from "@/components/ui/Switch";
 import { DUR, EASE } from "@/lib/motion";
 import { deleteService, moveService, saveService, setServiceVisible } from "../../actions";
+import { call } from "@/lib/call";
 import { Empty, Panel } from "../ui";
 import { useCan } from "../AdminContext";
 
@@ -29,7 +30,15 @@ export function ServicesManager({ category, services, library }: { category: { k
   const [editing, setEditing] = useState<Svc | "new" | null>(null);
   const [deleting, setDeleting] = useState<Svc | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  /** Runs a quick change (show/hide, reorder) and says so if the request didn't arrive. */
+  const quick = (action: () => Promise<unknown>) =>
+    start(async () => {
+      setNotice(null);
+      const r = (await call(action())) as { ok?: boolean; error?: string } | undefined;
+      if (r && r.ok === false && r.error) setNotice(r.error);
+    });
 
   return (
     <>
@@ -40,6 +49,7 @@ export function ServicesManager({ category, services, library }: { category: { k
         {canEdit && <Button size="sm" onClick={() => setEditing("new")}>Add a service</Button>}
       </div>
 
+      {notice && <p role="alert" className="mb-4 rounded-field bg-ember-soft px-4 py-3 text-[14px] font-medium text-ember">{notice}</p>}
       <Panel>
         {services.length === 0 ? (
           <Empty title={`No services in ${category.name} yet`} body="Add the first one, for example “Cars” in Rentals." action={canEdit ? <Button onClick={() => setEditing("new")}>Add a service</Button> : undefined} />
@@ -68,9 +78,9 @@ export function ServicesManager({ category, services, library }: { category: { k
                     <span className="text-[13px] font-medium text-navy/55">{s.visible ? "Visible" : "Hidden"}</span>
                   ) : (
                   <div className="flex flex-wrap items-center gap-2">
-                    <Switch checked={s.visible} label={s.visible ? "Visible" : "Hidden"} onChange={(v) => start(() => setServiceVisible(s.id, v))} />
-                    <IconBtn label="Move up" disabled={i === 0} onClick={() => start(() => moveService(s.id, -1))}>↑</IconBtn>
-                    <IconBtn label="Move down" disabled={i === services.length - 1} onClick={() => start(() => moveService(s.id, 1))}>↓</IconBtn>
+                    <Switch checked={s.visible} label={s.visible ? "Visible" : "Hidden"} onChange={(v) => quick(() => setServiceVisible(s.id, v))} />
+                    <IconBtn label="Move up" disabled={i === 0} onClick={() => quick(() => moveService(s.id, -1))}>↑</IconBtn>
+                    <IconBtn label="Move down" disabled={i === services.length - 1} onClick={() => quick(() => moveService(s.id, 1))}>↓</IconBtn>
                     <Button variant="secondary" size="sm" onClick={() => setEditing(s)}>Edit</Button>
                     {canDelete && <button type="button" onClick={() => { setError(null); setDeleting(s); }} className="press h-10 rounded-full px-4 text-[14px] font-semibold text-ember hover:bg-ember-soft">Delete</button>}
                   </div>
@@ -98,7 +108,7 @@ export function ServicesManager({ category, services, library }: { category: { k
             onClick={() =>
               deleting &&
               start(async () => {
-                const r = await deleteService(deleting.id);
+                const r = await call(deleteService(deleting.id));
                 if (r.ok) setDeleting(null);
                 else setError(r.error);
               })
@@ -130,7 +140,7 @@ function ServiceForm({ category, initial, library, onDone }: { category: { key: 
         if (initial) fd.set("id", initial.id);
         setError(null);
         start(async () => {
-          const r = await saveService(fd);
+          const r = await call(saveService(fd));
           if (r.ok) onDone();
           else setError(r.error);
         });

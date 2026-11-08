@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { BUSINESS_STATUS, find } from "@/lib/status";
 import { useCan } from "../AdminContext";
 import { setBusinessStatus } from "../../actions";
+import { call } from "@/lib/call";
 
 /** Change a business's status straight from the list. Explains when Verified isn't allowed yet. */
 export function StatusSelect({ id, status }: { id: string; status: string }) {
@@ -29,7 +30,7 @@ export function StatusSelect({ id, status }: { id: string; status: string }) {
           setValue(v);
           setError(null);
           start(async () => {
-            const r = await setBusinessStatus(id, v);
+            const r = await call(setBusinessStatus(id, v));
             if (!r.ok) {
               setValue(prev);
               setError(r.error);

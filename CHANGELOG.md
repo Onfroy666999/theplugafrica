@@ -5,6 +5,7 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 ## [Unreleased]
 
 ### Fixed
+- When a request fails (for example when Cloudflare's free plan cuts it off with error 1102), the sign-in and invitation forms, inbox status and notes, business saves, services and team actions now say "We couldn't reach the server" instead of showing the "This page didn't load" page (#65). Failed sign-ins with an unknown email no longer hash a dummy password at runtime.
 - Explore filters (category, city, Clear filters) update instantly in the browser instead of asking the server to render the page again, which took about a second on staging and cost Worker CPU (#63). The URL still changes, so filtered views can be shared.
 - An end-to-end test could fail at random depending on which business the database returned first; it now picks one in a fixed order.
 

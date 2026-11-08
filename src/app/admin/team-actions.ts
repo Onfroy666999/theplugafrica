@@ -2,7 +2,6 @@
 
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireAdmin, startSession } from "@/lib/auth";
 import { audit } from "@/lib/audit";
@@ -97,7 +96,8 @@ const AcceptSchema = z
   })
   .refine((d) => d.password === d.confirm, { message: "The two passwords don't match." });
 
-export async function acceptInvite(token: string, _: unknown, fd: FormData): Promise<{ error: string } | undefined> {
+/** Accepts a link. Returns { ok: true } and the browser then opens the admin, or an error to show. */
+export async function acceptInvite(token: string, _: unknown, fd: FormData): Promise<{ ok: true } | { ok?: false; error: string }> {
   const inv = await findInvite(token);
   if (!inv) return { error: "This link has expired or was already used. Ask an owner for a new one." };
   const p = AcceptSchema.safeParse(Object.fromEntries(fd));
@@ -127,5 +127,5 @@ export async function acceptInvite(token: string, _: unknown, fd: FormData): Pro
   }
   await db.admin.update({ where: { id: admin.id }, data: { lastSignInAt: new Date() } });
   await startSession(admin);
-  redirect("/admin");
+  return { ok: true };
 }
