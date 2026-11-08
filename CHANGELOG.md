@@ -4,6 +4,9 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- Error alerts (#8): server errors email the team (`ALERT_EMAIL`, or `NOTIFY_EMAIL`) with the page, the first line of the error and an error ID to find it in Cloudflare's logs; never what visitors typed or query strings. The same error is emailed once an hour, at most 10 alerts an hour. Works on Cloudflare Workers (the alert is kept alive after the response with `waitUntil`, without which Cloudflare cancels it). Off until email is set up.
+
 ## [0.8.0] - 2026-11-08
 
 ### Added
