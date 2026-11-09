@@ -127,7 +127,7 @@ export function BusinessAndEmergency() {
 export function Footer() {
   const cols = [
     { h: "Explore", l: CATS.filter((c) => c.key !== "emergency").slice(0, 6).map((c) => ({ t: c.name, href: `/explore/${c.key}` })) },
-    { h: "The Plug", l: [{ t: "About", href: "/about" }, { t: "How it works", href: "/#how-it-works" }, { t: "Concierge", href: "/concierge" }, { t: "Emergency", href: "/emergency" }, { t: "Contact", href: "/contact" }] },
+    { h: "The Plug", l: [{ t: "About", href: "/about" }, { t: "How it works", href: "/#how-it-works" }, { t: "Concierge", href: "/concierge" }, { t: "Membership", href: "/membership" }, { t: "Emergency", href: "/emergency" }, { t: "Contact", href: "/contact" }] },
     { h: "Businesses", l: [{ t: "List your business", href: "/businesses" }, { t: "How verification works", href: "/businesses#verification" }] },
   ];
   return (
@@ -136,7 +136,7 @@ export function Footer() {
         <div>
           <Link href="/" aria-label="The Plug Africa home"><Lockup tone="light" /></Link>
           <p className="mt-4 max-w-xs text-[14px] leading-relaxed text-navy/60">
-            A directory of verified businesses and services across Africa. The Plug connects you; it doesn&apos;t take payments or guarantee outcomes, so always check credentials.
+            A directory of verified businesses and services across Africa. The Plug connects you; it never handles payments between you and a business, or guarantees outcomes, so always check credentials.
           </p>
         </div>
         {cols.map((c) => (

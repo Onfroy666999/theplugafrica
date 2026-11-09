@@ -219,3 +219,48 @@ Set on **both Workers** (Settings › **Runtime variables and secrets** (top of 
 Add all of these as **Secret**, even the ones that aren't secret: each deploy from GitHub replaces the Worker's plain-text variables with those in `wrangler.jsonc` (Wrangler's `keep_vars` is off), so text variables set in the dashboard disappear. Secrets are kept.
 
 **Before the domain is verified,** leave `EMAIL_FROM` unset (it defaults to Resend's test sender `onboarding@resend.dev`) and set `NOTIFY_EMAIL` to the Resend account's own address: Resend only delivers test-sender mail to that address, so customer confirmations and business emails start working once the domain is verified.
+
+## Concierge membership: Paystack (issue #83)
+
+The membership costs **$8 a month**, charged in cedis through **Paystack**. Stripe doesn't accept Ghana-registered businesses. Paystack is only ever used for The Plug's own fees. Until the two secrets below are set, the membership page says "Membership opens soon" and nobody can be charged.
+
+**1. Paystack account (Kenneth).** Sign up at paystack.com as a Ghana business and complete the business verification. Live payments need it; test mode works at once.
+
+**2. The plan.** In Paystack › **Plans** › **Create plan**, set:
+- Name: `Concierge membership`
+- Interval: **Monthly**
+- Currency: GHS
+- Amount: the cedi price shown next to $8
+
+Copy the **plan code** (`PLN_…`). The site reads the price from the plan, so changing it in Paystack updates the page within the hour. Create the plan in **test mode** first; live mode has its own plan with its own code.
+
+**3. Webhook.** In Paystack › Settings › **API Keys & Webhooks**, set the webhook URL. Test and live each have their own:
+
+| Mode | Webhook URL |
+|---|---|
+| Test | `https://staging.theplugafrica.org/api/paystack/webhook` |
+| Live | `https://theplugafrica.org/api/paystack/webhook` |
+
+**4. Secrets** on each Worker, under Settings › **Runtime variables and secrets**, both as type **Secret**:
+
+| Name | Staging | Production |
+|---|---|---|
+| `PAYSTACK_SECRET_KEY` | the **test** secret key (`sk_test_…`) | the test key while checking, the **live** key (`sk_live_…`) at launch |
+| `PAYSTACK_PLAN_CODE` | the test plan's code | the matching plan's code (test or live) |
+
+**5. Cloudflare Access must let Paystack through.** While the site is behind Access (Part G), Paystack can't sign in, so its webhook would be blocked. In Zero Trust › Access controls › Applications, add a self-hosted application named `Paystack webhook` with:
+- hostnames `theplugafrica.org` and `staging.theplugafrica.org`, path `api/paystack/webhook`
+- a policy with action **Bypass**, rule *Include* › **Everyone**
+
+The webhook is still safe without Access: the site checks Paystack's signature on every call and refuses anything unsigned.
+
+**Test it** in test mode, with Paystack's test card (on Paystack's "Test payments" page):
+1. Sign in on staging and join at `/membership`.
+2. Pay with the test card.
+3. You come back to "Welcome, you're a member".
+4. Your account shows the membership, and Admin › Members lists you.
+5. Cancel from the account; the status changes to cancelled, with benefits until the paid month ends.
+
+Staging and production share one database, so test memberships show in both admins. Delete them from Paystack's test dashboard and ask Claude to clear the rows.
+
+**How it works:** `src/lib/paystack.ts` (API calls, signature check), `src/lib/membership.ts` (webhook events, confirming checkout), `src/lib/membership-plan.ts` (price, benefits, who counts as a member). Deleting an account cancels its subscription with Paystack first.

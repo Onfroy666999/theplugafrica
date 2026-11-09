@@ -3,6 +3,8 @@ import { pageMeta } from "@/lib/site";
 import Image from "next/image";
 import { Suspense } from "react";
 import { Check } from "@/components/market/Icons";
+import { LinkButton } from "@/components/ui/Button";
+import { MEMBERSHIP_USD } from "@/lib/membership-plan";
 import { Footer, Header, Reveal } from "@/components/market/Sections";
 import { ConciergeForm } from "./ConciergeForm";
 
@@ -71,6 +73,22 @@ export default function ConciergePage() {
                 </div>
               ))}
             </div>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Concierge membership (issue #83) */}
+      <section className="mx-auto max-w-[1280px] px-5 pt-6 pb-24 md:px-8">
+        <Reveal>
+          <div className="flex flex-col items-start justify-between gap-6 rounded-hero bg-navy p-8 text-white md:flex-row md:items-center md:p-12">
+            <div className="max-w-2xl">
+              <p className="text-[13px] font-semibold tracking-[0.14em] text-gold-light uppercase">Concierge membership</p>
+              <h2 className="mt-2 font-heading text-[26px] font-bold md:text-[32px]">Use the concierge often? Become a member.</h2>
+              <p className="mt-3 text-[15.5px] leading-relaxed text-white/75">
+                Priority with the concierge, a check on any business before you pay, and quick tasks done for you. ${MEMBERSHIP_USD} a month, optional, cancel any time.
+              </p>
+            </div>
+            <LinkButton href="/membership" variant="gold" size="lg">See the membership</LinkButton>
           </div>
         </Reveal>
       </section>

@@ -4,6 +4,22 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- Concierge membership (#83):
+  - **Price:** `/membership` offers it at $8 a month, charged in cedis through Paystack (the cedi price comes from the Paystack plan). It's optional and can be cancelled any time.
+  - **Benefits** (proposed; one list, easy to edit): priority with the concierge, a check before you pay, two quick tasks a month, a direct line and members' offers.
+  - **Joining:** Join opens Paystack's checkout, and the payment is checked with Paystack on the way back. A signed webhook keeps the status in step: renewals, failed payments (3 days' grace), and cancellations.
+  - **The account page** shows the membership, with "Change card" (Paystack's page) and "Cancel". Cancelling keeps the benefits until the paid month ends.
+  - **Deleting an account** cancels its subscription first.
+  - **Members get priority:** their concierge requests are marked "Member" in the admin, listed first under New, and flagged in the team email.
+  - **Admin › Members** lists members and their renewal dates.
+  - **Links:** the concierge page and the footer link to the membership.
+  - **Until Paystack is connected**, the page says "Membership opens soon" and nobody can be charged. Setup is in `docs/DEPLOY.md`.
+  - Migration `20261109200552_concierge_membership`.
+
+### Changed
+- The footer and the contact sheet now say The Plug never handles payments *between you and a business*, rather than that it takes no payments at all: members pay The Plug's own fee.
+
 ## [0.11.0] - 2026-11-09
 
 ### Added
