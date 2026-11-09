@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Suspense } from "react";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { inboxWhere, pageArgs } from "@/lib/inbox";
@@ -24,9 +23,7 @@ export default async function Enquiries({ searchParams }: { searchParams: SP }) 
   return (
     <>
       <PageHeader title="Enquiries" sub="Contact-detail requests and requests sent through The Plug. The reference code proves the lead came from The Plug." />
-      <Suspense>
-        <InboxToolbar kind="enquiry" statuses={ENQUIRY_STATUS} months={recentMonths()} placeholder="Search by reference, business, name or phone" />
-      </Suspense>
+      <InboxToolbar kind="enquiry" statuses={ENQUIRY_STATUS} months={recentMonths()} placeholder="Search by reference, business, name or phone" />
       <Panel>
         {rows.length === 0 && filtered ? (
           <Empty title="Nothing matches" body="Try another status or month, or clear the search." />

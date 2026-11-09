@@ -1,13 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense } from "react";
 import { Breadcrumbs } from "@/components/market/Breadcrumbs";
 import { FloatingConcierge, Footer, Header } from "@/components/market/Sections";
 import { FaqSection, HelpBand, TrustAndTips } from "@/components/market/TrustSections";
 import { LinkButton } from "@/components/ui/Button";
 import { CATEGORY_CONTENT } from "@/lib/content";
 import type { ServiceCard } from "@/lib/data";
-import type { Listing } from "@/lib/listings";
+import { toCardListing, type Listing } from "@/lib/listings";
 import { citySlug } from "@/lib/site";
 import { ExploreClient } from "../../ExploreClient";
 
@@ -85,9 +84,7 @@ export function ServiceView({
 
         <div className="mt-8">
           {listings.length ? (
-            <Suspense fallback={<div className="h-[50vh]" />}>
-              <ExploreClient listings={listings} embedded lockCity={cities.length > 0} />
-            </Suspense>
+            <ExploreClient listings={listings.map(toCardListing)} embedded lockCity={cities.length > 0} />
           ) : (
             <div className="rounded-panel bg-cream p-10 text-center">
               <p className="font-heading text-[20px] font-bold text-navy">

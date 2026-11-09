@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { db } from "@/lib/db";
 import { CATS } from "@/lib/directory";
 import { photoLibrary } from "../businesses/library";
@@ -20,9 +19,7 @@ export default async function Services({ searchParams }: { searchParams: SP }) {
   return (
     <>
       <PageHeader title="Services" sub="The services inside each category. Visitors choose a category, then a service, then a business." />
-      <Suspense>
-        <CategoryPicker cats={cats.map((c) => ({ value: c.key, label: c.name }))} value={cat.key} />
-      </Suspense>
+      <CategoryPicker cats={cats.map((c) => ({ value: c.key, label: c.name }))} value={cat.key} />
       <ServicesManager
         key={cat.key}
         category={{ key: cat.key, name: cat.name }}

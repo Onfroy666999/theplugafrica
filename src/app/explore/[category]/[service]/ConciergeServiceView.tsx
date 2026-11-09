@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { Suspense } from "react";
 import { Breadcrumbs } from "@/components/market/Breadcrumbs";
 import { Check, Shield } from "@/components/market/Icons";
 import { Footer, Header, Reveal } from "@/components/market/Sections";
@@ -110,9 +109,7 @@ export function ConciergeServiceView({ cat, svc, siblings }: { cat: { key: strin
               Tell us a little about what you&apos;re planning. A Plug concierge will call you to talk it through. The first call is free, and nothing is charged until you&apos;ve agreed the fee.
             </p>
           </div>
-          <Suspense fallback={<div className="h-[560px] rounded-hero bg-cream" />}>
-            <ConciergeForm service={{ category: cat.key, slug: svc.slug, name: svc.name }} />
-          </Suspense>
+          <ConciergeForm service={{ category: cat.key, slug: svc.slug, name: svc.name }} />
         </section>
 
         {others.length > 0 && (

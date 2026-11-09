@@ -4,6 +4,21 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-09
+
+### Changed
+- Faster on phones (#76). On a phone-speed CPU, the browser work on the home page fell from about 27 s to 9 s, and on Explore from 13 s to 6 s.
+  - The home page is now built on the server. Only the slideshow, search, category tabs, popular rail, menu and floating button run in the browser. It used to be one big browser component that redrew the whole page every time the slideshow changed.
+  - The slideshow pauses when it is off screen or the tab is hidden.
+  - The header and slideshow captions no longer use a background blur, which was costly to redraw.
+  - Explore's results grid fades in with CSS instead of a layout animation that measured every card.
+  - Listing cards are sent only the fields they show and one photo, not every photo and detail.
+- No visible change to the design.
+
+### Fixed
+- Explore and the admin inbox pages no longer show a hydration error on some loads (React #418). Unneeded loading placeholders were removed; they could arrive after the page and confuse React.
+- The "Popular in Accra" row on phones lines up with the page margin instead of the screen edge.
+
 ## [0.9.0] - 2026-11-08
 
 ### Added

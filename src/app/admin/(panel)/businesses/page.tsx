@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense } from "react";
 import type { Prisma } from "@prisma/client";
 import { LinkButton } from "@/components/ui/Button";
 import { parseImages } from "@/lib/data";
@@ -35,9 +34,7 @@ export default async function Businesses({ searchParams }: { searchParams: SP })
   return (
     <>
       <PageHeader title="Businesses" sub={`${total} in total. Only In review and Verified appear on the site.`} action={add} />
-      <Suspense>
-        <BusinessFilters />
-      </Suspense>
+      <BusinessFilters />
 
       <Panel>
         {rows.length === 0 ? (

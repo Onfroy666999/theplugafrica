@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { inboxWhere, pageArgs } from "@/lib/inbox";
@@ -20,9 +19,7 @@ export default async function Messages({ searchParams }: { searchParams: SP }) {
   return (
     <>
       <PageHeader title="Messages" sub="General messages from the Contact page. Reply by email or phone, then mark them Replied." />
-      <Suspense>
-        <InboxToolbar kind="contact" statuses={CONTACT_STATUS} months={recentMonths()} placeholder="Search by name, email, phone, topic or reference" />
-      </Suspense>
+      <InboxToolbar kind="contact" statuses={CONTACT_STATUS} months={recentMonths()} placeholder="Search by name, email, phone, topic or reference" />
       <Panel>
         {rows.length === 0 ? (
           filtered ? <Empty title="Nothing matches" body="Try another status or month, or clear the search." /> : <Empty title="No messages yet" body="Messages sent from the Contact page appear here." />

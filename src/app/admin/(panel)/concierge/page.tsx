@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Suspense } from "react";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { CATS } from "@/lib/directory";
@@ -32,9 +31,7 @@ export default async function Concierge({ searchParams }: { searchParams: SP }) 
   return (
     <>
       <PageHeader title="Concierge requests" sub="Paid, hands-on requests. Agree the fee before any work starts." />
-      <Suspense>
-        <InboxToolbar kind="concierge" statuses={CONCIERGE_STATUS} months={recentMonths()} placeholder="Search by name, phone, email, city or reference" assignable />
-      </Suspense>
+      <InboxToolbar kind="concierge" statuses={CONCIERGE_STATUS} months={recentMonths()} placeholder="Search by name, phone, email, city or reference" assignable />
       <Panel>
         {rows.length === 0 ? (
           filtered ? <Empty title="Nothing matches" body="Try another status, month or assignment, or clear the search." /> : <Empty title="No requests yet" body="Requests from the Concierge page, and from “Ask a concierge to handle it” on listings, arrive here." />

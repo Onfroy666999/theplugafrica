@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { CatIcon, Search } from "@/components/market/Icons";
@@ -10,8 +9,7 @@ import { ChipGroup } from "@/components/ui/ChipGroup";
 import { Select } from "@/components/ui/Select";
 import { Switch } from "@/components/ui/Switch";
 import { CATS, LISTING_CATS, type CatKey } from "@/lib/directory";
-import { CITIES, type Listing } from "@/lib/listings";
-import { DUR, EASE } from "@/lib/motion";
+import { CITIES, type CardListing } from "@/lib/listings";
 import { searchListings } from "@/lib/search";
 
 const SORT_OPTIONS = [
@@ -41,13 +39,12 @@ export function ExploreClient({
   embedded = false,
   lockCity = false,
 }: {
-  listings: Listing[];
+  listings: CardListing[];
   embedded?: boolean;
   lockCity?: boolean;
 }) {
   const params = useSearchParams();
   const path = usePathname();
-  const reduce = useReducedMotion();
 
   const cat = (params.get("cat") as CatKey | null) ?? null;
   const cityParam = params.get("city");
@@ -142,29 +139,15 @@ export function ExploreClient({
           " · Example listings while real businesses are added"}
       </p>
 
-      <motion.div
-        layout={!reduce}
-        className="mt-4 grid grid-cols-1 gap-x-5 gap-y-9 sm:grid-cols-2 lg:grid-cols-4"
-      >
-        <AnimatePresence mode="popLayout" initial={false}>
-          {results.map((l, i) => (
-            <motion.div
-              key={l.slug}
-              layout={!reduce}
-              initial={{ opacity: 0, transform: "scale(0.97)" }}
-              animate={{ opacity: 1, transform: "scale(1)" }}
-              exit={{
-                opacity: 0,
-                transform: "scale(0.97)",
-                transition: { duration: DUR.fast },
-              }}
-              transition={{ duration: DUR.base, ease: EASE.out }}
-            >
-              <ListingCard l={l} priority={i < 2} />
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </motion.div>
+      {/* A light CSS fade as results appear. No layout animation: measuring and moving every card made this page
+          about four times heavier on phones (issue #76). */}
+      <div className="mt-4 grid grid-cols-1 gap-x-5 gap-y-9 sm:grid-cols-2 lg:grid-cols-4">
+        {results.map((l, i) => (
+          <div key={l.slug} className="fade-in">
+            <ListingCard l={l} priority={i < 2} />
+          </div>
+        ))}
+      </div>
 
       {results.length === 0 && (
         <div className="mt-6 rounded-panel bg-cream p-10 text-center">
