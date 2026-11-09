@@ -4,6 +4,8 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-09
+
 ### Added
 - Visitor accounts (#82):
   - **Sign in** in the header opens `/account/sign-in`. Visitors sign in with a 6-digit code sent to their email; there's no password, and the account is created on first sign-in.
