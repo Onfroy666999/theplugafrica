@@ -50,7 +50,7 @@ export function toListing(b: Row): Listing {
 // What visitors may see. The live site (SITE_ENV=production) hides the design's example businesses; staging and
 // local keep them. Staging and production share one database for now (decided 2026-11-06), so this is a filter,
 // not a separate dataset. Read per request: Workers expose SITE_ENV from wrangler.jsonc at runtime.
-const publicWhere = () => ({ status: { in: [...PUBLIC_STATUSES] }, ...(process.env.SITE_ENV === "production" && { isExample: false }) });
+export const publicWhere = () => ({ status: { in: [...PUBLIC_STATUSES] }, ...(process.env.SITE_ENV === "production" && { isExample: false }) });
 
 export async function getPublicListings(): Promise<Listing[]> {
   const rows = await db.business.findMany({

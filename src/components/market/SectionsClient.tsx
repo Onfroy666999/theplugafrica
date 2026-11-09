@@ -13,7 +13,8 @@ import { CATS, type CatKey } from "@/lib/directory";
 import type { CardListing } from "@/lib/listings";
 import type { ServiceCard } from "@/lib/data";
 import { ListingCard } from "./ListingCard";
-import { Arrow, CatIcon, Chat } from "./Icons";
+import { Arrow, CatIcon, Chat, UserIcon } from "./Icons";
+import { useSignedIn } from "./saved";
 import { LinkButton } from "@/components/ui/Button";
 import { DUR, EASE, SPRING, STAGGER, fadeUp } from "@/lib/motion";
 
@@ -31,6 +32,7 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const path = usePathname();
+  const signedIn = useSignedIn();
   useEffect(() => setOpen(false), [path]);
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 8);
@@ -54,7 +56,15 @@ export function Header() {
           })}
         </nav>
         <div className="flex items-center gap-2">
-          {/* Customer sign-in arrives with accounts (#20); until then there is no Sign in button. */}
+          {/* Visitor accounts (issue #82). Says "Sign in" until the browser knows otherwise (no flash for most visitors). */}
+          <Link
+            href="/account"
+            aria-label={signedIn ? "Your account" : "Sign in"}
+            className={`press flex h-10 items-center gap-2 rounded-full px-3 text-[14px] font-medium text-navy/75 hover:bg-navy/[0.05] hover:text-navy ${path.startsWith("/account") ? "bg-navy/[0.05] text-navy" : ""}`}
+          >
+            <UserIcon className="h-5 w-5" />
+            <span className="max-md:hidden">{signedIn ? "Account" : "Sign in"}</span>
+          </Link>
           {/* max-sm:hidden, not hidden sm:inline-flex: the kit button's own inline-flex would win over plain hidden (issue #46). */}
           <LinkButton href="/businesses" size="sm" className="max-sm:hidden">List your business</LinkButton>
           <button
@@ -83,6 +93,9 @@ export function Header() {
                 {n.label}
               </Link>
             ))}
+            <Link href="/account" className="block border-b border-navy/[0.06] py-3.5 font-heading text-[17px] font-semibold text-navy">
+              {signedIn ? "Your account" : "Sign in"}
+            </Link>
             {/* Phones only: from sm up the header already shows this button (issue #46). */}
             <LinkButton href="/businesses" full className="mt-4 sm:hidden">List your business</LinkButton>
           </motion.nav>

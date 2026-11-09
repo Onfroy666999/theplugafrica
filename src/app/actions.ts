@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { notifyBusinessRequest, notifyConcierge, notifyContactMessage, notifyReview, notifyWaitlist } from "@/lib/notify";
 import { limitForm, screenForm } from "@/lib/protect";
 import { PUBLIC_STATUSES } from "@/lib/status";
+import { getUser } from "@/lib/users";
 import { BusinessRequestSchema, ConciergeSchema, ContactSchema, ReviewSchema, WaitlistSchema, makeRef, parseDetails } from "@/lib/validation";
 
 // Public form handlers. Each one saves to the admin inboxes and returns a reference code.
@@ -30,7 +31,8 @@ export async function createEnquiry(slug: string): Promise<
   if (!b) return { ok: false, error: "This business is no longer listed." };
   if (await limitForm("reveal", 20)) return { ok: false, error: "You've asked for several businesses' details in a short time. Please wait a while." };
   const ref = makeRef("PLG");
-  await db.enquiry.create({ data: { ref, businessId: b.id } });
+  const user = await getUser();
+  await db.enquiry.create({ data: { ref, businessId: b.id, userId: user?.id } });
   return { ok: true, ref, contact: { phone: b.phone ?? undefined, whatsapp: b.whatsapp ?? undefined, email: b.email ?? undefined } };
 }
 
@@ -48,8 +50,9 @@ export async function submitConcierge(fd: FormData): Promise<FormResult> {
   const over = await limit("concierge");
   if (over) return over;
   const ref = makeRef("CNC");
+  const user = await getUser();
   await db.conciergeRequest.create({
-    data: { ref, name: d.name, phone: d.phone, email: d.email, city: d.city, category: d.category, service: service?.name, details: d.details, timing: d.when, businessId: business?.id, ...where.data },
+    data: { ref, name: d.name, phone: d.phone, email: d.email, city: d.city, category: d.category, service: service?.name, details: d.details, timing: d.when, businessId: business?.id, userId: user?.id, ...where.data },
   });
   notifyConcierge({ ref, name: d.name, phone: d.phone, email: d.email, category: d.category, service: service?.name, details: d.details, timing: d.when, city: d.city, ...where.data });
   return { ok: true, ref };
@@ -69,8 +72,9 @@ export async function sendBusinessRequest(slug: string, fd: FormData): Promise<F
   const over = await limit("request");
   if (over) return over;
   const ref = makeRef("PLG");
+  const user = await getUser();
   await db.enquiry.create({
-    data: { ref, businessId: b.id, kind: "request", name: d.name, phone: d.phone, email: d.email, city: d.city, message: d.message, ...where.data },
+    data: { ref, businessId: b.id, userId: user?.id, kind: "request", name: d.name, phone: d.phone, email: d.email, city: d.city, message: d.message, ...where.data },
   });
   notifyBusinessRequest({ ref, name: d.name, phone: d.phone, email: d.email, message: d.message, city: d.city, business: { name: b.name, email: b.email }, ...where.data });
   return { ok: true, ref };

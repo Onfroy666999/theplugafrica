@@ -4,8 +4,24 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- Visitor accounts (#82):
+  - **Sign in** in the header opens `/account/sign-in`. Visitors sign in with a 6-digit code sent to their email; there's no password, and the account is created on first sign-in.
+  - **Code safety:** codes are stored only as hashes and work once, for 10 minutes, with 5 tries. Only the newest code works. At most 5 codes an hour go to one address, and 10 an hour to one visitor.
+  - **`/account`** shows the visitor's requests with reference and progress (including earlier ones sent with the same email), their saved businesses and their details. They can sign out or delete the account; requests they already sent stay with the team.
+  - **The heart** on listing cards now saves the business (it used to do nothing), and asks the visitor to sign in first.
+  - **Linked requests:** concierge requests and requests to businesses sent while signed in are linked to the account.
+  - **Admin › Users** lists accounts, read-only.
+  - **Separate sessions:** visitor sessions use their own cookie and signing key, so they can never open the admin.
+  - Migration `20261109183309_user_accounts`.
+
 ### Changed
-- Domain (#5): the site's address will be theplugafrica.org (bought at Namecheap). `docs/DEPLOY.md` Part G has the steps to connect it to Cloudflare: production on theplugafrica.org, www redirecting to it, staging on staging.theplugafrica.org, plus email sending and receiving on the domain. Workers Paid is now active.
+- Domain (#5): the site now runs on **theplugafrica.org**, with HTTPS and DNSSEC.
+  - `www` redirects to it, and staging is on `staging.theplugafrica.org`.
+  - The workers.dev and preview addresses are switched off in `wrangler.jsonc`.
+  - Email: Resend sends the site's emails from `hello@theplugafrica.org`, and mail to that address is forwarded to the team.
+  - The setup is recorded in `docs/DEPLOY.md` Part G.
+  - Workers Paid is now active.
 
 ## [0.10.0] - 2026-11-09
 

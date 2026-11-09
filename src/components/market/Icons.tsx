@@ -118,6 +118,15 @@ export function Heart({ filled, className = "h-5 w-5" }: { filled?: boolean; cla
   );
 }
 
+export function UserIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <circle {...P} strokeWidth={1.8} cx="12" cy="8.5" r="3.75" />
+      <path {...P} strokeWidth={1.8} d="M4.75 20c.9-3.6 3.8-5.5 7.25-5.5s6.35 1.9 7.25 5.5" />
+    </svg>
+  );
+}
+
 export function Search({ className = "h-5 w-5" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
