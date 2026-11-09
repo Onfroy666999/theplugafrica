@@ -4,6 +4,8 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-09
+
 ### Added
 - Concierge membership (#83):
   - **Price:** `/membership` offers it at $8 a month, charged in cedis through Paystack (the cedi price comes from the Paystack plan). It's optional and can be cancelled any time.
