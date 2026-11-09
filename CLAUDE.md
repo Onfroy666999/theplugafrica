@@ -1,6 +1,6 @@
 # The Plug Africa — Project Brief for Claude Code
 
-Owner: Bilson (Group BD, Accra, Ghana). Goal: a durable, passive-income business that serves international clients and expats. Working name and domain: **The Plug Africa**, **ThePlugAfrica.com**.
+Owner: Bilson (Group BD, Accra, Ghana). Goal: a durable, passive-income business that serves international clients and expats. Working name and domain: **The Plug Africa**, **theplugafrica.org** (registered at Namecheap, 2026-11-09; the .com was not used).
 
 Status legend used below: **[Decided]** the owner chose it. **[Proposed]** my suggestion, not yet approved. **[Open]** unresolved or unverified.
 
@@ -117,13 +117,14 @@ The owner disliked the first website UI and asked for premium, animated, human-f
 
 ### 6d. Hosting stack (decided by the owner on 2026-11-05)
 
-- **[Decided]** **Supabase** for the database and photo storage (London region). **Cloudflare** hosts the Next.js app on Workers via `@opennextjs/cloudflare`, and serves DNS. **ThePlugAfrica.com** is registered at a registrar other than Cloudflare (the owner will choose which), with its nameservers pointed to Cloudflare. This replaces the earlier Vercel + Neon + Vercel Blob proposal.
-- Costs: Cloudflare Workers paid plan (about $5/month, likely needed for bundle size). Supabase Free is fine for staging, but **production must be on Supabase Pro (about $25/month)** because free projects pause after a week of inactivity.
+- **[Decided]** **Supabase** for the database and photo storage (London region). **Cloudflare** hosts the Next.js app on Workers via `@opennextjs/cloudflare`, and serves DNS. **theplugafrica.org** is registered at **Namecheap** (decided 2026-11-09, replacing the planned ThePlugAfrica.com), with its nameservers pointed to Cloudflare; production on the apex, `www` redirecting, staging on `staging.theplugafrica.org`. Steps: `docs/DEPLOY.md` Part G. This replaces the earlier Vercel + Neon + Vercel Blob proposal.
+- Costs: Cloudflare Workers Paid (about $5/month; active since 2026-11-09). Supabase Free is fine for staging, but **production must be on Supabase Pro (about $25/month)** because free projects pause after a week of inactivity.
 - What the Workers runtime means for the code (issues #3 and #4): photo uploads and the photo library move to Supabase Storage (no local disk); the Prisma connection must work on Workers; `next/image` needs a Cloudflare- or Supabase-compatible loader.
 - Accounts are created by the owner (Claude can't create accounts). Secrets go into Cloudflare/Supabase settings, never into chat or the repo.
 - **[Decided 2026-11-05] Whose accounts:** the site is hosted on **Kenneth's** Cloudflare and Supabase accounts. The developer is **Reginald** (GitHub `Onfroy666999`, which owns the repo); he works through membership of Kenneth's accounts. This computer's Wrangler is signed in to Reginald's own Cloudflare account for other projects: never deploy from it and never log it out.
 - **[Decided 2026-11-05] How it deploys:** Cloudflare **Workers Builds** (Git integration) in Kenneth's account builds from the GitHub repo. Two Workers: `theplugafrica-staging` from `develop` and `theplugafrica` from `main`, using the environments in `wrangler.jsonc`. No Cloudflare token is stored in GitHub. Step-by-step setup: `docs/DEPLOY.md`.
-- Bundle size measured 2026-11-05: **about 2.4 MiB gzipped**, under the free plan's 3 MiB limit (it was 3.1 MiB until the share card became a fixed image, which removed `next/og`). Most of it is the Next.js runtime, our pages, Prisma's query engine, Motion and Base UI. Keep an eye on it: avoid `next/og` and other heavy server-side libraries. Workers Paid (about $5/month) is still needed: the free plan allows 10 ms CPU per request, which server-rendered pages often exceed.
+- **[Decided 2026-11-09] Domain and email:** the site is live on **theplugafrica.org** (Namecheap, DNS on Cloudflare; www redirects; staging on `staging.theplugafrica.org`). Email is all free: **Resend** sends the website's own emails (`EMAIL_FROM` = hello@); **Cloudflare Email Routing** forwards `hello@theplugafrica.org` to Kenneth's Gmail, and Gmail "Send mail as" replies as hello@ through Resend's SMTP. (Zoho's free plan wasn't offered.) Owner's step-by-step: the Claude doc "Connecting theplugafrica.org: step-by-step guide"; technical summary: `docs/DEPLOY.md` Part G.
+- Bundle size measured 2026-11-05: **about 2.4 MiB gzipped**, under the free plan's 3 MiB limit (it was 3.1 MiB until the share card became a fixed image, which removed `next/og`). Most of it is the Next.js runtime, our pages, Prisma's query engine, Motion and Base UI. Keep an eye on it: avoid `next/og` and other heavy server-side libraries. Workers Paid has been active since 2026-11-09 (the free plan allowed only 10 ms CPU per request, which caused error 1102).
 
 ### 6b. Admin and backend (feature/admin, 2026-11-04)
 
@@ -153,13 +154,13 @@ The owner disliked the first website UI and asked for premium, animated, human-f
 
 ## 8. Other deliverables already produced
 
-- Partner presentation (PowerPoint, 12 slides) and business overview (Word, 8 pages), both rebranded to The Plug Africa. They contain an unverified phrase, "domain secured at ThePlugAfrica.com"; correct it once the owner confirms purchase.
+- Partner presentation (PowerPoint, 12 slides) and business overview (Word, 8 pages), both rebranded to The Plug Africa. They contain the phrase "domain secured at ThePlugAfrica.com", which is wrong: the domain bought is theplugafrica.org. Correct both documents.
 - Logo exploration: v1 plug-prong "A" mark, v2 five concepts, enhanced #4 (rejected for use).
 - Comparable platforms were reviewed; the owner found "quite some lapses" in them, which is the opening for The Plug.
 
 ## 9. Open items and next steps
 
-1. **Domain:** confirm ThePlugAfrica.com is actually registered. Check the registrar, and nic.gh if a .com.gh is wanted.
+1. **Domain:** theplugafrica.org bought at Namecheap (2026-11-09). Connect it to Cloudflare (`docs/DEPLOY.md` Part G, issue #5). Decide whether to also register .com / .com.gh for brand protection.
 2. **Trademark:** search and file for "The Plug Africa" in Ghana (Registrar General) and priority export markets.
 3. **Photos:** owner to supply or license images; then integrate (see section 6).
 4. **Backend:** real forms, waitlist, database, admin panel.

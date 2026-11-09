@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 import { CITIES } from "./listings";
 
-/** Public address of the site. Set NEXT_PUBLIC_SITE_URL in each environment (e.g. https://theplugafrica.com). */
+/** Public address of the site. Set NEXT_PUBLIC_SITE_URL in each environment (e.g. https://theplugafrica.org). */
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
 export const SITE_NAME = "The Plug Africa";
 

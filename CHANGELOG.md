@@ -4,6 +4,9 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Changed
+- Domain (#5): the site's address will be theplugafrica.org (bought at Namecheap). `docs/DEPLOY.md` Part G has the steps to connect it to Cloudflare: production on theplugafrica.org, www redirecting to it, staging on staging.theplugafrica.org, plus email sending and receiving on the domain. Workers Paid is now active.
+
 ## [0.10.0] - 2026-11-09
 
 ### Changed
