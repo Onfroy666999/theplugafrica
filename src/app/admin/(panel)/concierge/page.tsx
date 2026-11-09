@@ -17,7 +17,8 @@ export default async function Concierge({ searchParams }: { searchParams: SP }) 
   const f = parseInboxFilters(sp, values(CONCIERGE_STATUS));
   const where = inboxWhere("concierge", f, admin.id);
   const [rows, total, team] = await Promise.all([
-    db.conciergeRequest.findMany({ where, ...pageArgs(f), include: { business: { select: { id: true, name: true } }, assignedTo: { select: { id: true, name: true } } } }),
+    // Members come first among new requests (issue #83); other views stay newest first.
+    db.conciergeRequest.findMany({ where, ...pageArgs(f), ...(f.status === "new" && { orderBy: [{ fromMember: "desc" as const }, { createdAt: "desc" as const }] }), include: { business: { select: { id: true, name: true } }, assignedTo: { select: { id: true, name: true } } } }),
     db.conciergeRequest.count({ where }),
     // Owners and editors can handle requests; viewers can't change anything.
     db.admin.findMany({ where: { role: { in: ["owner", "editor"] } }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
@@ -30,7 +31,7 @@ export default async function Concierge({ searchParams }: { searchParams: SP }) 
   };
   return (
     <>
-      <PageHeader title="Concierge requests" sub="Paid, hands-on requests. Agree the fee before any work starts." />
+      <PageHeader title="Concierge requests" sub="Paid, hands-on requests. Agree the fee before any work starts. Requests from members are marked, and come first under New." />
       <InboxToolbar kind="concierge" statuses={CONCIERGE_STATUS} months={recentMonths()} placeholder="Search by name, phone, email, city or reference" assignable />
       <Panel>
         {rows.length === 0 ? (
@@ -49,6 +50,7 @@ export default async function Concierge({ searchParams }: { searchParams: SP }) 
                 assign={{ options: options(r.assignedTo), value: r.assignedTo?.id ?? "" }}
               >
                 <p className="text-[15px] font-semibold text-navy">
+                  {r.fromMember && <span className="mr-2 inline-flex rounded-full bg-gold/15 px-2 py-0.5 align-middle text-[11.5px] font-bold tracking-wide text-gold-ink uppercase">Member</span>}
                   {r.name} <span className="font-normal text-navy/65">· {catName(r.category)}{r.service && <> › {r.service}</>} · {r.city}</span>
                 </p>
                 <p className="mt-0.5 text-[13px] text-navy/65">

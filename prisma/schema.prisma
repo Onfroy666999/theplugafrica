@@ -184,6 +184,8 @@ model ConciergeRequest {
   // The visitor's account when they were signed in (issue #82).
   userId        String?
   user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // Sent by a concierge member (issue #83): marked in the admin, and new ones are listed first.
+  fromMember    Boolean   @default(false)
   createdAt     DateTime  @default(now())
 
   @@index([assignedToId])
@@ -284,6 +286,7 @@ model User {
   saved             SavedBusiness[]
   enquiries         Enquiry[]
   conciergeRequests ConciergeRequest[]
+  membership        Membership?
 }
 
 /// A one-time sign-in code (issue #82). Only a hash is stored; a code works once, for 10 minutes, with 5 tries.
@@ -309,4 +312,25 @@ model SavedBusiness {
 
   @@id([userId, businessId])
   @@index([businessId])
+}
+
+/// Concierge membership (issue #83): a Paystack subscription. Paystack is the source of truth; its webhook keeps
+/// this row in step. A member keeps the benefits until `currentPeriodEnd`, even after cancelling.
+model Membership {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status           String    @default("pending") // pending | active | non_renewing | past_due | cancelled
+  planCode         String?
+  subscriptionCode String?   @unique
+  emailToken       String? // Paystack's token for cancelling this subscription
+  customerCode     String?
+  currentPeriodEnd DateTime? // next payment date while active; the end of access once cancelled
+  startedAt        DateTime?
+  cancelledAt      DateTime?
+  lastEvent        String? // the last Paystack event applied, for troubleshooting
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([status])
 }

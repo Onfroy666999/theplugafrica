@@ -6,6 +6,8 @@ import { z } from "zod";
 import { publicWhere } from "@/lib/data";
 import { db } from "@/lib/db";
 import { emailEnabled } from "@/lib/email";
+import { getMembership } from "@/lib/membership";
+import { disableSubscription } from "@/lib/paystack";
 import { hit, limitForm, screenForm, sha256 } from "@/lib/protect";
 import { CODE_LENGTH, cleanCode, safeNext } from "@/lib/signin-code";
 import { checkCode, endUserSession, getUser, issueCode, sendCodeEmail, startUserSession } from "@/lib/users";
@@ -88,6 +90,12 @@ export async function deleteAccount(fd: FormData): Promise<{ ok: false; error: s
   const u = await getUser();
   if (!u) return { ok: false, error: "Your session has ended. Please sign in again." };
   if (String(fd.get("confirm") ?? "").trim().toLowerCase() !== "delete") return { ok: false, error: "Type DELETE to confirm." };
+  // A running membership is cancelled with Paystack first, so nobody keeps being charged for a deleted account.
+  const m = await getMembership(u.id);
+  if (m && ["active", "past_due", "pending"].includes(m.status) && m.subscriptionCode) {
+    if (!m.emailToken || !(await disableSubscription(m.subscriptionCode, m.emailToken)))
+      return { ok: false, error: "We couldn't cancel your membership with Paystack just now, so your account wasn't deleted. Please try again in a minute." };
+  }
   await db.user.delete({ where: { id: u.id } });
   await db.signInCode.deleteMany({ where: { email: u.email } });
   await endUserSession();
