@@ -18,6 +18,7 @@ import {
 } from "@/components/market/Sections";
 import { DUR, EASE, SPRING, STAGGER } from "@/lib/motion";
 import { CATS } from "@/lib/directory";
+import { LISTINGS } from "@/lib/listings";
 
 // Photo "chips" framing the search: real scenes, one per need.
 const FRAMES = [
@@ -117,7 +118,7 @@ export default function OptionE() {
         </div>
       </section>
 
-      <PopularRail />
+      <PopularRail listings={LISTINGS} />
       <CategoryExplorer />
       <HowItWorks />
       <ConciergeBand />

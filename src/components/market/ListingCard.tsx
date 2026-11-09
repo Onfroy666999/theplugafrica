@@ -3,10 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import type { Listing } from "@/lib/listings";
+import type { CardListing } from "@/lib/listings";
 import { Heart, Shield, Star } from "./Icons";
 
-export function StatusBadge({ status, className = "" }: { status: Listing["status"]; className?: string }) {
+export function StatusBadge({ status, className = "" }: { status: CardListing["status"]; className?: string }) {
   return status === "verified" ? (
     <span className={`inline-flex items-center gap-1 text-[12px] font-semibold text-ok ${className}`}>
       <Shield className="h-4 w-4" /> Verified
@@ -19,7 +19,7 @@ export function StatusBadge({ status, className = "" }: { status: Listing["statu
 }
 
 /** `priority`: load the photo straight away; set it for the first cards on a page, which are usually the largest thing on screen (issue #30). */
-export function ListingCard({ l, sizes = "(min-width:1024px) 25vw, (min-width:640px) 50vw, 90vw", priority = false }: { l: Listing; sizes?: string; priority?: boolean }) {
+export function ListingCard({ l, sizes = "(min-width:1024px) 25vw, (min-width:640px) 50vw, 90vw", priority = false }: { l: CardListing; sizes?: string; priority?: boolean }) {
   const [saved, setSaved] = useState(false);
   return (
     <Link href={`/listing/${l.slug}`} className="group block">
