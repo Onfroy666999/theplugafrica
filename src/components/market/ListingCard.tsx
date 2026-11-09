@@ -2,9 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
 import type { CardListing } from "@/lib/listings";
 import { Heart, Shield, Star } from "./Icons";
+import { useSaved } from "./saved";
 
 export function StatusBadge({ status, className = "" }: { status: CardListing["status"]; className?: string }) {
   return status === "verified" ? (
@@ -20,18 +20,20 @@ export function StatusBadge({ status, className = "" }: { status: CardListing["s
 
 /** `priority`: load the photo straight away; set it for the first cards on a page, which are usually the largest thing on screen (issue #30). */
 export function ListingCard({ l, sizes = "(min-width:1024px) 25vw, (min-width:640px) 50vw, 90vw", priority = false }: { l: CardListing; sizes?: string; priority?: boolean }) {
-  const [saved, setSaved] = useState(false);
+  const [saved, toggle] = useSaved(l.slug);
   return (
     <Link href={`/listing/${l.slug}`} className="group block">
       <div className="relative aspect-square overflow-hidden rounded-card bg-navy/5">
         <Image src={l.images[0]} alt={l.name} fill sizes={sizes} priority={priority} className="object-cover media-zoom" />
         {l.isExample && <span className="absolute top-3 left-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-navy shadow-sm">Example</span>}
         <button
-          aria-label={saved ? "Remove from saved" : "Save"}
+          aria-label={saved ? `Remove ${l.name} from saved` : `Save ${l.name}`}
           aria-pressed={saved}
           onClick={(e) => {
+            // Inside the card's link: save without opening the listing.
             e.preventDefault();
-            setSaved((s) => !s);
+            e.stopPropagation();
+            toggle();
           }}
           className="absolute top-1.5 right-1.5 flex h-11 w-11 items-center justify-center transition-transform duration-150 ease-[var(--ease-out)] active:scale-90"
         >

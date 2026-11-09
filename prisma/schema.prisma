@@ -16,16 +16,16 @@ datasource db {
 
 // Team accounts (issue #18). Roles and what each may do: src/lib/roles.ts.
 model Admin {
-  id            String     @id @default(cuid())
-  email         String     @unique
+  id            String             @id @default(cuid())
+  email         String             @unique
   name          String
   passwordHash  String
-  role          String     @default("editor") // owner | editor | viewer (existing accounts became owners)
+  role          String             @default("editor") // owner | editor | viewer (existing accounts became owners)
   // Sessions signed before this moment stop working (set when the password changes).
-  sessionsSince DateTime   @default(now())
+  sessionsSince DateTime           @default(now())
   lastSignInAt  DateTime?
-  createdAt     DateTime   @default(now())
-  invitesSent   Invite[]   @relation("InvitedBy")
+  createdAt     DateTime           @default(now())
+  invitesSent   Invite[]           @relation("InvitedBy")
   activity      AuditLog[]
   assigned      ConciergeRequest[]
 }
@@ -90,9 +90,10 @@ model Business {
 
   credentials       Credential[]
   enquiries         Enquiry[]
-  reviews     Review[]
+  reviews           Review[]
   conciergeRequests ConciergeRequest[]
   services          Service[] // one or more services within its category (issue #26)
+  savedBy           SavedBusiness[]
 
   @@index([status, category, city])
 }
@@ -147,7 +148,12 @@ model Enquiry {
   timeOfDay     String?
   status        String    @default("new") // new | contacted | converted | closed
   notes         String?
+  // The visitor's account when they were signed in (issue #82); kept as a plain request if the account is deleted.
+  userId        String?
+  user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt     DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model ConciergeRequest {
@@ -175,9 +181,13 @@ model ConciergeRequest {
   // Team member handling it (issue #67); cleared if their account is removed.
   assignedToId  String?
   assignedTo    Admin?    @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+  // The visitor's account when they were signed in (issue #82).
+  userId        String?
+  user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt     DateTime  @default(now())
 
   @@index([assignedToId])
+  @@index([userId])
 }
 
 model WaitlistEntry {
@@ -258,4 +268,45 @@ model Review {
 
   @@index([businessId, status])
   @@index([status, createdAt])
+}
+
+/// A visitor's own account (issue #82). Signing in is by a code sent to the email: there is no password.
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique // stored lower-case
+  name          String?
+  phone         String?
+  createdAt     DateTime  @default(now())
+  lastSignInAt  DateTime?
+  // Sessions signed before this time are refused ("sign out everywhere", account deletion).
+  sessionsSince DateTime  @default(now())
+
+  saved             SavedBusiness[]
+  enquiries         Enquiry[]
+  conciergeRequests ConciergeRequest[]
+}
+
+/// A one-time sign-in code (issue #82). Only a hash is stored; a code works once, for 10 minutes, with 5 tries.
+model SignInCode {
+  id        String    @id @default(cuid())
+  email     String
+  codeHash  String
+  attempts  Int       @default(0)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email, createdAt])
+}
+
+/// A business a visitor saved with the heart (issue #82).
+model SavedBusiness {
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@id([userId, businessId])
+  @@index([businessId])
 }

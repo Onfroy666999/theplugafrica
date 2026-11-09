@@ -19,7 +19,7 @@ The site runs on **Cloudflare Workers** (via OpenNext) with a **Supabase** Postg
 ## Part A: Access and plan (Kenneth)
 
 1. **Cloudflare members:** Manage Account › **Members** › **Invite members**. Enter Reginald's email, scope **the entire account**, and choose a role that can manage Workers and Hyperdrive (Workers Platform Admin, or Administrator). Select **Invite members**; Reginald accepts from the email.
-2. **Cloudflare plan:** switch to **Workers Paid** (about $5/month). The app's size (about 2.4 MiB compressed) fits the free plan's 3 MiB, but the free plan allows only 10 ms of CPU per request, which server-rendered pages often exceed, and caps Hyperdrive at 100,000 queries a day.
+2. **Cloudflare plan:** **Workers Paid** (about $5/month; done 2026-11-09). The app's size (about 2.4 MiB compressed) fits the free plan's 3 MiB, but the free plan allows only 10 ms of CPU per request, which server-rendered pages often exceed, and caps Hyperdrive at 100,000 queries a day.
 3. **Supabase members:** Organization › **Team** › **Invite**, role **Developer**.
 
 ## Part B: Supabase (Reginald, in Kenneth's organisation)
@@ -63,7 +63,7 @@ Check the **account switcher** (top left) shows Kenneth's account before every s
 
 The Node version comes from `.nvmrc` (22); dependencies are installed automatically.
 
-5. **Runtime secret** (Settings › Variables & Secrets), used by the live site:
+5. **Runtime secret** (Settings › **Runtime variables and secrets** (top of the page; not *Variables and secrets* under Builds, which only exist during the build)), used by the live site:
 
 | Name | Type | Value |
 |---|---|---|
@@ -86,11 +86,11 @@ After a release PR merges `develop` into `main`, create a second Worker the same
 | Branch | `main` |
 | Build command | `npx prisma migrate deploy && npx opennextjs-cloudflare build` (same) |
 | Deploy command | `npx opennextjs-cloudflare deploy` (no `--env`) |
-| Build variable `NEXT_PUBLIC_SITE_URL` | `https://theplugafrica.kennethbilson1989.workers.dev` until the domain is connected (#5) |
+| Build variable `NEXT_PUBLIC_SITE_URL` | `https://theplugafrica.org` once the domain is connected (Part G); until then `https://theplugafrica.kennethbilson1989.workers.dev` |
 | Build secrets `DATABASE_URL`, `DIRECT_URL` | the same Session pooler string as staging |
 | Runtime secret `AUTH_SECRET` | a **new** value, different from staging's |
 
-Then enable **workers.dev** under Settings › Domains & Routes. No seeding is needed: the database is shared. The hosted admin account is the same on both sites.
+The Worker is served on its custom domain only: `workers_dev` and `preview_urls` are off in `wrangler.jsonc` (Part G). No seeding is needed: the database is shared. The hosted admin account is the same on both sites.
 
 ## Part E: First data load (once per Supabase project)
 
@@ -113,7 +113,67 @@ The build applies migrations but doesn't seed. To load the starting services, th
 - `/admin/login` signs in with the hosted admin details.
 - Photo uploads in the admin show "not available on the hosted site yet" until Supabase Storage (issue #3); choose library photos meanwhile.
 
+## Part G: Connect the domain, theplugafrica.org (issue #5)
+
+The domain is registered at **Namecheap**. Its DNS will run on **Cloudflare**, in Kenneth's account, so the Workers can serve it with automatic HTTPS.
+
+| Address | Serves |
+|---|---|
+| `theplugafrica.org` | production (the `theplugafrica` Worker) |
+| `www.theplugafrica.org` | redirects to `theplugafrica.org` |
+| `staging.theplugafrica.org` | staging (the `theplugafrica-staging` Worker) |
+
+**1. Add the domain to Cloudflare** (Kenneth's account):
+1. Select **Add a domain**, enter `theplugafrica.org`, and choose to scan DNS records automatically.
+2. Pick the **Free** plan for the domain. This is separate from Workers Paid, and nothing more is needed.
+3. Review the imported records and **delete Namecheap's parking records**: an `A` record on `theplugafrica.org` and a `CNAME` `www` → `parkingpage.namecheap.com`. They would block the Worker addresses in step 3. Keep any `MX` or `TXT` records you recognise (for example, existing email).
+4. Cloudflare then shows **two nameservers** (like `xxx.ns.cloudflare.com`). Keep the page open.
+
+**2. Point Namecheap at Cloudflare:**
+1. Go to Namecheap › **Domain List** › `theplugafrica.org` › **Manage**.
+2. If **DNSSEC** is on (Advanced DNS tab), turn it off first.
+3. Under **Nameservers**, choose **Custom DNS**, enter the two Cloudflare nameservers, and save with the green tick.
+4. Back in Cloudflare, select **Check nameservers**. The domain usually shows **Active** within an hour; it can take up to 24 hours. Cloudflare emails Kenneth when it's active.
+
+**3. Attach the Workers** (once the domain is Active), under Workers & Pages › the Worker › Settings › **Domains & Routes** › **Add** › **Custom domain**:
+- On `theplugafrica`, add `theplugafrica.org`, then `www.theplugafrica.org`.
+- On `theplugafrica-staging`, add `staging.theplugafrica.org`.
+
+Cloudflare creates the DNS records and the HTTPS certificates itself. The certificates take a few minutes.
+
+**4. Redirect www.** Go to the domain › Rules › **Redirect Rules** › **Create rule** › template **"Redirect from WWW to root"**, then Deploy.
+
+**5. Update the site address and rebuild.** The address is built into the pages, so change these build variables (Settings › Build), then go to Deployments › latest › **Retry build** on each Worker:
+
+| Worker | `NEXT_PUBLIC_SITE_URL` |
+|---|---|
+| `theplugafrica` | `https://theplugafrica.org` |
+| `theplugafrica-staging` | `https://staging.theplugafrica.org` |
+
+This address goes into share previews, the sitemap, invite links and the admin links in emails.
+
+**6. Recommended:**
+- **Always use HTTPS:** SSL/TLS › Edge Certificates › **Always Use HTTPS** on.
+- **Keep staging private:** go to Zero Trust › Access › Applications › **Add** › Self-hosted, for `staging.theplugafrica.org`, with a policy allowing the team's email addresses. `wrangler.jsonc` already sets `"workers_dev": false` and `"preview_urls": false` for both Workers, so the old addresses can't get round it (the dashboard toggles are reset by every deploy). **Decided 2026-11-09:** the live site is also behind Access (application `The Plug – pre-launch`) until the owner launches; on launch day delete that application.
+- **Turnstile:** if a widget exists, add the three hostnames to it.
+- **DNSSEC:** turn it on in Cloudflare (DNS › Settings) and add the DS record it shows at Namecheap (Advanced DNS › DNSSEC).
+
+**7. Email on the domain** (decided 2026-11-09; all free; Zoho's free plan wasn't offered):
+- **Website's own emails, Resend:** Resend › Domains › **Add domain** › `theplugafrica.org`, then add the records it lists (on `send` and `resend._domainkey`) in Cloudflare › DNS as **DNS only**. Make two API keys, `Website` (for `RESEND_API_KEY`) and `Gmail` (below). Set `EMAIL_FROM` and `NOTIFY_EMAIL` (see "Email notifications" below).
+- **Receiving, Cloudflare Email Routing:** Compute › Email Service › Email Routing › onboard the domain, verify Kenneth's Gmail as a destination, and route `hello@` to it.
+- **Replying as hello@, Gmail "Send mail as":** Gmail › Settings › Accounts and Import › Send mail as › add `hello@theplugafrica.org` via SMTP `smtp.resend.com`, port 587 (TLS), username `resend`, password = the `Gmail` key. Set "Reply from the same address the message was sent to".
+- **DMARC:** a `TXT` on `_dmarc`: `v=DMARC1; p=none; rua=mailto:hello@theplugafrica.org`.
+- Replies reach the right place: visitor confirmations come from `hello@`, which forwards to Gmail; every request, waitlist and message alert sets the visitor as reply-to.
+
+**Check it:**
+- `https://theplugafrica.org` loads, with a padlock and no "Staging site" banner.
+- `www.theplugafrica.org` lands on `theplugafrica.org`.
+- `https://theplugafrica.org/robots.txt` lists `Sitemap: https://theplugafrica.org/sitemap.xml`.
+- A share preview (WhatsApp, for example) shows the new address.
+
 ## Troubleshooting
+
+- **"A DNS record already exists" when adding a custom domain:** delete that record in Cloudflare › DNS (usually a Namecheap parking record), then add the domain again.
 
 - **"The name in your Wrangler configuration file must match the name of your Worker":** the dashboard name must be `theplugafrica` (production) or `theplugafrica-staging` (staging, deployed with `--env staging`). Workers Builds may open a pull request to fix the name; don't merge it if the names above are right.
 - **GitHub already linked to another Cloudflare account:** each GitHub account can point to one Cloudflare account. On GitHub › Settings › Applications › Cloudflare Workers & Pages, check which repositories it can see; ask Claude before changing an install other projects rely on.
@@ -127,7 +187,7 @@ The build applies migrations but doesn't seed. To load the starting services, th
 
 When the site hits a server error (a page, a form or a button fails), the team gets an email with the page, the first line of the error and an **error ID**. It never includes what visitors typed or the address's query string. The same error on the same page is emailed once an hour, and at most 10 alerts go out an hour.
 
-It uses the email setup below, so it starts working once `RESEND_API_KEY` is set. Alerts go to `ALERT_EMAIL` (text, comma-separated) if set on the Worker, otherwise to `NOTIFY_EMAIL`.
+It uses the email setup below, so it starts working once `RESEND_API_KEY` is set. Alerts go to `ALERT_EMAIL` (comma-separated; add it as a **secret**, see below) if set on the Worker, otherwise to `NOTIFY_EMAIL`.
 
 To see the full error: Cloudflare › Workers & Pages › the Worker › **Logs**, and search for the error ID. These logs also show requests Cloudflare itself stopped (for example error 1102, CPU limit exceeded), which the site can't email about because the Worker was cut off.
 
@@ -140,7 +200,7 @@ Every public form has a hidden honeypot, a "too fast" check (bots submit instant
 | Name | Where | Type |
 |---|---|---|
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Settings › Build › Variables (it's needed at build time) | variable |
-| `TURNSTILE_SECRET_KEY` | Settings › Variables & Secrets | secret |
+| `TURNSTILE_SECRET_KEY` | Settings › **Runtime variables and secrets** (top of the page; not *Variables and secrets* under Builds, which only exist during the build) | secret |
 
 Redeploy; the check then appears above each form's send button. Without these, the forms work as before.
 
@@ -148,12 +208,14 @@ Redeploy; the check then appears above each form's send button. Without these, t
 
 The site emails the team about every new concierge request, business request, waitlist sign-up and contact message, confirms to visitors who gave an email, and forwards business requests to the business when it has an email address. It's off until a Resend key is set; forms work the same either way, and a failed email never breaks a form.
 
-Set on **both Workers** (Settings › Variables & Secrets):
+Set on **both Workers** (Settings › **Runtime variables and secrets** (top of the page; not *Variables and secrets* under Builds, which only exist during the build)):
 
 | Name | Type | Value |
 |---|---|---|
 | `RESEND_API_KEY` | secret | from Resend › API Keys (in Kenneth's Resend account) |
-| `NOTIFY_EMAIL` | text | team address(es) for alerts, comma-separated |
-| `EMAIL_FROM` | text | `The Plug Africa <hello@theplugafrica.com>` once the domain is verified in Resend |
+| `NOTIFY_EMAIL` | secret | team address(es) for alerts, comma-separated (Kenneth's Gmail) |
+| `EMAIL_FROM` | secret | `The Plug Africa <hello@theplugafrica.org>` once the domain is verified in Resend (Part G, step 7) |
+
+Add all of these as **Secret**, even the ones that aren't secret: each deploy from GitHub replaces the Worker's plain-text variables with those in `wrangler.jsonc` (Wrangler's `keep_vars` is off), so text variables set in the dashboard disappear. Secrets are kept.
 
 **Before the domain is verified,** leave `EMAIL_FROM` unset (it defaults to Resend's test sender `onboarding@resend.dev`) and set `NOTIFY_EMAIL` to the Resend account's own address: Resend only delivers test-sender mail to that address, so customer confirmations and business emails start working once the domain is verified.

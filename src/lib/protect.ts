@@ -6,7 +6,7 @@ import { db } from "./db";
 // Counters live in the database (RateLimit) so every Cloudflare isolate shares them; memory wouldn't.
 // Visitors are identified by a salted one-way hash of their IP address; the IP itself is never stored.
 
-async function sha256(text: string) {
+export async function sha256(text: string) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
 }

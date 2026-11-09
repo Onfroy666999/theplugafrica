@@ -1,6 +1,6 @@
 # The Plug Africa — Project Brief for Claude Code
 
-Owner: Bilson (Group BD, Accra, Ghana). Goal: a durable, passive-income business that serves international clients and expats. Working name and domain: **The Plug Africa**, **ThePlugAfrica.com**.
+Owner: Bilson (Group BD, Accra, Ghana). Goal: a durable, passive-income business that serves international clients and expats. Working name and domain: **The Plug Africa**, **theplugafrica.org** (registered at Namecheap, 2026-11-09; the .com was not used).
 
 Status legend used below: **[Decided]** the owner chose it. **[Proposed]** my suggestion, not yet approved. **[Open]** unresolved or unverified.
 
@@ -117,13 +117,14 @@ The owner disliked the first website UI and asked for premium, animated, human-f
 
 ### 6d. Hosting stack (decided by the owner on 2026-11-05)
 
-- **[Decided]** **Supabase** for the database and photo storage (London region). **Cloudflare** hosts the Next.js app on Workers via `@opennextjs/cloudflare`, and serves DNS. **ThePlugAfrica.com** is registered at a registrar other than Cloudflare (the owner will choose which), with its nameservers pointed to Cloudflare. This replaces the earlier Vercel + Neon + Vercel Blob proposal.
-- Costs: Cloudflare Workers paid plan (about $5/month, likely needed for bundle size). Supabase Free is fine for staging, but **production must be on Supabase Pro (about $25/month)** because free projects pause after a week of inactivity.
+- **[Decided]** **Supabase** for the database and photo storage (London region). **Cloudflare** hosts the Next.js app on Workers via `@opennextjs/cloudflare`, and serves DNS. **theplugafrica.org** is registered at **Namecheap** (decided 2026-11-09, replacing the planned ThePlugAfrica.com), with its nameservers pointed to Cloudflare; production on the apex, `www` redirecting, staging on `staging.theplugafrica.org`. Steps: `docs/DEPLOY.md` Part G. This replaces the earlier Vercel + Neon + Vercel Blob proposal.
+- Costs: Cloudflare Workers Paid (about $5/month; active since 2026-11-09). Supabase Free is fine for staging, but **production must be on Supabase Pro (about $25/month)** because free projects pause after a week of inactivity.
 - What the Workers runtime means for the code (issues #3 and #4): photo uploads and the photo library move to Supabase Storage (no local disk); the Prisma connection must work on Workers; `next/image` needs a Cloudflare- or Supabase-compatible loader.
 - Accounts are created by the owner (Claude can't create accounts). Secrets go into Cloudflare/Supabase settings, never into chat or the repo.
 - **[Decided 2026-11-05] Whose accounts:** the site is hosted on **Kenneth's** Cloudflare and Supabase accounts. The developer is **Reginald** (GitHub `Onfroy666999`, which owns the repo); he works through membership of Kenneth's accounts. This computer's Wrangler is signed in to Reginald's own Cloudflare account for other projects: never deploy from it and never log it out.
 - **[Decided 2026-11-05] How it deploys:** Cloudflare **Workers Builds** (Git integration) in Kenneth's account builds from the GitHub repo. Two Workers: `theplugafrica-staging` from `develop` and `theplugafrica` from `main`, using the environments in `wrangler.jsonc`. No Cloudflare token is stored in GitHub. Step-by-step setup: `docs/DEPLOY.md`.
-- Bundle size measured 2026-11-05: **about 2.4 MiB gzipped**, under the free plan's 3 MiB limit (it was 3.1 MiB until the share card became a fixed image, which removed `next/og`). Most of it is the Next.js runtime, our pages, Prisma's query engine, Motion and Base UI. Keep an eye on it: avoid `next/og` and other heavy server-side libraries. Workers Paid (about $5/month) is still needed: the free plan allows 10 ms CPU per request, which server-rendered pages often exceed.
+- **[Decided 2026-11-09] Domain and email:** the site is live on **theplugafrica.org** (Namecheap, DNS on Cloudflare; www redirects; staging on `staging.theplugafrica.org`). Email is all free: **Resend** sends the website's own emails (`EMAIL_FROM` = hello@); **Cloudflare Email Routing** forwards `hello@theplugafrica.org` to Kenneth's Gmail, and Gmail "Send mail as" replies as hello@ through Resend's SMTP. (Zoho's free plan wasn't offered.) Owner's step-by-step: the Claude doc "Connecting theplugafrica.org: step-by-step guide"; technical summary: `docs/DEPLOY.md` Part G.
+- Bundle size measured 2026-11-05: **about 2.4 MiB gzipped**, under the free plan's 3 MiB limit (it was 3.1 MiB until the share card became a fixed image, which removed `next/og`). Most of it is the Next.js runtime, our pages, Prisma's query engine, Motion and Base UI. Keep an eye on it: avoid `next/og` and other heavy server-side libraries. Workers Paid has been active since 2026-11-09 (the free plan allowed only 10 ms CPU per request, which caused error 1102).
 
 ### 6b. Admin and backend (feature/admin, 2026-11-04)
 
@@ -132,6 +133,7 @@ The owner disliked the first website UI and asked for premium, animated, human-f
 - **Stack:** Prisma 6 + **PostgreSQL** (issue #2). Locally the database runs in Docker (`docker-compose.yml`, host port **5433**, because 5432 belongs to another local project). Staging and production use **Supabase** Postgres in the **London** region (pooled URL on port 6543 with `?pgbouncer=true` as `DATABASE_URL`, direct URL on 5432 as `DIRECT_URL`). Schema changes go through migrations in `prisma/migrations` (`npm run db:migrate -- --name <change>`); deploys run `npm run db:deploy`. `DATABASE_URL` is the pooled URL and `DIRECT_URL` the direct one (they are the same locally). Sessions are signed JWT cookies (jose, `AUTH_SECRET`), checked in `src/middleware.ts` and again by `requireAdmin()` in every admin page and action. Passwords use bcrypt; sign-in is throttled to 5 attempts per 15 minutes.
 - **Reviews (#14) and emergency numbers (#11):** reviews need a PLG-/CNC- reference for that business, one per code, and appear only after approval in Admin › Reviews; ratings are recalculated from approved reviews. Emergency numbers live in Admin › Emergency and are public only once verified with a source.
 - **Admin tools (#67):** inboxes have status/month filters, search, pages of 50 and owner-only delete; concierge requests can be assigned ("Handled by"); owners download any inbox as CSV (`/admin/export/<kind>`, filters shared with the page through `src/lib/inbox.ts`); "My account" changes your own name and password; waitlist entries can become a business ("Create business from this").
+- **Visitor accounts (#82):** visitors sign in at `/account/sign-in` with a 6-digit emailed code (no passwords; `src/lib/users.ts`, `src/app/account/`). Cookie `plug_user`, signed with a key derived from `AUTH_SECRET` that differs from the admin's; `plug_signed_in=1` is a harmless hint for the header and hearts. `/account` lists their requests (linked by account or by the verified email), saved businesses (the heart), details, sign out and delete. Admin › Users is read-only. **[Decided 2026-11-09] Next:** Concierge membership at **$8/month**, shown with its cedi equivalent and charged in cedis through **Paystack** (#83); concierge fees of **10% from the customer and 10% from the business**, collected by Paystack pay links that the site emails (#84). The member's side of the fee is a setting (default 10%).
 - **Admin sections:** Dashboard; Businesses (add, edit, photos, credentials checklist, status Draft → In review → Verified → Hidden; Verified is blocked until every credential is Checked); Enquiries (reference codes from "Contact this business"); Concierge requests; Business waitlist; Messages (from the Contact page, #29). Each inbox has a status and private notes.
 - **Public site** reads businesses from the database (`src/lib/data.ts`); only In review and Verified are public. The forms and the contact sheet save to the database (`src/app/actions.ts`). The 16 design examples are seeded with `isExample` and labelled "Example".
 - **Setup:** `npm install` → `npm run db:up` (Docker) → `npm run db:deploy` → `npm run db:seed`. To **use** the site/admin: `npm run serve` (production build; pages respond in about 0.2–1 s). To **develop**: `npm run dev` (Turbopack; the first visit to each page compiles slowly on this machine, 10–30 s). Development mode made the admin feel unresponsive (5–36 s per page with webpack), so the owner should use `npm run serve`.
@@ -153,13 +155,13 @@ The owner disliked the first website UI and asked for premium, animated, human-f
 
 ## 8. Other deliverables already produced
 
-- Partner presentation (PowerPoint, 12 slides) and business overview (Word, 8 pages), both rebranded to The Plug Africa. They contain an unverified phrase, "domain secured at ThePlugAfrica.com"; correct it once the owner confirms purchase.
+- Partner presentation (PowerPoint, 12 slides) and business overview (Word, 8 pages), both rebranded to The Plug Africa. They contain the phrase "domain secured at ThePlugAfrica.com", which is wrong: the domain bought is theplugafrica.org. Correct both documents.
 - Logo exploration: v1 plug-prong "A" mark, v2 five concepts, enhanced #4 (rejected for use).
 - Comparable platforms were reviewed; the owner found "quite some lapses" in them, which is the opening for The Plug.
 
 ## 9. Open items and next steps
 
-1. **Domain:** confirm ThePlugAfrica.com is actually registered. Check the registrar, and nic.gh if a .com.gh is wanted.
+1. **Domain:** theplugafrica.org bought at Namecheap (2026-11-09). Connect it to Cloudflare (`docs/DEPLOY.md` Part G, issue #5). Decide whether to also register .com / .com.gh for brand protection.
 2. **Trademark:** search and file for "The Plug Africa" in Ghana (Registrar General) and priority export markets.
 3. **Photos:** owner to supply or license images; then integrate (see section 6).
 4. **Backend:** real forms, waitlist, database, admin panel.
