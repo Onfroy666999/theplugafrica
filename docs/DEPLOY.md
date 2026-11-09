@@ -159,9 +159,11 @@ This address goes into share previews, the sitemap, invite links and the admin l
 - **Turnstile:** if a widget exists, add the three hostnames to it.
 - **DNSSEC:** turn it on in Cloudflare (DNS › Settings) and add the DS record it shows at Namecheap (Advanced DNS › DNSSEC).
 
-**7. Email on the domain:**
-- **Sending (Resend):** go to Resend › Domains › **Add domain** › `theplugafrica.org`, and add the records it lists in Cloudflare › DNS as **DNS only** (grey cloud, not proxied). Once Resend says Verified, set `EMAIL_FROM` (see "Email notifications" below).
-- **Receiving (optional, free):** Cloudflare › Email › **Email Routing** can forward, for example, `hello@theplugafrica.org` to the team's existing inbox. Its records don't clash with Resend's.
+**7. Email on the domain** (decided 2026-11-09: two free services, two jobs):
+- **Inbox, Zoho Mail (Forever Free):** the team reads and replies at `hello@theplugafrica.org`. Verify the domain in Zoho (one-click for Cloudflare, or a `TXT` on `@`), create Kenneth's user with `hello@` as an alias, then add the `MX`, SPF `TXT` and DKIM `TXT` records exactly as Zoho shows them (the MX ending can be `.com`, `.eu` or `.in`). Only one SPF record may sit on `@`.
+- **Website's own emails, Resend:** Resend › Domains › **Add domain** › `theplugafrica.org`, then add the records it lists (on `send` and `resend._domainkey`) in Cloudflare › DNS as **DNS only**. Once Verified, set `EMAIL_FROM` and `NOTIFY_EMAIL` (see "Email notifications" below). Zoho Mail can't send for the website: the free plan has no SMTP/IMAP and Workers need an HTTP API.
+- **DMARC:** a `TXT` on `_dmarc`: `v=DMARC1; p=none; rua=mailto:hello@theplugafrica.org`.
+- Replies reach the right place without extra setup: visitor confirmations come from `hello@`, so replies land in Zoho; every request, waitlist and message alert sets the visitor as reply-to.
 
 **Check it:**
 - `https://theplugafrica.org` loads, with a padlock and no "Staging site" banner.
@@ -211,7 +213,7 @@ Set on **both Workers** (Settings › Variables & Secrets):
 | Name | Type | Value |
 |---|---|---|
 | `RESEND_API_KEY` | secret | from Resend › API Keys (in Kenneth's Resend account) |
-| `NOTIFY_EMAIL` | secret | team address(es) for alerts, comma-separated |
+| `NOTIFY_EMAIL` | secret | team address(es) for alerts, comma-separated: `hello@theplugafrica.org` (the Zoho inbox) |
 | `EMAIL_FROM` | secret | `The Plug Africa <hello@theplugafrica.org>` once the domain is verified in Resend (Part G, step 7) |
 
 Add all of these as **Secret**, even the ones that aren't secret: each deploy from GitHub replaces the Worker's plain-text variables with those in `wrangler.jsonc` (Wrangler's `keep_vars` is off), so text variables set in the dashboard disappear. Secrets are kept.
