@@ -4,6 +4,8 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-09
+
 ### Changed
 - Faster on phones (#76). On a phone-speed CPU, the browser work on the home page fell from about 27 s to 9 s, and on Explore from 13 s to 6 s.
   - The home page is now built on the server. Only the slideshow, search, category tabs, popular rail, menu and floating button run in the browser. It used to be one big browser component that redrew the whole page every time the slideshow changed.
