@@ -28,6 +28,18 @@ export type Listing = {
   services?: { slug: string; name: string }[];
 };
 
+/**
+ * What a listing card and the Explore search need (issue #76). Pages send only this to the browser, not full listings
+ * with descriptions, credentials and every photo: that data was most of the work on phones.
+ */
+export type CardListing = Pick<Listing, "slug" | "name" | "cat" | "kind" | "city" | "area" | "blurb" | "status" | "rating" | "reviewCount" | "isExample" | "images">;
+
+/** A listing trimmed for cards and search: the fields above, and only the first photo. */
+export const toCardListing = (l: Listing): CardListing => ({
+  slug: l.slug, name: l.name, cat: l.cat, kind: l.kind, city: l.city, area: l.area, blurb: l.blurb, status: l.status,
+  rating: l.rating, reviewCount: l.reviewCount, isExample: l.isExample, images: l.images.slice(0, 1),
+});
+
 const REVIEWS: Record<CatKey, Review[]> = {
   rentals: [
     { name: "Example reviewer", when: "2 weeks ago", rating: 5, text: "Exactly as shown in the photos. The owner met us on time and walked us through everything." },

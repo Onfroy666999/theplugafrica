@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/site";
-import { Suspense } from "react";
 import { FloatingConcierge, Footer, Header } from "@/components/market/Sections";
 import { getPublicListings } from "@/lib/data";
+import { toCardListing } from "@/lib/listings";
 import { ExploreClient } from "./ExploreClient";
 
 export const dynamic = "force-dynamic";
@@ -18,9 +18,7 @@ export default async function ExplorePage() {
   return (
     <main className="min-h-screen bg-white text-navy">
       <Header />
-      <Suspense fallback={<div className="mx-auto h-[60vh] max-w-[1280px]" />}>
-        <ExploreClient listings={listings} />
-      </Suspense>
+      <ExploreClient listings={listings.map(toCardListing)} />
       <Footer />
       <FloatingConcierge />
     </main>

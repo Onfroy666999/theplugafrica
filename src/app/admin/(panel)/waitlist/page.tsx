@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { LinkButton } from "@/components/ui/Button";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -28,9 +27,7 @@ export default async function Waitlist({ searchParams }: { searchParams: SP }) {
         sub="Businesses asking to be listed. Contact them to start verification, then create the business from their entry."
         action={canEdit ? <LinkButton href="/admin/businesses/new" variant="secondary">Add a business</LinkButton> : undefined}
       />
-      <Suspense>
-        <InboxToolbar kind="waitlist" statuses={WAITLIST_STATUS} months={recentMonths()} placeholder="Search by business, name, phone, city or reference" />
-      </Suspense>
+      <InboxToolbar kind="waitlist" statuses={WAITLIST_STATUS} months={recentMonths()} placeholder="Search by business, name, phone, city or reference" />
       <Panel>
         {rows.length === 0 ? (
           filtered ? <Empty title="Nothing matches" body="Try another status or month, or clear the search." /> : <Empty title="No sign-ups yet" body="Businesses that join from the For businesses page appear here." />
