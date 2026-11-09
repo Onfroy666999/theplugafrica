@@ -37,6 +37,8 @@ export async function act(name: string, args: unknown[], o: { cookie?: string | 
   });
   const set = res.headers.get("set-cookie") ?? "";
   const session = set.match(/plug_admin=([^;]+)/)?.[1];
+  // Visitor accounts (issue #82) use their own cookie.
+  const visitorSession = set.match(/plug_user=([^;]+)/)?.[1];
   const body = await res.text();
   // The reply is a React stream, one "<id>:<json>" row per line. Row 0 is {"a": "$@<id>", ...}: "a" points to the
   // row holding the action's return value (other rows may carry refreshed page data).
@@ -52,7 +54,7 @@ export async function act(name: string, args: unknown[], o: { cookie?: string | 
     const v = row ? JSON.parse(row) : null;
     if (v && typeof v === "object") result = v;
   } catch {}
-  return { status: res.status, redirect: res.headers.get("x-action-redirect")?.split(";")[0] ?? null, cookie: session ? `plug_admin=${session}` : null, result };
+  return { status: res.status, redirect: res.headers.get("x-action-redirect")?.split(";")[0] ?? null, cookie: session ? `plug_admin=${session}` : visitorSession ? `plug_user=${visitorSession}; plug_signed_in=1` : null, result };
 }
 
 export async function page(path: string, cookie?: string | null) {
