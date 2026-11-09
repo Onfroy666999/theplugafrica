@@ -154,8 +154,8 @@ This address goes into share previews, the sitemap, invite links and the admin l
 
 **6. Recommended:**
 - **Always use HTTPS:** SSL/TLS › Edge Certificates › **Always Use HTTPS** on.
-- **Keep staging private:** go to Zero Trust › Access › Applications › **Add** › Self-hosted, for `staging.theplugafrica.org`, with a policy allowing the team's email addresses. Then turn off **workers.dev** and **Preview URLs** on the staging Worker (Domains & Routes); otherwise the old address gets round the protection.
-- **Production's workers.dev address** can be turned off once the domain works.
+- **Keep staging private:** go to Zero Trust › Access › Applications › **Add** › Self-hosted, for `staging.theplugafrica.org`, with a policy allowing the team's email addresses. Then set `"workers_dev": false` and `"preview_urls": false` under `env.staging` in `wrangler.jsonc` (ask Claude); otherwise the old address gets round the protection. Switching them off in the dashboard alone is undone by the next deploy.
+- **Production's workers.dev address** can be turned off once the domain works, also through `wrangler.jsonc` (`"workers_dev": false`), not the dashboard.
 - **Turnstile:** if a widget exists, add the three hostnames to it.
 - **DNSSEC:** turn it on in Cloudflare (DNS › Settings) and add the DS record it shows at Namecheap (Advanced DNS › DNSSEC).
 
@@ -185,7 +185,7 @@ This address goes into share previews, the sitemap, invite links and the admin l
 
 When the site hits a server error (a page, a form or a button fails), the team gets an email with the page, the first line of the error and an **error ID**. It never includes what visitors typed or the address's query string. The same error on the same page is emailed once an hour, and at most 10 alerts go out an hour.
 
-It uses the email setup below, so it starts working once `RESEND_API_KEY` is set. Alerts go to `ALERT_EMAIL` (text, comma-separated) if set on the Worker, otherwise to `NOTIFY_EMAIL`.
+It uses the email setup below, so it starts working once `RESEND_API_KEY` is set. Alerts go to `ALERT_EMAIL` (comma-separated; add it as a **secret**, see below) if set on the Worker, otherwise to `NOTIFY_EMAIL`.
 
 To see the full error: Cloudflare › Workers & Pages › the Worker › **Logs**, and search for the error ID. These logs also show requests Cloudflare itself stopped (for example error 1102, CPU limit exceeded), which the site can't email about because the Worker was cut off.
 
@@ -211,7 +211,9 @@ Set on **both Workers** (Settings › Variables & Secrets):
 | Name | Type | Value |
 |---|---|---|
 | `RESEND_API_KEY` | secret | from Resend › API Keys (in Kenneth's Resend account) |
-| `NOTIFY_EMAIL` | text | team address(es) for alerts, comma-separated |
-| `EMAIL_FROM` | text | `The Plug Africa <hello@theplugafrica.org>` once the domain is verified in Resend (Part G, step 7) |
+| `NOTIFY_EMAIL` | secret | team address(es) for alerts, comma-separated |
+| `EMAIL_FROM` | secret | `The Plug Africa <hello@theplugafrica.org>` once the domain is verified in Resend (Part G, step 7) |
+
+Add all of these as **Secret**, even the ones that aren't secret: each deploy from GitHub replaces the Worker's plain-text variables with those in `wrangler.jsonc` (Wrangler's `keep_vars` is off), so text variables set in the dashboard disappear. Secrets are kept.
 
 **Before the domain is verified,** leave `EMAIL_FROM` unset (it defaults to Resend's test sender `onboarding@resend.dev`) and set `NOTIFY_EMAIL` to the Resend account's own address: Resend only delivers test-sender mail to that address, so customer confirmations and business emails start working once the domain is verified.
