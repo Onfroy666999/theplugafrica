@@ -15,6 +15,14 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
   - **Separate sessions:** visitor sessions use their own cookie and signing key, so they can never open the admin.
   - Migration `20261109183309_user_accounts`.
 
+### Changed
+- Domain (#5): the site now runs on **theplugafrica.org**, with HTTPS and DNSSEC.
+  - `www` redirects to it, and staging is on `staging.theplugafrica.org`.
+  - The workers.dev and preview addresses are switched off in `wrangler.jsonc`.
+  - Email: Resend sends the site's emails from `hello@theplugafrica.org`, and mail to that address is forwarded to the team.
+  - The setup is recorded in `docs/DEPLOY.md` Part G.
+  - Workers Paid is now active.
+
 ## [0.10.0] - 2026-11-09
 
 ### Changed
