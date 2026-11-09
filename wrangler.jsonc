@@ -14,6 +14,11 @@
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "images": { "binding": "IMAGES" },
   "observability": { "enabled": true },
+  // Served only on the custom domains (theplugafrica.org, staging.theplugafrica.org), which Cloudflare Access guards
+  // until launch. The workers.dev and preview addresses would bypass Access, so they stay off. Set here, not in the
+  // dashboard: each deploy applies these values (issue #5).
+  "workers_dev": false,
+  "preview_urls": false,
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "theplugafrica" }],
   "vars": { "SITE_ENV": "production" },
   // Staging and production share one Supabase database for now (decided 2026-11-06), so both use the same Hyperdrive
@@ -21,6 +26,8 @@
   "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "dd99b214f8ec47358ebd2bdf5b1929e9", "localConnectionString": "postgresql://localhost:5433/theplugafrica" }],
   "env": {
     "staging": {
+      "workers_dev": false,
+      "preview_urls": false,
       "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "theplugafrica-staging" }],
       "images": { "binding": "IMAGES" },
       "vars": { "SITE_ENV": "staging" },

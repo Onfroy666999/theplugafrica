@@ -90,7 +90,7 @@ After a release PR merges `develop` into `main`, create a second Worker the same
 | Build secrets `DATABASE_URL`, `DIRECT_URL` | the same Session pooler string as staging |
 | Runtime secret `AUTH_SECRET` | a **new** value, different from staging's |
 
-Then enable **workers.dev** under Settings › Domains & Routes. No seeding is needed: the database is shared. The hosted admin account is the same on both sites.
+The Worker is served on its custom domain only: `workers_dev` and `preview_urls` are off in `wrangler.jsonc` (Part G). No seeding is needed: the database is shared. The hosted admin account is the same on both sites.
 
 ## Part E: First data load (once per Supabase project)
 
@@ -154,8 +154,7 @@ This address goes into share previews, the sitemap, invite links and the admin l
 
 **6. Recommended:**
 - **Always use HTTPS:** SSL/TLS › Edge Certificates › **Always Use HTTPS** on.
-- **Keep staging private:** go to Zero Trust › Access › Applications › **Add** › Self-hosted, for `staging.theplugafrica.org`, with a policy allowing the team's email addresses. Then set `"workers_dev": false` and `"preview_urls": false` under `env.staging` in `wrangler.jsonc` (ask Claude); otherwise the old address gets round the protection. Switching them off in the dashboard alone is undone by the next deploy.
-- **Production's workers.dev address** can be turned off once the domain works, also through `wrangler.jsonc` (`"workers_dev": false`), not the dashboard.
+- **Keep staging private:** go to Zero Trust › Access › Applications › **Add** › Self-hosted, for `staging.theplugafrica.org`, with a policy allowing the team's email addresses. `wrangler.jsonc` already sets `"workers_dev": false` and `"preview_urls": false` for both Workers, so the old addresses can't get round it (the dashboard toggles are reset by every deploy). **Decided 2026-11-09:** the live site is also behind Access (application `The Plug – pre-launch`) until the owner launches; on launch day delete that application.
 - **Turnstile:** if a widget exists, add the three hostnames to it.
 - **DNSSEC:** turn it on in Cloudflare (DNS › Settings) and add the DS record it shows at Namecheap (Advanced DNS › DNSSEC).
 
