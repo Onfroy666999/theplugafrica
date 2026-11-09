@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Field, Input, Spinner } from "@/components/market/Form";
 import { Button } from "@/components/ui/Button";
+import { cancelMembership, cardLink } from "@/app/membership/actions";
 import { deleteAccount, updateProfile } from "./actions";
 
 const FAILED = "Something went wrong. Please check your connection and try again.";
@@ -78,6 +79,66 @@ export function DeleteAccount() {
           </div>
         </form>
       )}
+    </div>
+  );
+}
+
+/** Change the card (on Paystack's own page) or cancel. Cancelling keeps the benefits until the paid month ends. */
+export function MembershipControls({ status }: { status: string }) {
+  const [busy, setBusy] = useState<"card" | "cancel" | null>(null);
+  const [confirm, setConfirm] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const running = status === "active" || status === "past_due";
+  const link = "press text-[14px] font-semibold text-white underline-offset-4 hover:underline disabled:opacity-60";
+  return (
+    <div className="mt-4 space-y-3">
+      <div className="flex flex-wrap gap-x-5 gap-y-2">
+        <button
+          type="button"
+          className={link}
+          disabled={busy !== null}
+          onClick={async () => {
+            setBusy("card");
+            setMsg(null);
+            const r = await cardLink().catch(() => ({ ok: false as const, error: FAILED }));
+            if (r.ok) return window.location.assign(r.url);
+            setBusy(null);
+            setMsg({ ok: false, text: r.error });
+          }}
+        >
+          {busy === "card" ? "Opening Paystack" : "Change card"}
+        </button>
+        {running && !confirm && (
+          <button type="button" className={link} onClick={() => setConfirm(true)}>
+            Cancel membership
+          </button>
+        )}
+      </div>
+      {running && confirm && (
+        <div className="rounded-field bg-white/10 p-4">
+          <p className="text-[14px] text-white/85">You won&apos;t be charged again, and you keep the benefits until the end of the month you&apos;ve paid for.</p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <Button
+              size="sm"
+              variant="light"
+              disabled={busy !== null}
+              onClick={async () => {
+                setBusy("cancel");
+                setMsg(null);
+                const r = await cancelMembership().catch(() => ({ ok: false as const, error: FAILED }));
+                setBusy(null);
+                setConfirm(false);
+                setMsg(r.ok ? { ok: true, text: "Cancelled. You won't be charged again." } : { ok: false, text: r.error });
+              }}
+            >
+              {busy === "cancel" && <Spinner />}
+              Cancel membership
+            </Button>
+            <Button size="sm" variant="outlineLight" type="button" onClick={() => setConfirm(false)}>Keep it</Button>
+          </div>
+        </div>
+      )}
+      {msg && <p role={msg.ok ? "status" : "alert"} className="text-[14px] font-medium text-white">{msg.text}</p>}
     </div>
   );
 }

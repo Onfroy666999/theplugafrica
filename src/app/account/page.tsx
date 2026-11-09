@@ -7,9 +7,11 @@ import { getPublicListings } from "@/lib/data";
 import { db } from "@/lib/db";
 import { getCat } from "@/lib/directory";
 import { toCardListing } from "@/lib/listings";
+import { getMembership } from "@/lib/membership";
+import { MEMBERSHIP_USD, canJoin, describeMembership } from "@/lib/membership-plan";
 import { requireUser } from "@/lib/users";
 import { signOut } from "./actions";
-import { DeleteAccount, ProfileForm } from "./AccountForms";
+import { DeleteAccount, MembershipControls, ProfileForm } from "./AccountForms";
 
 export const metadata: Metadata = { title: "Your account — The Plug Africa", robots: { index: false, follow: false } };
 
@@ -25,7 +27,7 @@ export default async function AccountPage() {
   const user = await requireUser("/account");
   // Requests sent while signed in, and earlier ones sent with this (now verified) email address.
   const mine = { OR: [{ userId: user.id }, { email: { equals: user.email, mode: "insensitive" as const } }] };
-  const [concierge, enquiries, savedRows, listings] = await Promise.all([
+  const [concierge, enquiries, savedRows, listings, membership] = await Promise.all([
     db.conciergeRequest.findMany({
       where: mine,
       orderBy: { createdAt: "desc" },
@@ -40,6 +42,7 @@ export default async function AccountPage() {
     }),
     db.savedBusiness.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, select: { business: { select: { slug: true } } } }),
     getPublicListings(),
+    getMembership(user.id),
   ]);
 
   const rows: Row[] = [
@@ -128,6 +131,22 @@ export default async function AccountPage() {
         </div>
 
         <aside className="space-y-6">
+          <div className={`rounded-panel p-6 ${membership && !canJoin(membership) ? "bg-navy text-white" : "bg-cream"}`}>
+            <h2 className="font-heading text-[18px] font-bold">Concierge membership</h2>
+            {membership && !canJoin(membership) ? (
+              <>
+                <p className="mt-2 text-[14.5px] leading-relaxed text-white/75">{describeMembership(membership)}</p>
+                <MembershipControls status={membership.status} />
+              </>
+            ) : (
+              <>
+                <p className="mt-2 text-[14.5px] leading-relaxed text-navy/65">
+                  Priority with the concierge, checks before you pay and quick tasks done for you. ${MEMBERSHIP_USD} a month, cancel any time.
+                </p>
+                <LinkButton href="/membership" size="sm" className="mt-4">See the membership</LinkButton>
+              </>
+            )}
+          </div>
           <ProfileForm name={user.name ?? ""} phone={user.phone ?? ""} />
           <div className="rounded-panel border border-navy/10 p-6">
             <h2 className="font-heading text-[18px] font-bold">Signing in</h2>

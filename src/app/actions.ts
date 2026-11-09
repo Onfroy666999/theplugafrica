@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { notifyBusinessRequest, notifyConcierge, notifyContactMessage, notifyReview, notifyWaitlist } from "@/lib/notify";
 import { limitForm, screenForm } from "@/lib/protect";
 import { PUBLIC_STATUSES } from "@/lib/status";
+import { isMember } from "@/lib/membership";
 import { getUser } from "@/lib/users";
 import { BusinessRequestSchema, ConciergeSchema, ContactSchema, ReviewSchema, WaitlistSchema, makeRef, parseDetails } from "@/lib/validation";
 
@@ -51,10 +52,11 @@ export async function submitConcierge(fd: FormData): Promise<FormResult> {
   if (over) return over;
   const ref = makeRef("CNC");
   const user = await getUser();
+  const fromMember = user ? await isMember(user.id) : false;
   await db.conciergeRequest.create({
-    data: { ref, name: d.name, phone: d.phone, email: d.email, city: d.city, category: d.category, service: service?.name, details: d.details, timing: d.when, businessId: business?.id, userId: user?.id, ...where.data },
+    data: { ref, name: d.name, phone: d.phone, email: d.email, city: d.city, category: d.category, service: service?.name, details: d.details, timing: d.when, businessId: business?.id, userId: user?.id, fromMember, ...where.data },
   });
-  notifyConcierge({ ref, name: d.name, phone: d.phone, email: d.email, category: d.category, service: service?.name, details: d.details, timing: d.when, city: d.city, ...where.data });
+  notifyConcierge({ ref, name: d.name, phone: d.phone, email: d.email, category: d.category, service: service?.name, details: d.details, timing: d.when, city: d.city, member: fromMember, ...where.data });
   return { ok: true, ref };
 }
 

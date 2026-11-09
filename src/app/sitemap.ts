@@ -27,6 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]),
     ...listings.map((l) => u(`/listing/${l.slug}`, { lastModified: l.updatedAt, priority: 0.6 })),
     u("/concierge", { priority: 0.7 }),
+    u("/membership", { priority: 0.6 }),
     u("/businesses", { priority: 0.5 }),
     u("/emergency", { priority: 0.5 }),
     u("/about", { priority: 0.5 }),

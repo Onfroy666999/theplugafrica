@@ -101,7 +101,7 @@ function ContactSteps({ l }: { l: Listing }) {
           <SheetTitle className="mt-4 pr-10 font-heading text-[22px] font-bold text-navy">Before you contact {l.name}</SheetTitle>
           <ul className="mt-4 space-y-2.5 text-[14.5px] leading-relaxed text-navy/70">
             {[
-              "The Plug is a directory. We connect you; we don't take payments or guarantee outcomes.",
+              "The Plug is a directory. We connect you; we don't handle your payments to businesses or guarantee outcomes.",
               "Check credentials yourself before paying anyone, and never pay before you've seen what you're paying for.",
               "We'll give you a reference code so the business knows you found them through The Plug.",
             ].map((t) => (
