@@ -63,7 +63,7 @@ Check the **account switcher** (top left) shows Kenneth's account before every s
 
 The Node version comes from `.nvmrc` (22); dependencies are installed automatically.
 
-5. **Runtime secret** (Settings › Variables & Secrets), used by the live site:
+5. **Runtime secret** (Settings › **Runtime variables and secrets** (top of the page; not *Variables and secrets* under Builds, which only exist during the build)), used by the live site:
 
 | Name | Type | Value |
 |---|---|---|
@@ -200,7 +200,7 @@ Every public form has a hidden honeypot, a "too fast" check (bots submit instant
 | Name | Where | Type |
 |---|---|---|
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Settings › Build › Variables (it's needed at build time) | variable |
-| `TURNSTILE_SECRET_KEY` | Settings › Variables & Secrets | secret |
+| `TURNSTILE_SECRET_KEY` | Settings › **Runtime variables and secrets** (top of the page; not *Variables and secrets* under Builds, which only exist during the build) | secret |
 
 Redeploy; the check then appears above each form's send button. Without these, the forms work as before.
 
@@ -208,7 +208,7 @@ Redeploy; the check then appears above each form's send button. Without these, t
 
 The site emails the team about every new concierge request, business request, waitlist sign-up and contact message, confirms to visitors who gave an email, and forwards business requests to the business when it has an email address. It's off until a Resend key is set; forms work the same either way, and a failed email never breaks a form.
 
-Set on **both Workers** (Settings › Variables & Secrets):
+Set on **both Workers** (Settings › **Runtime variables and secrets** (top of the page; not *Variables and secrets* under Builds, which only exist during the build)):
 
 | Name | Type | Value |
 |---|---|---|
