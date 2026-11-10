@@ -10,6 +10,8 @@ export const planCode = () => process.env.PAYSTACK_PLAN_CODE ?? "";
 
 /** Both settings present: the membership can take payments. Until then the page says it opens soon. */
 export const paystackReady = () => Boolean(key() && planCode());
+/** The secret key alone is enough for one-off payments such as concierge fees (#84). */
+export const paystackKeySet = () => Boolean(key());
 
 type Reply<T> = { status: boolean; message?: string; data?: T };
 
@@ -45,10 +47,34 @@ export function initializeSubscription(o: { email: string; callbackUrl: string; 
 export type PaystackTransaction = {
   status: string;
   reference: string;
+  amount?: number; // pesewas
+  currency?: string;
+  metadata?: Record<string, unknown> | string | null;
   customer?: { email?: string; customer_code?: string };
   plan?: string | { plan_code?: string } | null;
   plan_object?: { plan_code?: string } | null;
 };
+
+/** A one-off payment in cedis (concierge fees, #84). Card and mobile money, whatever Paystack offers the customer. */
+export function initializeCharge(o: { email: string; amountPesewas: number; reference: string; callbackUrl: string; metadata: Record<string, string> }) {
+  return call<{ authorization_url: string; reference: string }>("/transaction/initialize", {
+    method: "POST",
+    body: { email: o.email, amount: o.amountPesewas, currency: "GHS", reference: o.reference, callback_url: o.callbackUrl, metadata: o.metadata },
+  });
+}
+
+/** Paystack sometimes sends metadata as a JSON string. */
+export function metadataOf(t: { metadata?: unknown }): Record<string, unknown> {
+  const m = t.metadata;
+  if (m && typeof m === "object") return m as Record<string, unknown>;
+  if (typeof m === "string") {
+    try {
+      const parsed = JSON.parse(m);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {}
+  }
+  return {};
+}
 
 export const verifyTransaction = (reference: string) => call<PaystackTransaction>(`/transaction/verify/${encodeURIComponent(reference)}`);
 

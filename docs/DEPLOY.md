@@ -263,4 +263,6 @@ The webhook is still safe without Access: the site checks Paystack's signature o
 
 Staging and production share one database, so test memberships show in both admins. Delete them from Paystack's test dashboard and ask Claude to clear the rows.
 
-**How it works:** `src/lib/paystack.ts` (API calls, signature check), `src/lib/membership.ts` (webhook events, confirming checkout), `src/lib/membership-plan.ts` (price, benefits, who counts as a member). Deleting an account cancels its subscription with Paystack first.
+**Concierge fees (#84)** use the same Paystack account and webhook, with no plan: they're one-off payments in cedis. Only `PAYSTACK_SECRET_KEY` is needed for them. Until it's set, pay links show the fee but can't take payment, and the team marks fees paid when they're settled another way.
+
+**How it works:** `src/lib/paystack.ts` (API calls, signature check), `src/lib/fees.ts` and `src/lib/fee-server.ts` (fees), `src/lib/membership.ts` (webhook events, confirming checkout), `src/lib/membership-plan.ts` (price, benefits, who counts as a member). Deleting an account cancels its subscription with Paystack first.

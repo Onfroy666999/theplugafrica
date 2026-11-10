@@ -4,7 +4,10 @@ import { db } from "@/lib/db";
 import { CATS } from "@/lib/directory";
 import { inboxWhere, pageArgs } from "@/lib/inbox";
 import { PAGE_SIZE, filterQuery, parseInboxFilters, recentMonths } from "@/lib/inbox-filters";
+import { feeStatusLabel } from "@/lib/fees";
+import { formatGhs } from "@/lib/membership-plan";
 import { describeRequest } from "@/lib/requests";
+import { can } from "@/lib/roles";
 import { CONCIERGE_STATUS, values } from "@/lib/status";
 import { InboxItem } from "../InboxItem";
 import { InboxToolbar } from "../InboxToolbar";
@@ -18,7 +21,7 @@ export default async function Concierge({ searchParams }: { searchParams: SP }) 
   const where = inboxWhere("concierge", f, admin.id);
   const [rows, total, team] = await Promise.all([
     // Members come first among new requests (issue #83); other views stay newest first.
-    db.conciergeRequest.findMany({ where, ...pageArgs(f), ...(f.status === "new" && { orderBy: [{ fromMember: "desc" as const }, { createdAt: "desc" as const }] }), include: { business: { select: { id: true, name: true } }, assignedTo: { select: { id: true, name: true } } } }),
+    db.conciergeRequest.findMany({ where, ...pageArgs(f), ...(f.status === "new" && { orderBy: [{ fromMember: "desc" as const }, { createdAt: "desc" as const }] }), include: { business: { select: { id: true, name: true } }, assignedTo: { select: { id: true, name: true } }, deals: { orderBy: { createdAt: "asc" }, include: { fees: { select: { party: true, status: true, amountPesewas: true } } } } } }),
     db.conciergeRequest.count({ where }),
     // Owners and editors can handle requests; viewers can't change anything.
     db.admin.findMany({ where: { role: { in: ["owner", "editor"] } }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
@@ -69,6 +72,19 @@ export default async function Concierge({ searchParams }: { searchParams: SP }) 
                   <p className="mt-1 text-[13px] text-navy/65">About <Link href={`/admin/businesses/${r.business.id}`} className="font-semibold text-navy hover:underline">{r.business.name}</Link></p>
                 )}
                 <p className="mt-2 max-w-3xl text-[14.5px] leading-relaxed whitespace-pre-line text-navy/80">{r.details}</p>
+                {/* Concierge fees (#84): deals recorded on this request, and a way to record one. */}
+                {r.deals.map((d) => (
+                  <p key={d.id} className="mt-2 text-[13.5px] text-navy/75">
+                    <span className="font-semibold text-navy">Deal:</span> {d.description} with {d.businessName}, {formatGhs(d.valuePesewas)} ·{" "}
+                    {d.fees.map((f) => `${f.party === "customer" ? "customer" : "business"} fee ${feeStatusLabel(f.status).toLowerCase()}`).join(", ")} ·{" "}
+                    <Link href="/admin/fees" className="font-semibold text-navy hover:underline">Fees</Link>
+                  </p>
+                ))}
+                {can(admin.role, "edit") && (
+                  <Link href={`/admin/fees/new?request=${r.id}`} className="mt-2 inline-block text-[13.5px] font-semibold text-navy underline-offset-4 hover:underline">
+                    {r.deals.length ? "Record another deal" : "Record deal"}
+                  </Link>
+                )}
               </InboxItem>
             ))}
           </ul>
