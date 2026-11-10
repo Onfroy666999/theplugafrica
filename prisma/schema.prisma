@@ -16,6 +16,7 @@ datasource db {
 
 // Team accounts (issue #18). Roles and what each may do: src/lib/roles.ts.
 model Admin {
+  dealsRecorded ConciergeDeal[]
   id            String             @id @default(cuid())
   email         String             @unique
   name          String
@@ -94,6 +95,7 @@ model Business {
   conciergeRequests ConciergeRequest[]
   services          Service[] // one or more services within its category (issue #26)
   savedBy           SavedBusiness[]
+  deals             ConciergeDeal[]
 
   @@index([status, category, city])
 }
@@ -157,8 +159,8 @@ model Enquiry {
 }
 
 model ConciergeRequest {
-  id            String    @id @default(cuid())
-  ref           String    @unique
+  id            String          @id @default(cuid())
+  ref           String          @unique
   name          String
   phone         String
   email         String?
@@ -175,18 +177,19 @@ model ConciergeRequest {
   preferredDate String? // YYYY-MM-DD
   timeOfDay     String?
   businessId    String?
-  business      Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
-  status        String    @default("new") // new | in_progress | done | closed
+  business      Business?       @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  status        String          @default("new") // new | in_progress | done | closed
   notes         String?
   // Team member handling it (issue #67); cleared if their account is removed.
   assignedToId  String?
-  assignedTo    Admin?    @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+  assignedTo    Admin?          @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
   // The visitor's account when they were signed in (issue #82).
   userId        String?
-  user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user          User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
   // Sent by a concierge member (issue #83): marked in the admin, and new ones are listed first.
-  fromMember    Boolean   @default(false)
-  createdAt     DateTime  @default(now())
+  fromMember    Boolean         @default(false)
+  deals         ConciergeDeal[]
+  createdAt     DateTime        @default(now())
 
   @@index([assignedToId])
   @@index([userId])
@@ -333,4 +336,51 @@ model Membership {
   updatedAt        DateTime  @updatedAt
 
   @@index([status])
+}
+
+/// A deal the concierge closed between a customer and a business (issue #84). The Plug's fee is a share of the agreed
+/// value from each side; the deal itself is paid directly between them, never through The Plug.
+model ConciergeDeal {
+  id           String           @id @default(cuid())
+  requestId    String
+  // Kept while fees exist: a request with a recorded deal can't be deleted.
+  request      ConciergeRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  businessId   String?
+  business     Business?        @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  businessName String // as it was when recorded; the business may not be listed
+  description  String
+  valuePesewas Int // the agreed price of the deal, in pesewas (GHS)
+  // Rates in basis points (1000 = 10%), stored so later changes to the rates don't alter old deals.
+  customerRate Int
+  businessRate Int
+  recordedById String?
+  recordedBy   Admin?           @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime         @default(now())
+  fees         ConciergeFee[]
+
+  @@index([requestId])
+  @@index([createdAt])
+}
+
+/// One side's fee on a deal (issue #84), paid through a Paystack link the site emails.
+model ConciergeFee {
+  id            String        @id @default(cuid())
+  ref           String        @unique // FEE-XXXX-XXXX, shown to people
+  token         String        @unique // the unguessable part of the /pay/<token> link
+  dealId        String
+  deal          ConciergeDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  party         String // customer | business
+  name          String
+  email         String?
+  phone         String?
+  amountPesewas Int
+  status        String        @default("due") // due | paid | waived | cancelled
+  paidVia       String? // paystack | offline
+  paystackRef   String? // the Paystack transaction that paid it
+  sentAt        DateTime?
+  paidAt        DateTime?
+  note          String?
+  createdAt     DateTime      @default(now())
+
+  @@index([status, createdAt])
 }

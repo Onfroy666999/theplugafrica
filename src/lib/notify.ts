@@ -2,6 +2,7 @@ import "server-only";
 import { after } from "next/server";
 import { getCat } from "./directory";
 import { layout, sendEmail } from "./email";
+import { CONCIERGE_FEE_PERCENT } from "./fees";
 import { BENEFITS } from "./membership-plan";
 import { describeRequest } from "./requests";
 import { SITE_URL } from "./site";
@@ -43,7 +44,7 @@ export function notifyConcierge(r: { ref: string; name: string; phone: string; e
         subject: `We've got your request (${r.ref})`,
         ...layout({
           heading: "We've got your request",
-          intro: `Thank you, ${r.name}. A Plug concierge will call you to understand what you need and agree the fee before any work starts.`,
+          intro: `Thank you, ${r.name}. A Plug concierge will call you to understand what you need. When we close a deal for you, our fee is ${CONCIERGE_FEE_PERCENT}% of the agreed price; we confirm it with you before any work starts.`,
           rows: [["Reference", r.ref], ["About", about], ["Where", d.place], ["When", d.when]],
           footer: "Keep this reference in case you need to follow up. The Plug Africa never asks for payment before you've agreed the fee.",
         }),

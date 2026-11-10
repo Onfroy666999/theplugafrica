@@ -4,6 +4,17 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- Concierge fees (#84):
+  - **The rate:** when the concierge closes a deal, The Plug's fee is 10% of the agreed price from the customer and 10% from the business. The member rate is a setting, also 10% for now.
+  - **Recording a deal:** "Record deal" on a concierge request takes the business, what the deal is for and the agreed price (GHS), and shows both fees as you type. It can email each side its pay link.
+  - **Paying:** each link opens `/pay/<link>`, which needs no account and shows what the fee is for. Paying goes through Paystack, by card or mobile money, in cedis. The payment is checked with Paystack on return and by the signed webhook: the right fee, the full amount, counted once. The team is emailed when a fee is paid.
+  - **Admin › Fees** shows what's due, overdue (after 14 days) and paid. Editors copy or resend links and mark fees paid outside Paystack (for example mobile money). Owners waive or cancel fees and download a spreadsheet.
+  - **Keeping the record:** a concierge request with a recorded deal can't be deleted.
+  - **Customers see their fees:** visitors with an account see their own fees, with a Pay button.
+  - **Wording:** the concierge page and the request confirmation now state the 10% fee.
+  - Migration `20261110100409_concierge_fees`.
+
 ## [0.12.0] - 2026-11-09
 
 ### Added

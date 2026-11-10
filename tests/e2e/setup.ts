@@ -49,7 +49,7 @@ export default async function setup() {
   // Stand-in Paystack (issue #83): checkout, verification, the plan, cancelling and the card page. Every call is
   // recorded; GET /__paystack lists them. A checkout's email is remembered so verifying its reference returns it.
   const calls: { method: string; path: string; body: unknown; auth: string | undefined }[] = [];
-  const checkouts = new Map<string, string>();
+  const checkouts = new Map<string, Record<string, unknown>>();
   const paystack = http.createServer((req, res) => {
     let body = "";
     req.on("data", (c) => (body += c));
@@ -64,15 +64,27 @@ export default async function setup() {
       calls.push({ method: req.method ?? "", path: url, body: parsed, auth: req.headers.authorization });
       if (req.headers.authorization !== `Bearer ${PAYSTACK_TEST_KEY}`) return json(401, { status: false, message: "Invalid key" });
       if (url === "/transaction/initialize") {
-        const reference = `e2e_${checkouts.size + 1}_${Date.now()}`;
-        checkouts.set(reference, String(parsed.email));
+        // A reference the site chose (concierge fees) or one made here (the membership).
+        const reference = String(parsed.reference ?? `e2e_${checkouts.size + 1}_${Date.now()}`);
+        checkouts.set(reference, parsed);
         return json(200, { status: true, data: { authorization_url: `https://checkout.paystack.test/${reference}`, reference, access_code: "x" } });
       }
       const verify = url.match(/^\/transaction\/verify\/(.+)$/);
       if (verify) {
-        const email = checkouts.get(decodeURIComponent(verify[1]));
-        if (!email) return json(404, { status: false, message: "Transaction reference not found" });
-        return json(200, { status: true, data: { status: "success", reference: verify[1], customer: { email, customer_code: "CUS_e2e" }, plan: PAYSTACK_TEST_PLAN } });
+        const init = checkouts.get(decodeURIComponent(verify[1]));
+        if (!init) return json(404, { status: false, message: "Transaction reference not found" });
+        return json(200, {
+          status: true,
+          data: {
+            status: "success",
+            reference: decodeURIComponent(verify[1]),
+            amount: init.plan ? 800 : init.amount,
+            currency: "GHS",
+            customer: { email: init.email, customer_code: "CUS_e2e" },
+            plan: init.plan ?? null,
+            metadata: init.metadata ?? null,
+          },
+        });
       }
       if (url === `/plan/${PAYSTACK_TEST_PLAN}`) return json(200, { status: true, data: { plan_code: PAYSTACK_TEST_PLAN, amount: 12345, currency: "GHS", interval: "monthly" } });
       if (url === "/subscription/disable") return json(200, { status: true, message: "Subscription disabled successfully" });

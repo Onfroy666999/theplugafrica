@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Suspense } from "react";
 import { Check } from "@/components/market/Icons";
 import { LinkButton } from "@/components/ui/Button";
+import { CONCIERGE_FEE_PERCENT } from "@/lib/fees";
 import { MEMBERSHIP_USD } from "@/lib/membership-plan";
 import { Footer, Header, Reveal } from "@/components/market/Sections";
 import { ConciergeForm } from "./ConciergeForm";
@@ -58,7 +59,7 @@ export default function ConciergePage() {
           <div className="rounded-hero bg-cream p-8 md:p-12">
             <h2 className="font-heading text-[26px] font-bold text-navy md:text-[32px]">How concierge pricing works</h2>
             <p className="mt-3 max-w-2xl text-[15.5px] leading-relaxed text-navy/65">
-              Concierge is The Plug&apos;s only paid, hands-on service. We agree the fee with you after the first call, before any work starts. You always pay businesses directly; The Plug never holds your money.
+              Concierge is The Plug&apos;s paid, hands-on service. When we close a deal for you, our fee is {CONCIERGE_FEE_PERCENT}% of the agreed price, and the business pays The Plug {CONCIERGE_FEE_PERCENT}% too. We confirm it with you before any work starts. You always pay businesses directly; The Plug never holds that money.
             </p>
             <div className="mt-8 grid gap-4 md:grid-cols-3">
               {[
@@ -69,7 +70,7 @@ export default function ConciergePage() {
                 <div key={p.t} className="rounded-card bg-white p-6">
                   <p className="font-heading text-[18px] font-bold text-navy">{p.t}</p>
                   <p className="mt-2 text-[14.5px] text-navy/60">{p.d}</p>
-                  <p className="mt-4 text-[13px] font-semibold text-gold-ink">Fee: to be confirmed</p>
+                  <p className="mt-4 text-[13px] font-semibold text-gold-ink">Fee: {CONCIERGE_FEE_PERCENT}% of the agreed price</p>
                 </div>
               ))}
             </div>

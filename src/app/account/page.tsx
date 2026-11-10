@@ -7,8 +7,10 @@ import { getPublicListings } from "@/lib/data";
 import { db } from "@/lib/db";
 import { getCat } from "@/lib/directory";
 import { toCardListing } from "@/lib/listings";
+import { payUrl } from "@/lib/fee-server";
+import { feeStatusLabel } from "@/lib/fees";
 import { getMembership } from "@/lib/membership";
-import { MEMBERSHIP_USD, canJoin, describeMembership } from "@/lib/membership-plan";
+import { MEMBERSHIP_USD, canJoin, describeMembership, formatGhs } from "@/lib/membership-plan";
 import { requireUser } from "@/lib/users";
 import { signOut } from "./actions";
 import { DeleteAccount, MembershipControls, ProfileForm } from "./AccountForms";
@@ -27,7 +29,7 @@ export default async function AccountPage() {
   const user = await requireUser("/account");
   // Requests sent while signed in, and earlier ones sent with this (now verified) email address.
   const mine = { OR: [{ userId: user.id }, { email: { equals: user.email, mode: "insensitive" as const } }] };
-  const [concierge, enquiries, savedRows, listings, membership] = await Promise.all([
+  const [concierge, enquiries, savedRows, listings, membership, fees] = await Promise.all([
     db.conciergeRequest.findMany({
       where: mine,
       orderBy: { createdAt: "desc" },
@@ -43,6 +45,13 @@ export default async function AccountPage() {
     db.savedBusiness.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, select: { business: { select: { slug: true } } } }),
     getPublicListings(),
     getMembership(user.id),
+    // Concierge fees on this visitor's requests (#84): their side only, not the business's.
+    db.conciergeFee.findMany({
+      where: { party: "customer", status: { in: ["due", "paid"] }, deal: { request: mine } },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      select: { ref: true, token: true, status: true, amountPesewas: true, deal: { select: { description: true, businessName: true } } },
+    }),
   ]);
 
   const rows: Row[] = [
@@ -113,6 +122,32 @@ export default async function AccountPage() {
               </ul>
             )}
           </div>
+
+          {fees.length > 0 && (
+            <div>
+              <h2 className="font-heading text-[22px] font-bold">Concierge fees</h2>
+              <ul className="mt-4 divide-y divide-navy/10 rounded-panel border border-navy/10">
+                {fees.map((f) => (
+                  <li key={f.ref} className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 p-5">
+                    <div className="min-w-0">
+                      <p className="font-heading text-[16px] font-bold">{f.deal.description}</p>
+                      <p className="mt-0.5 text-[14px] text-navy/65">
+                        With {f.deal.businessName} · <span className="font-mono">{f.ref}</span>
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-semibold">{formatGhs(f.amountPesewas)}</span>
+                      {f.status === "due" ? (
+                        <LinkButton href={payUrl(f.token)} size="sm">Pay</LinkButton>
+                      ) : (
+                        <span className="rounded-full bg-ok-soft px-3 py-1 text-[12.5px] font-semibold text-ok">{feeStatusLabel(f.status)}</span>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div>
             <h2 className="font-heading text-[22px] font-bold">Saved businesses</h2>

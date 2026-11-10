@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { getCat } from "@/lib/directory";
 import { inboxWhere } from "@/lib/inbox";
 import { INBOX_KINDS, parseInboxFilters, type InboxKind } from "@/lib/inbox-filters";
+import { OVERDUE_DAYS, feeStatusLabel, isOverdue } from "@/lib/fees";
 import { describeRequest } from "@/lib/requests";
 import { can } from "@/lib/roles";
 import { CONCIERGE_STATUS, CONTACT_STATUS, ENQUIRY_STATUS, WAITLIST_STATUS, find, values } from "@/lib/status";
@@ -22,6 +23,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ kind: st
   if (!admin) return new Response("Sign in first.", { status: 401 });
   if (!can(admin.role, "team")) return new Response("Only owners can download inbox data.", { status: 403 });
   const { kind: raw } = await params;
+  if (raw === "fees") return feesCsv(admin, new URL(req.url).searchParams.get("show") ?? "");
   if (!INBOX_KINDS.includes(raw as InboxKind)) return new Response("Unknown inbox.", { status: 404 });
   const kind = raw as InboxKind;
   const statuses = STATUSES[kind];
@@ -74,6 +76,51 @@ export async function GET(req: Request, { params }: { params: Promise<{ kind: st
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="theplugafrica-${kind}-${f.month ?? day}.csv"`,
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
+/** Concierge fees (issue #84): one row per fee, for the accounts. */
+async function feesCsv(admin: { id: string; name: string }, show: string) {
+  const overdueBefore = new Date(Date.now() - OVERDUE_DAYS * 86_400_000);
+  const where =
+    show === "due" ? { status: "due" } : show === "paid" ? { status: "paid" } : show === "overdue" ? { status: "due", OR: [{ sentAt: { lt: overdueBefore } }, { sentAt: null, createdAt: { lt: overdueBefore } }] } : {};
+  const rows = await db.conciergeFee.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    take: MAX_ROWS,
+    include: { deal: { include: { request: { select: { ref: true } } } } },
+  });
+  const ghs = (p: number) => (p / 100).toFixed(2);
+  const date = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : "");
+  const csv = toCsv(
+    ["Fee reference", "Recorded", "Request", "Deal", "Business", "Deal value (GHS)", "Side", "Name", "Email", "Phone", "Fee (GHS)", "Status", "Emailed", "Paid", "Paid via", "Paystack reference", "Note"],
+    rows.map((f) => [
+      f.ref,
+      date(f.createdAt),
+      f.deal.request.ref,
+      f.deal.description,
+      f.deal.businessName,
+      ghs(f.deal.valuePesewas),
+      f.party,
+      f.name,
+      f.email ?? "",
+      f.phone ?? "",
+      ghs(f.amountPesewas),
+      isOverdue(f) ? "Overdue" : feeStatusLabel(f.status),
+      date(f.sentAt),
+      date(f.paidAt),
+      f.paidVia ?? "",
+      f.paystackRef ?? "",
+      f.note ?? "",
+    ]),
+  );
+  await audit(admin, "inbox.export", `Downloaded ${rows.length} concierge fees${show ? ` (${show})` : ""}`);
+  return new Response(csv, {
+    headers: {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="theplugafrica-fees-${new Date().toISOString().slice(0, 10)}.csv"`,
       "Cache-Control": "no-store",
     },
   });
