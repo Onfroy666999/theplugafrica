@@ -4,6 +4,8 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-10
+
 ### Added
 - Concierge fees (#84):
   - **The rate:** when the concierge closes a deal, The Plug's fee is 10% of the agreed price from the customer and 10% from the business. The member rate is a setting, also 10% for now.
