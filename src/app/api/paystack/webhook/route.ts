@@ -1,5 +1,6 @@
+import { confirmFeePayment } from "@/lib/fee-server";
 import { applyPaystackEvent, type PaystackEvent } from "@/lib/membership";
-import { signatureOk } from "@/lib/paystack";
+import { metadataOf, signatureOk, type PaystackTransaction } from "@/lib/paystack";
 
 // Paystack's webhook (issue #83). Set its URL in Paystack › Settings › API Keys & Webhooks:
 //   https://theplugafrica.org/api/paystack/webhook
@@ -14,7 +15,9 @@ export async function POST(req: Request) {
   } catch {
     return new Response("Bad request", { status: 400 });
   }
-  const outcome = await applyPaystackEvent(event);
+  // Concierge fees (#84) are one-off charges marked in their metadata; everything else is the membership (#83).
+  const fee = event.event === "charge.success" && metadataOf(event.data as PaystackTransaction).purpose === "concierge_fee";
+  const outcome = fee ? `fee ${await confirmFeePayment(event.data as unknown as PaystackTransaction)}` : await applyPaystackEvent(event);
   // The event name and outcome only: no customer details in the logs.
   console.log(`Paystack ${event.event}: ${outcome}`);
   return Response.json({ ok: true, outcome });

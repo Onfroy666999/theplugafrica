@@ -36,7 +36,12 @@ export type AuditAction =
   | "review.approve"
   | "review.reject"
   | "review.respond"
-  | "review.delete";
+  | "review.delete"
+  | "fee.record"
+  | "fee.resend"
+  | "fee.paid"
+  | "fee.waive"
+  | "fee.cancel";
 
 /** Records one entry. Never throws: a logging hiccup must not undo the change it describes. */
 export async function audit(actor: { id: string; name: string }, action: AuditAction, summary: string, target?: { type: string; id: string }) {

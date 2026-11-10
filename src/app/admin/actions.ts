@@ -294,7 +294,11 @@ export async function deleteInboxItem(kind: InboxKind, id: string): Promise<{ ok
   const before = await inboxRecord(kind, id);
   if (!before) return { ok: true };
   if (kind === "enquiry") await db.enquiry.delete({ where: { id } });
-  if (kind === "concierge") await db.conciergeRequest.delete({ where: { id } });
+  if (kind === "concierge") {
+    // A recorded deal is the record of fees owed or paid (#84): it keeps its request.
+    if (await db.conciergeDeal.count({ where: { requestId: id } })) return { ok: false, error: "This request has a recorded deal with fees, so it can't be deleted." };
+    await db.conciergeRequest.delete({ where: { id } });
+  }
   if (kind === "waitlist") await db.waitlistEntry.delete({ where: { id } });
   if (kind === "contact") await db.contactMessage.delete({ where: { id } });
   await audit(admin, "inbox.delete", `Deleted ${cfg.label.toLowerCase()} ${before.ref}`, { type: kind, id });
