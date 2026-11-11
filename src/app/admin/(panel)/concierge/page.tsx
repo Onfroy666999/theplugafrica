@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -26,6 +27,11 @@ export default async function Concierge({ searchParams }: { searchParams: SP }) 
     // Owners and editors can handle requests; viewers can't change anything.
     db.admin.findMany({ where: { role: { in: ["owner", "editor"] } }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
+  // Past the last page (an old link, or the last entry on the page was just deleted): go to the last page with entries.
+  if (rows.length === 0 && total > 0 && f.page > 1) {
+    const q = filterQuery(f, { page: Math.ceil(total / PAGE_SIZE) });
+    redirect(q ? `/admin/concierge?${q}` : "/admin/concierge");
+  }
   const filtered = Boolean(f.status || f.q || f.month || f.assigned);
   const catName = (k: string) => CATS.find((c) => c.key === k)?.name ?? k;
   const options = (current: { id: string; name: string } | null) => {

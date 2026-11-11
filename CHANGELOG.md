@@ -4,6 +4,30 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Fixed
+- The rest of the debug session's follow-ups (#94):
+  - **Team:**
+    - Owners changing or removing each other at the same moment take turns, so the team always keeps an owner.
+    - An invite link is only used up once the account exists. An email that already has an account gets a clear message.
+  - **Businesses:**
+    - A business and its credentials save together or not at all.
+    - A status change waits for a save in progress.
+    - A renamed business's old web address permanently redirects to the new one.
+  - **Photos:**
+    - A partly failed upload removes what it uploaded.
+    - Owners can delete uploaded photos that nothing uses (more than a day old) from Admin › Businesses.
+    - An oversized photo is named before uploading, and large selections upload in batches.
+  - **Admin:**
+    - An inbox page past the end goes to the last page.
+    - Changing a filter right after searching no longer undoes it.
+  - **Public site:**
+    - Scroll-in sections are visible without JavaScript and appear after 3 seconds even if it never loads.
+    - The Popular rail's arrows know when everything fits.
+    - The category tabs are real tabs, with arrow keys and a linked panel.
+    - Request forms use the visitor's own date for today.
+  - **Reviews:** asking again for the same business's contact details within a day gives the same reference, so review codes can't be collected in bulk.
+  - Migration `20261111112104_slug_aliases_and_reveal_reuse`.
+
 ## [0.13.2] - 2026-11-11
 
 ### Security

@@ -18,7 +18,8 @@ export function BusinessFilters() {
   const [q, setQ] = useState(params.get("q") ?? "");
 
   const set = (k: string, v: string | null) => {
-    const p = new URLSearchParams(params.toString());
+    // The address as it is now, not when typing began: a filter changed meanwhile must not be undone (issue #94).
+    const p = new URLSearchParams(window.location.search);
     if (v && v !== "all") p.set(k, v);
     else p.delete(k);
     router.replace(`${path}?${p.toString()}`, { scroll: false });

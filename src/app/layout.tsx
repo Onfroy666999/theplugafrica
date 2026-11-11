@@ -39,6 +39,10 @@ export default function RootLayout({
   return (
     // suppressHydrationWarning: browser extensions (e.g. Grammarly) inject attributes on <html>/<body>.
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Lets CSS hide scroll-reveal content only when scripts can run (issue #94); without scripts it stays visible. */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+      </head>
       <body className={`${fraunces.variable} ${inter.variable} ${jakarta.variable} antialiased`} suppressHydrationWarning>
         {isStaging() && (
           <div className="bg-gold px-4 py-1.5 text-center text-[12.5px] font-semibold text-navy">

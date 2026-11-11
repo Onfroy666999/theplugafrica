@@ -44,6 +44,36 @@ export async function uploadToStorage(name: string, body: ArrayBuffer, contentTy
   return `${publicPrefix()}${path}`;
 }
 
+/** Deletes uploaded files by their public URLs. Returns how many were removed. */
+export async function deleteFromStorage(urls: string[]): Promise<number> {
+  const c = config();
+  const prefix = publicPrefix();
+  if (!c || !prefix) return 0;
+  const paths = urls.filter((u) => u.startsWith(prefix)).map((u) => u.slice(prefix.length));
+  if (!paths.length) return 0;
+  const res = await fetch(`${c.url}/storage/v1/object/${BUCKET}`, {
+    method: "DELETE",
+    headers: { ...headers(c.key), "Content-Type": "application/json" },
+    body: JSON.stringify({ prefixes: paths }),
+  });
+  if (!res.ok) throw new Error(`Storage delete failed (${res.status})`);
+  return ((await res.json().catch(() => [])) as unknown[]).length || paths.length;
+}
+
+/** Uploaded photos with their upload time, oldest first (for cleaning up). */
+export async function listStorageFiles(): Promise<{ url: string; createdAt: Date }[]> {
+  const c = config();
+  if (!c) return [];
+  const res = await fetch(`${c.url}/storage/v1/object/list/${BUCKET}`, {
+    method: "POST",
+    headers: { ...headers(c.key), "Content-Type": "application/json" },
+    body: JSON.stringify({ prefix: "uploads", limit: 1000, sortBy: { column: "created_at", order: "asc" } }),
+  });
+  if (!res.ok) return [];
+  const rows = (await res.json()) as { name: string; id: string | null; created_at?: string }[];
+  return rows.filter((r) => r.id).map((r) => ({ url: `${publicPrefix()}uploads/${r.name}`, createdAt: new Date(r.created_at ?? 0) }));
+}
+
 /** Public URLs of uploaded photos, newest first. */
 export async function listStoragePhotos(): Promise<string[]> {
   const c = config();
