@@ -86,7 +86,11 @@ export async function recordDeal(fd: FormData): Promise<DealResult> {
 type Simple = { ok: true; message?: string } | { ok: false; error: string };
 
 /** Resend, mark paid (e.g. paid by mobile money directly), waive or cancel one fee. */
-export async function updateFee(id: string, action: "resend" | "paid" | "waive" | "cancel", note?: string): Promise<Simple> {
+const FEE_ACTIONS = ["resend", "paid", "waive", "cancel"] as const;
+
+export async function updateFee(id: string, action: (typeof FEE_ACTIONS)[number], note?: string): Promise<Simple> {
+  // Checked before the permission: an unknown action must never fall through to "cancel" with editor rights.
+  if (!FEE_ACTIONS.includes(action)) return { ok: false, error: "Unknown action." };
   const admin = await requireAdmin(action === "waive" || action === "cancel" ? "delete" : "edit");
   const fee = await feeForEmail(String(id));
   if (!fee) return { ok: false, error: "That fee no longer exists." };
@@ -98,11 +102,13 @@ export async function updateFee(id: string, action: "resend" | "paid" | "waive" 
     await audit(admin, "fee.resend", `Sent fee ${fee.ref} again`, { type: "fee", id: fee.id });
   } else {
     if (fee.status !== "due") return { ok: false, error: "This fee is no longer due." };
-    const status = action === "paid" ? "paid" : action === "waive" ? "waived" : "cancelled";
-    await db.conciergeFee.update({
-      where: { id: fee.id },
+    const status = ({ paid: "paid", waive: "waived", cancel: "cancelled" } as const)[action];
+    // Only while still due: a Paystack payment landing at the same moment wins, and isn't overwritten.
+    const changed = await db.conciergeFee.updateMany({
+      where: { id: fee.id, status: "due" },
       data: { status, note: cleanNote, ...(action === "paid" && { paidVia: "offline", paidAt: new Date() }) },
     });
+    if (changed.count === 0) return { ok: false, error: "This fee changed a moment ago (it may just have been paid). Refresh to see it." };
     const verb = { paid: "Marked fee", waive: "Waived fee", cancel: "Cancelled fee" }[action];
     await audit(admin, action === "paid" ? "fee.paid" : action === "waive" ? "fee.waive" : "fee.cancel", `${verb} ${fee.ref} (${formatGhs(fee.amountPesewas)})${action === "paid" ? " as paid outside Paystack" : ""}`, { type: "fee", id: fee.id });
   }

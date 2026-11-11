@@ -130,13 +130,40 @@ export async function confirmFeePayment(t: PaystackTransaction | null): Promise<
   if (meta.purpose !== "concierge_fee" || typeof meta.feeId !== "string") return "no";
   const fee = await db.conciergeFee.findUnique({ where: { id: meta.feeId }, include: { deal: { select: { description: true } } } });
   if (!fee) return "no";
-  if (fee.status === "paid") return "already";
+  if (fee.status !== "due") {
+    // Money arrived for a fee that was already paid, waived or cancelled (two tabs, or waived during checkout).
+    if (t.reference !== fee.paystackRef) await flagRefund(fee, t);
+    return "already";
+  }
   if ((t.currency ?? "GHS") !== "GHS" || (t.amount ?? 0) < fee.amountPesewas) return "no";
   // Only a fee still due becomes paid; the condition makes a webhook and a return arriving together count once.
   const done = await db.conciergeFee.updateMany({ where: { id: fee.id, status: "due" }, data: { status: "paid", paidVia: "paystack", paystackRef: t.reference, paidAt: new Date() } });
   if (done.count === 0) return "already";
   notifyFeePaid({ ref: fee.ref, party: fee.party, name: fee.name, amountPesewas: fee.amountPesewas, description: fee.deal.description });
   return "paid";
+}
+
+/** Records an extra payment on the fee and tells the team, once per Paystack reference. */
+async function flagRefund(fee: { id: string; ref: string; status: string; note: string | null }, t: PaystackTransaction) {
+  const mark = `Extra payment ${t.reference}`;
+  if (fee.note?.includes(mark)) return;
+  const amount = formatGhs(t.amount ?? 0);
+  await db.conciergeFee.update({ where: { id: fee.id }, data: { note: [fee.note, `${mark} (${amount}): refund needed`].filter(Boolean).join(" · ").slice(0, 1000) } });
+  const to = (process.env.NOTIFY_EMAIL ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  if (!to.length) return;
+  after(() =>
+    sendEmail({
+      to,
+      subject: `Refund needed: ${amount} paid on fee ${fee.ref}`,
+      ...layout({
+        heading: "A payment needs refunding",
+        intro: `Paystack took ${amount} for fee ${fee.ref}, which was already ${fee.status}. Refund it in the Paystack dashboard.`,
+        rows: [["Paystack reference", t.reference], ["Fee reference", fee.ref]],
+        button: { label: "Open fees in the admin", href: `${SITE_URL}/admin/fees` },
+        footer: "You're receiving this because you're on The Plug Africa team.",
+      }),
+    }),
+  );
 }
 
 function notifyFeePaid(f: { ref: string; party: string; name: string; amountPesewas: number; description: string }) {

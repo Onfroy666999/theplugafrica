@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Field, Input, Spinner } from "@/components/market/Form";
 import { Button } from "@/components/ui/Button";
 import { payFee } from "../actions";
@@ -9,6 +9,12 @@ import { payFee } from "../actions";
 export function PayButton({ token, amount, needsEmail }: { token: string; amount: string; needsEmail: boolean }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Coming back from Paystack with the Back button restores this page as it was left: make the button usable again.
+  useEffect(() => {
+    const back = (e: PageTransitionEvent) => e.persisted && setBusy(false);
+    window.addEventListener("pageshow", back);
+    return () => window.removeEventListener("pageshow", back);
+  }, []);
   return (
     <form
       className="space-y-4"

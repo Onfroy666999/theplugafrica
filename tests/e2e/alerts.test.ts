@@ -26,8 +26,9 @@ const alerts = (list: { subject: string }[]) => list.filter((m) => m.subject.sta
 
 describe("error alerts", () => {
   it("emails the team when the server hits an error, without visitors' details", async () => {
-    // An invalid status makes the server action throw: a real server error.
-    const r = await act("updateInbox", ["contact", messageId, { status: "not-a-status" }], { cookie: owner, at: "/admin/messages?q=0240000000", ip });
+    // Notes sent as a number (only a hand-crafted request can do this) make the action throw: a real server error.
+    // (An invalid status no longer does: since the debug session, issue #94, it's refused with a message.)
+    const r = await act("updateInbox", ["contact", messageId, { notes: 12345 }], { cookie: owner, at: "/admin/messages?q=0240000000", ip });
     expect(r.status).toBe(500);
     const sent = alerts(await emails((e) => alerts(e).length >= 1));
     expect(sent).toHaveLength(1);
@@ -39,7 +40,7 @@ describe("error alerts", () => {
   });
 
   it("doesn't email the same error again within the hour", async () => {
-    await act("updateInbox", ["contact", messageId, { status: "not-a-status" }], { cookie: owner, at: "/admin/messages", ip });
+    await act("updateInbox", ["contact", messageId, { notes: 12345 }], { cookie: owner, at: "/admin/messages", ip });
     await new Promise((r) => setTimeout(r, 2500));
     expect(alerts(await emails())).toHaveLength(1);
   });

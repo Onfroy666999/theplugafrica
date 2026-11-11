@@ -28,7 +28,8 @@ export function hasBenefits(m: MembershipLike, now = new Date()) {
   const end = m.currentPeriodEnd?.getTime();
   switch (m.status) {
     case "active":
-      return true;
+      // Paystack renews before this date; if no renewal arrives, the benefits stop after the grace days.
+      return end === undefined || end + GRACE_DAYS * 86_400_000 > now.getTime();
     case "non_renewing":
     case "cancelled":
       return end !== undefined && end > now.getTime();

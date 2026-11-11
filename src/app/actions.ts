@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { notifyBusinessRequest, notifyConcierge, notifyContactMessage, notifyReview, notifyWaitlist } from "@/lib/notify";
 import { limitForm, screenForm } from "@/lib/protect";
-import { PUBLIC_STATUSES } from "@/lib/status";
+import { publicWhere } from "@/lib/data";
 import { isMember } from "@/lib/membership";
 import { getUser } from "@/lib/users";
 import { BusinessRequestSchema, ConciergeSchema, ContactSchema, ReviewSchema, WaitlistSchema, makeRef, parseDetails } from "@/lib/validation";
@@ -28,7 +28,7 @@ async function limit(kind: string): Promise<FormResult | null> {
 export async function createEnquiry(slug: string): Promise<
   { ok: true; ref: string; contact: { phone?: string; whatsapp?: string; email?: string } } | { ok: false; error: string }
 > {
-  const b = await db.business.findFirst({ where: { slug, status: { in: [...PUBLIC_STATUSES] } } });
+  const b = await db.business.findFirst({ where: { slug, ...publicWhere() } });
   if (!b) return { ok: false, error: "This business is no longer listed." };
   if (await limitForm("reveal", 20)) return { ok: false, error: "You've asked for several businesses' details in a short time. Please wait a while." };
   const ref = makeRef("PLG");
@@ -45,7 +45,7 @@ export async function submitConcierge(fd: FormData): Promise<FormResult> {
   const where = parseDetails(Object.fromEntries(fd));
   if (!where.ok) return { ok: false, error: where.error };
   const d = parsed.data;
-  const business = d.listing ? await db.business.findUnique({ where: { slug: d.listing }, select: { id: true } }) : null;
+  const business = d.listing ? await db.business.findFirst({ where: { slug: d.listing, ...publicWhere() }, select: { id: true } }) : null;
   // Store the service name (not the slug) so the request still reads correctly if the service is renamed later.
   const service = d.service ? await db.service.findFirst({ where: { category: d.category, slug: d.service }, select: { name: true } }) : null;
   const over = await limit("concierge");
@@ -64,7 +64,7 @@ export async function submitConcierge(fd: FormData): Promise<FormResult> {
 export async function sendBusinessRequest(slug: string, fd: FormData): Promise<FormResult> {
   const blocked = await screen(fd, "PLG");
   if (blocked) return blocked;
-  const b = await db.business.findFirst({ where: { slug, status: { in: [...PUBLIC_STATUSES] } }, select: { id: true, name: true, email: true } });
+  const b = await db.business.findFirst({ where: { slug, ...publicWhere() }, select: { id: true, name: true, email: true } });
   if (!b) return { ok: false, error: "This business is no longer listed." };
   const parsed = BusinessRequestSchema.safeParse(Object.fromEntries(fd));
   if (!parsed.success) return { ok: false, error: "Please add your name, phone number and a sentence about what you need." };
@@ -121,7 +121,7 @@ export async function sendContactMessage(fd: FormData): Promise<FormResult> {
 export async function submitReview(slug: string, fd: FormData): Promise<FormResult> {
   const blocked = await screen(fd, "REV");
   if (blocked) return blocked;
-  const b = await db.business.findFirst({ where: { slug, status: { in: [...PUBLIC_STATUSES] }, isExample: false }, select: { id: true, name: true } });
+  const b = await db.business.findFirst({ where: { slug, ...publicWhere(), isExample: false }, select: { id: true, name: true } });
   if (!b) return { ok: false, error: "Reviews aren't open for this listing." };
   const parsed = ReviewSchema.safeParse(Object.fromEntries(fd));
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };

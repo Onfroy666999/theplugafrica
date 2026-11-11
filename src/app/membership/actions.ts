@@ -24,7 +24,8 @@ export async function startMembership(): Promise<JoinResult> {
     metadata: { userId: user.id, purpose: "membership" },
   });
   if (!checkout) return { ok: false, error: "We couldn't reach Paystack just now. Please try again in a minute." };
-  if (!m) await db.membership.create({ data: { userId: user.id, status: "pending" } });
+  // Marks the checkout as started: only a pending membership can be confirmed on the way back.
+  await db.membership.upsert({ where: { userId: user.id }, create: { userId: user.id, status: "pending" }, update: { status: "pending" } });
   return { ok: true, url: checkout.authorization_url };
 }
 

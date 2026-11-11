@@ -29,7 +29,8 @@ export async function hashCode(secret: string, email: string, code: string) {
 /** Where to go after signing in: a path on this site only, never another site, the admin or the sign-in page itself. */
 export function safeNext(next: unknown, fallback = "/account") {
   const n = typeof next === "string" ? next : "";
-  if (!n.startsWith("/") || n.startsWith("//") || n.startsWith("/\\")) return fallback;
+  // Browsers drop tabs and newlines and read a backslash as "/", so "/<tab>/evil.com" would become "//evil.com".
+  if (!n.startsWith("/") || n.startsWith("//") || /[\u0000-\u0020\\]/.test(n)) return fallback;
   if (n.startsWith("/admin") || n.startsWith("/account/sign-in")) return fallback;
   return n;
 }

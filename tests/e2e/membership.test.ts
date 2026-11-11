@@ -159,6 +159,11 @@ describe("being a member", () => {
     expect((await page("/account", cookie)).html).toContain("Your benefits last until");
   });
 
+  it("doesn't switch a cancelled membership back on when an old return link is opened again", async () => {
+    await page(`/membership/welcome?reference=${reference}`, cookie);
+    expect((await membership(EMAIL))?.status).toBe("cancelled");
+  });
+
   it("cancels a running membership with Paystack before deleting the account", async () => {
     const other = await signInVisitor(OTHER);
     await webhook("subscription.create", {

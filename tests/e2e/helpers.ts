@@ -66,7 +66,7 @@ export async function page(path: string, cookie?: string | null) {
 export function form(fields: Record<string, string>, o: { human?: boolean } = { human: true }) {
   const fd = new FormData();
   if (o.human) {
-    fd.set("_t", String(Date.now() - 10_000));
+    fd.set("_e", "10000"); // 10 seconds on the form
     fd.set("website", "");
   }
   for (const [k, v] of Object.entries(fields)) fd.set(k, v);

@@ -45,7 +45,9 @@ export function ConciergeForm({ service }: { service?: { category: string; slug:
             setBusy(true);
             setError(null);
             const fd = new FormData(e.currentTarget);
-            if (listing) fd.set("listing", listing.slug);
+            // The server checks the business is public; real businesses aren't in the built-in examples list.
+            const asked = listing?.slug ?? params.get("listing");
+            if (asked) fd.set("listing", asked);
             if (service) {
               fd.set("category", service.category);
               fd.set("service", service.slug);
