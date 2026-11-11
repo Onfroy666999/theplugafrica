@@ -132,7 +132,7 @@ describe("spam protection", () => {
 
   it("refuses a form sent faster than a person could fill it", async () => {
     const fd = entry(0);
-    fd.set("_t", String(Date.now() - 500));
+    fd.set("_e", "500");
     const r = await act("joinWaitlist", [fd], { ip: visitor() });
     expect(r.result).toEqual({ ok: false, error: "Please take a moment to check your details, then send again." });
   });

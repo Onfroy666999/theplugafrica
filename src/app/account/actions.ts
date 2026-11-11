@@ -20,7 +20,9 @@ export type CodeRequest = { ok: true; email: string } | { ok: false; error: stri
 
 /** Step 1: email a sign-in code. The account itself is created when the code is used. */
 export async function requestSignInCode(fd: FormData): Promise<CodeRequest> {
-  const screened = await screenForm(fd);
+  // "Send a new code" reuses the first step's check; Turnstile tokens work once, so it isn't asked again.
+  // The per-visitor and per-email limits below still apply.
+  const screened = await screenForm(fd, { turnstile: fd.get("resend") !== "1" });
   if (screened === "bot") return { ok: true, email: "" };
   if (screened) return { ok: false, error: screened };
   const parsed = EmailSchema.safeParse(fd.get("email"));
@@ -92,6 +94,8 @@ export async function deleteAccount(fd: FormData): Promise<{ ok: false; error: s
   if (String(fd.get("confirm") ?? "").trim().toLowerCase() !== "delete") return { ok: false, error: "Type DELETE to confirm." };
   // A running membership is cancelled with Paystack first, so nobody keeps being charged for a deleted account.
   const m = await getMembership(u.id);
+  if (m && ["active", "past_due"].includes(m.status) && !m.subscriptionCode)
+    return { ok: false, error: "Your membership is still being set up with Paystack, so your account can't be deleted yet. Please try again in a few minutes." };
   if (m && ["active", "past_due", "pending"].includes(m.status) && m.subscriptionCode) {
     if (!m.emailToken || !(await disableSubscription(m.subscriptionCode, m.emailToken)))
       return { ok: false, error: "We couldn't cancel your membership with Paystack just now, so your account wasn't deleted. Please try again in a minute." };

@@ -25,8 +25,17 @@ function load() {
       saved = new Set(slugs ?? []);
       emit();
     })
-    .catch(() => {});
+    .catch(() => {
+      loading = null; // try again on the next page
+    });
   return loading;
+}
+
+/** Called after signing in or out, so one account's hearts never show for another. */
+export function resetSaved() {
+  saved = new Set();
+  loading = null;
+  emit();
 }
 
 /** Signed in or not, for the header. False on the server and during hydration, so the page never mismatches. */

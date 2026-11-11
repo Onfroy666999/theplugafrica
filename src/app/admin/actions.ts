@@ -178,12 +178,13 @@ export async function saveBusiness(fd: FormData): Promise<SaveResult> {
 
 export async function setBusinessStatus(id: string, status: string) {
   const admin = await requireAdmin("edit");
-  z.enum(values(BUSINESS_STATUS)).parse(status);
+  if (!z.enum(values(BUSINESS_STATUS)).safeParse(status).success) return { ok: false as const, error: "Unknown status." };
   if (status === "verified") {
     const creds = await db.credential.findMany({ where: { businessId: id }, select: { state: true } });
     if (!canBeVerified(creds)) return { ok: false as const, error: "Check every credential before marking Verified." };
   }
   const before = await db.business.findUnique({ where: { id }, select: { name: true, status: true } });
+  if (!before) return { ok: false as const, error: "This business no longer exists." };
   await db.business.update({ where: { id }, data: { status } });
   if (before && before.status !== status)
     await audit(admin, "business.status", `Changed ${before.name} from ${statusLabel(before.status)} to ${statusLabel(status)}`, { type: "business", id });
@@ -268,10 +269,16 @@ function inboxRecord(kind: InboxKind, id: string) {
 
 export async function updateInbox(kind: InboxKind, id: string, patch: { status?: string; notes?: string }) {
   const admin = await requireAdmin("edit");
+  if (!Object.hasOwn(INBOX, kind)) return { ok: false as const, error: "Unknown inbox." };
   const cfg = INBOX[kind];
   const before = await inboxRecord(kind, id);
+  if (!before) return { ok: false as const, error: "This entry was deleted." };
   const data: { status?: string; notes?: string | null } = {};
-  if (patch.status !== undefined) data.status = z.enum(values(cfg.statuses)).parse(patch.status);
+  if (patch.status !== undefined) {
+    const s = z.enum(values(cfg.statuses)).safeParse(patch.status);
+    if (!s.success) return { ok: false as const, error: "Unknown status." };
+    data.status = s.data;
+  }
   if (patch.notes !== undefined) data.notes = patch.notes.trim().slice(0, 4000) || null;
   if (kind === "enquiry") await db.enquiry.update({ where: { id }, data });
   if (kind === "concierge") await db.conciergeRequest.update({ where: { id }, data });
@@ -289,8 +296,8 @@ export async function updateInbox(kind: InboxKind, id: string, patch: { status?:
 /** Owners can delete an inbox entry, for spam and tests (issue #67). */
 export async function deleteInboxItem(kind: InboxKind, id: string): Promise<{ ok: true } | { ok: false; error: string }> {
   const admin = await requireAdmin("delete");
+  if (!Object.hasOwn(INBOX, kind)) return { ok: false, error: "Unknown inbox." };
   const cfg = INBOX[kind];
-  if (!cfg) return { ok: false, error: "Unknown inbox." };
   const before = await inboxRecord(kind, id);
   if (!before) return { ok: true };
   if (kind === "enquiry") await db.enquiry.delete({ where: { id } });
@@ -312,6 +319,7 @@ export async function assignConcierge(id: string, adminId: string): Promise<{ ok
   const admin = await requireAdmin("edit");
   const to = adminId ? await db.admin.findUnique({ where: { id: adminId }, select: { id: true, name: true } }) : null;
   if (adminId && !to) return { ok: false, error: "That team member no longer exists." };
+  if (!(await db.conciergeRequest.findUnique({ where: { id }, select: { id: true } }))) return { ok: false, error: "This request was deleted." };
   const r = await db.conciergeRequest.update({ where: { id }, data: { assignedToId: to?.id ?? null }, select: { ref: true } });
   await audit(admin, "inbox.assign", to ? `Assigned concierge request ${r.ref} to ${to.name}` : `Unassigned concierge request ${r.ref}`, { type: "concierge", id });
   revalidatePath("/admin/concierge");

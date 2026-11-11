@@ -9,6 +9,7 @@ import { FormGuard } from "@/components/market/FormGuard";
 import { Button } from "@/components/ui/Button";
 import { CODE_LENGTH, CODE_MINUTES } from "@/lib/signin-code";
 import { DUR, EASE } from "@/lib/motion";
+import { resetSaved } from "@/components/market/saved";
 
 const FAILED = "Something went wrong. Please check your connection and try again.";
 /** Seconds before "Send a new code" works, so a slow email isn't answered with a second one. */
@@ -92,6 +93,7 @@ export function SignInForm({ next }: { next: string }) {
                 setBusy(false);
                 return setError(r.error);
               }
+              resetSaved();
               router.replace(r.next);
               router.refresh();
             }}
@@ -140,7 +142,10 @@ export function SignInForm({ next }: { next: string }) {
                 onClick={async () => {
                   if (!first.current) return;
                   setNotice(null);
-                  if (await sendCode(first.current)) setNotice("We've sent a new code. Only the newest one works.");
+                  const again = new FormData();
+                  first.current.forEach((v, k) => again.set(k, v));
+                  again.set("resend", "1"); // the first step's Turnstile token is spent
+                  if (await sendCode(again)) setNotice("We've sent a new code. Only the newest one works.");
                 }}
                 className="press font-medium text-navy underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:text-navy/65 disabled:no-underline"
               >

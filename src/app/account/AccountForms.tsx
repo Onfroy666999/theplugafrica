@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Field, Input, Spinner } from "@/components/market/Form";
 import { Button } from "@/components/ui/Button";
 import { cancelMembership, cardLink } from "@/app/membership/actions";
@@ -85,8 +86,14 @@ export function DeleteAccount() {
 
 /** Change the card (on Paystack's own page) or cancel. Cancelling keeps the benefits until the paid month ends. */
 export function MembershipControls({ status }: { status: string }) {
+  const router = useRouter();
   const [busy, setBusy] = useState<"card" | "cancel" | null>(null);
   const [confirm, setConfirm] = useState(false);
+  useEffect(() => {
+    const back = (e: PageTransitionEvent) => e.persisted && setBusy(null);
+    window.addEventListener("pageshow", back);
+    return () => window.removeEventListener("pageshow", back);
+  }, []);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const running = status === "active" || status === "past_due";
   const link = "press text-[14px] font-semibold text-white underline-offset-4 hover:underline disabled:opacity-60";
@@ -129,6 +136,7 @@ export function MembershipControls({ status }: { status: string }) {
                 setBusy(null);
                 setConfirm(false);
                 setMsg(r.ok ? { ok: true, text: "Cancelled. You won't be charged again." } : { ok: false, text: r.error });
+                if (r.ok) router.refresh();
               }}
             >
               {busy === "cancel" && <Spinner />}

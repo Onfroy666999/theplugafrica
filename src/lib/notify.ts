@@ -123,6 +123,11 @@ export function notifyReview(r: { business: string; name: string; rating: number
   });
 }
 
+/** A short note to the team about something that needs a person (a possible double charge, for example). */
+export function notifyTeam(subject: string, intro: string, path: string) {
+  later(() => teamAlert(subject, subject, intro, [], path) ?? Promise.resolve());
+}
+
 /** A new concierge member (issue #83): tell the team, and welcome the member. */
 export function notifyNewMember(u: { email: string; name: string | null }) {
   later(async () => {
