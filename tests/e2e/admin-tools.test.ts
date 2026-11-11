@@ -45,7 +45,7 @@ afterAll(async () => {
   await db.invite.deleteMany({ where: { email: { endsWith: "@example.test" } } });
   await db.admin.deleteMany({ where: { email: { endsWith: "@example.test" } } });
   await db.auditLog.deleteMany({ where: { createdAt: { gte: started } } });
-  await db.rateLimit.deleteMany({ where: { key: { startsWith: "login:" } } });
+  await db.rateLimit.deleteMany({ where: { key: { startsWith: "login" } } });
   await db.$disconnect();
 });
 

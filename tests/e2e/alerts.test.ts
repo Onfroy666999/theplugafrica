@@ -17,7 +17,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await db.contactMessage.deleteMany({ where: { ref: "MSG-E2EA-LERT" } });
-  await db.rateLimit.deleteMany({ where: { OR: [{ key: { startsWith: "alert:" } }, { key: { startsWith: "login:" } }] } });
+  await db.rateLimit.deleteMany({ where: { OR: [{ key: { startsWith: "alert:" } }, { key: { startsWith: "login" } }] } });
   await db.auditLog.deleteMany({ where: { createdAt: { gte: started } } });
   await db.$disconnect();
 });
