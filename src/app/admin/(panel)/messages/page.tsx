@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { inboxWhere, pageArgs } from "@/lib/inbox";
@@ -15,6 +16,11 @@ export default async function Messages({ searchParams }: { searchParams: SP }) {
   const f = parseInboxFilters(sp, values(CONTACT_STATUS));
   const where = inboxWhere("contact", f, admin.id);
   const [rows, total] = await Promise.all([db.contactMessage.findMany({ where, ...pageArgs(f) }), db.contactMessage.count({ where })]);
+  // Past the last page (an old link, or the last entry on the page was just deleted): go to the last page with entries.
+  if (rows.length === 0 && total > 0 && f.page > 1) {
+    const q = filterQuery(f, { page: Math.ceil(total / PAGE_SIZE) });
+    redirect(q ? `/admin/messages?${q}` : "/admin/messages");
+  }
   const filtered = Boolean(f.status || f.q || f.month);
   return (
     <>

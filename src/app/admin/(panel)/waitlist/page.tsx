@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { LinkButton } from "@/components/ui/Button";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -17,6 +18,11 @@ export default async function Waitlist({ searchParams }: { searchParams: SP }) {
   const f = parseInboxFilters(sp, values(WAITLIST_STATUS));
   const where = inboxWhere("waitlist", f, admin.id);
   const [rows, total] = await Promise.all([db.waitlistEntry.findMany({ where, ...pageArgs(f) }), db.waitlistEntry.count({ where })]);
+  // Past the last page (an old link, or the last entry on the page was just deleted): go to the last page with entries.
+  if (rows.length === 0 && total > 0 && f.page > 1) {
+    const q = filterQuery(f, { page: Math.ceil(total / PAGE_SIZE) });
+    redirect(q ? `/admin/waitlist?${q}` : "/admin/waitlist");
+  }
   const filtered = Boolean(f.status || f.q || f.month);
   const canEdit = can(admin.role, "edit");
   const catName = (k: string) => CATS.find((c) => c.key === k)?.name ?? k;

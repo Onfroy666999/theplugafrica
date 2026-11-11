@@ -57,8 +57,19 @@ export async function passwordLink(adminId: string): Promise<LinkResult> {
   return { ok: true, url, emailed };
 }
 
-/** True when someone other than `adminId` is an owner, so the team is never left without one. */
-const otherOwnerExists = async (adminId: string) => (await db.admin.count({ where: { role: "owner", id: { not: adminId } } })) > 0;
+type Tx = Parameters<Parameters<typeof db.$transaction>[0]>[0];
+
+/**
+ * True when someone other than `adminId` is an owner, so the team is never left without one. Locks every owner row
+ * until the transaction ends (issue #94): two owners demoting or removing each other at the same moment take turns,
+ * and the second sees the first one's change.
+ */
+async function otherOwnerExists(tx: Tx, adminId: string) {
+  const owners = await tx.$queryRaw<{ id: string }[]>`SELECT "id" FROM "Admin" WHERE "role" = 'owner' FOR UPDATE`;
+  return owners.some((o) => o.id !== adminId);
+}
+
+const NEEDS_OWNER = "The team needs at least one owner.";
 
 export async function changeRole(adminId: string, role: string): Promise<Result> {
   const me = await requireAdmin("team");
@@ -67,8 +78,12 @@ export async function changeRole(adminId: string, role: string): Promise<Result>
   const a = await db.admin.findUnique({ where: { id: adminId } });
   if (!a) return { ok: false, error: "That account no longer exists." };
   if (a.role === role) return { ok: true };
-  if (a.role === "owner" && !(await otherOwnerExists(a.id))) return { ok: false, error: "The team needs at least one owner." };
-  await db.admin.update({ where: { id: a.id }, data: { role } });
+  const changed = await db.$transaction(async (tx) => {
+    if (a.role === "owner" && !(await otherOwnerExists(tx, a.id))) return false;
+    await tx.admin.update({ where: { id: a.id }, data: { role } });
+    return true;
+  });
+  if (!changed) return { ok: false, error: NEEDS_OWNER };
   await audit(me, "team.role", `Changed ${a.name} from ${roleLabel(a.role).toLowerCase()} to ${roleLabel(role).toLowerCase()}`, { type: "admin", id: a.id });
   revalidatePath("/admin/team");
   return { ok: true };
@@ -79,8 +94,13 @@ export async function removeMember(adminId: string): Promise<Result> {
   if (adminId === me.id) return { ok: false, error: "You can't remove your own account. Ask another owner." };
   const a = await db.admin.findUnique({ where: { id: adminId } });
   if (!a) return { ok: true };
-  if (a.role === "owner" && !(await otherOwnerExists(a.id))) return { ok: false, error: "The team needs at least one owner." };
-  await db.$transaction([db.invite.deleteMany({ where: { email: a.email, usedAt: null } }), db.admin.delete({ where: { id: a.id } })]);
+  const removed = await db.$transaction(async (tx) => {
+    if (a.role === "owner" && !(await otherOwnerExists(tx, a.id))) return false;
+    await tx.invite.deleteMany({ where: { email: a.email, usedAt: null } });
+    await tx.admin.deleteMany({ where: { id: a.id } });
+    return true;
+  });
+  if (!removed) return { ok: false, error: NEEDS_OWNER };
   await audit(me, "team.remove", `Removed ${a.name} (${a.email}, ${roleLabel(a.role).toLowerCase()})`, { type: "admin", id: a.id });
   revalidatePath("/admin/team");
   return { ok: true };
@@ -104,22 +124,35 @@ export async function acceptInvite(token: string, _: unknown, fd: FormData): Pro
   if (!p.success) return { error: p.error.issues[0].message };
   const passwordHash = await bcrypt.hash(p.data.password, 12);
 
-  // Claim the link first, so it can't be used twice even if two requests race.
-  const claimed = await db.invite.updateMany({ where: { id: inv.id, usedAt: null }, data: { usedAt: new Date() } });
-  if (!claimed.count) return { error: "This link was already used. Ask an owner for a new one." };
-
+  const USED = "This link was already used. Ask an owner for a new one.";
+  const EXISTS = "This email already has an account. Sign in, or ask an owner for a password link.";
   let admin: { id: string; name: string };
   if (inv.purpose === "invite") {
-    if (await db.admin.findUnique({ where: { email: inv.email }, select: { id: true } }))
-      return { error: "This email already has an account. Sign in, or ask an owner for a password link." };
-    admin = await db.admin.create({
-      data: { email: inv.email, name: p.data.name || inv.name, role: isRole(inv.role) ? (inv.role as Role) : "viewer", passwordHash },
-      select: { id: true, name: true },
-    });
+    // Checked before the link is used up, so a link isn't wasted on an email that already has an account (issue #94).
+    if (await db.admin.findUnique({ where: { email: inv.email }, select: { id: true } })) return { error: EXISTS };
+    // Claiming the link and creating the account happen together: if either fails, the link still works.
+    try {
+      const created = await db.$transaction(async (tx) => {
+        const claimed = await tx.invite.updateMany({ where: { id: inv.id, usedAt: null }, data: { usedAt: new Date() } });
+        if (!claimed.count) return null;
+        return tx.admin.create({
+          data: { email: inv.email, name: p.data.name || inv.name, role: isRole(inv.role) ? (inv.role as Role) : "viewer", passwordHash },
+          select: { id: true, name: true },
+        });
+      });
+      if (!created) return { error: USED };
+      admin = created;
+    } catch (e) {
+      if ((e as { code?: string }).code === "P2002") return { error: EXISTS };
+      throw e;
+    }
     await audit(admin, "team.join", `Joined the team as ${aRole(inv.role)}`, { type: "admin", id: admin.id });
   } else {
     const found = await db.admin.findUnique({ where: { email: inv.email }, select: { id: true, name: true } });
     if (!found) return { error: "That account no longer exists." };
+    // Claim the link, so it can't be used twice even if two requests race.
+    const claimed = await db.invite.updateMany({ where: { id: inv.id, usedAt: null }, data: { usedAt: new Date() } });
+    if (!claimed.count) return { error: USED };
     // A new password signs out every other session.
     await db.admin.update({ where: { id: found.id }, data: { passwordHash, sessionsSince: new Date() } });
     admin = found;

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -19,6 +20,11 @@ export default async function Enquiries({ searchParams }: { searchParams: SP }) 
     db.enquiry.findMany({ where, ...pageArgs(f), include: { business: { select: { id: true, name: true } } } }),
     db.enquiry.count({ where }),
   ]);
+  // Past the last page (an old link, or the last entry on the page was just deleted): go to the last page with entries.
+  if (rows.length === 0 && total > 0 && f.page > 1) {
+    const q = filterQuery(f, { page: Math.ceil(total / PAGE_SIZE) });
+    redirect(q ? `/admin/enquiries?${q}` : "/admin/enquiries");
+  }
   const filtered = Boolean(f.status || f.q || f.month);
   return (
     <>

@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { notifyBusinessRequest, notifyConcierge, notifyContactMessage, notifyReview, notifyWaitlist } from "@/lib/notify";
-import { limitForm, screenForm } from "@/lib/protect";
+import { limitForm, screenForm, visitorId } from "@/lib/protect";
 import { publicWhere } from "@/lib/data";
 import { isMember } from "@/lib/membership";
 import { getUser } from "@/lib/users";
@@ -31,9 +31,17 @@ export async function createEnquiry(slug: string): Promise<
   const b = await db.business.findFirst({ where: { slug, ...publicWhere() } });
   if (!b) return { ok: false, error: "This business is no longer listed." };
   if (await limitForm("reveal", 20)) return { ok: false, error: "You've asked for several businesses' details in a short time. Please wait a while." };
-  const ref = makeRef("PLG");
+  // Asking again for the same business within a day gives the same reference (issue #94), so review codes can't be
+  // collected in bulk by revealing a business over and over.
+  const visitorHash = await visitorId();
   const user = await getUser();
-  await db.enquiry.create({ data: { ref, businessId: b.id, userId: user?.id } });
+  const recent = await db.enquiry.findFirst({
+    where: { businessId: b.id, kind: "contact", visitorHash, createdAt: { gt: new Date(Date.now() - 86_400_000) } },
+    orderBy: { createdAt: "desc" },
+    select: { ref: true },
+  });
+  const ref = recent?.ref ?? makeRef("PLG");
+  if (!recent) await db.enquiry.create({ data: { ref, businessId: b.id, userId: user?.id, visitorHash } });
   return { ok: true, ref, contact: { phone: b.phone ?? undefined, whatsapp: b.whatsapp ?? undefined, email: b.email ?? undefined } };
 }
 

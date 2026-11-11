@@ -16,7 +16,7 @@ import { ListingCard } from "./ListingCard";
 import { Arrow, CatIcon, Chat, UserIcon } from "./Icons";
 import { useSignedIn } from "./saved";
 import { LinkButton } from "@/components/ui/Button";
-import { DUR, EASE, SPRING, STAGGER, fadeUp } from "@/lib/motion";
+import { DUR, EASE, SPRING, STAGGER } from "@/lib/motion";
 
 /* ---------- Header ---------- */
 
@@ -109,21 +109,38 @@ export function Header() {
 
 /**
  * Fades content up as it scrolls into view. `as="li"` keeps lists valid for screen readers (issue #30).
- * With reduced motion, content is simply shown: nothing waits, invisible, for an animation.
+ *
+ * Done in CSS (issue #94): the server sends the content visible. Only when the browser can run scripts (the `js`
+ * class set in the root layout) is it hidden for the fade, and a 3-second fallback shows it even if the page's
+ * JavaScript never arrives. Reduced motion: shown straight away. See `.reveal` in globals.css.
  */
 export function Reveal({ children, delay = 0, className = "", as = "div" }: { children: React.ReactNode; delay?: number; className?: string; as?: "div" | "li" }) {
-  const reduce = useReducedMotion();
-  const Tag = as === "li" ? motion.li : motion.div;
-  return (
-    <Tag
-      className={className}
-      initial={reduce ? false : fadeUp.hidden}
-      whileInView={fadeUp.shown}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ delay, duration: DUR.enter, ease: EASE.out }}
-    >
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          el.classList.add("in");
+          io.disconnect();
+        }
+      },
+      { rootMargin: "0px 0px -60px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  const style = delay ? ({ "--reveal-delay": `${delay}s` } as React.CSSProperties) : undefined;
+  const cls = `reveal ${className}`.trim();
+  return as === "li" ? (
+    <li ref={ref as React.RefObject<HTMLLIElement>} className={cls} style={style}>
       {children}
-    </Tag>
+    </li>
+  ) : (
+    <div ref={ref as React.RefObject<HTMLDivElement>} className={cls} style={style}>
+      {children}
+    </div>
   );
 }
 
@@ -148,14 +165,30 @@ export function CategoryExplorer({ id = "explore", services }: { id?: string; se
         <p className="mt-2 text-[15px] text-navy/60">Every category in one place. Pick one to see what&apos;s inside.</p>
       </Reveal>
 
-      <div role="tablist" className="mt-8 flex gap-1 overflow-x-auto border-b border-navy/10 [mask-image:linear-gradient(90deg,#000_85%,transparent)] [scrollbar-width:none] md:[mask-image:none] [&::-webkit-scrollbar]:hidden">
+      <div
+        role="tablist"
+        aria-label="Categories"
+        onKeyDown={(e) => {
+          // Arrow keys, Home and End move between tabs, as screen-reader users expect (issue #94).
+          const i = CATS.findIndex((c) => c.key === active);
+          const to = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: CATS.length - 1 }[e.key];
+          if (to === undefined) return;
+          e.preventDefault();
+          const next = CATS[(to + CATS.length) % CATS.length].key;
+          setActive(next);
+          document.getElementById(`${id}-tab-${next}`)?.focus();
+        }}
+        className="mt-8 flex gap-1 overflow-x-auto border-b border-navy/10 [mask-image:linear-gradient(90deg,#000_85%,transparent)] [scrollbar-width:none] md:[mask-image:none] [&::-webkit-scrollbar]:hidden">
         {CATS.map((c) => {
           const on = c.key === active;
           return (
             <button
               key={c.key}
               role="tab"
+              id={`${id}-tab-${c.key}`}
               aria-selected={on}
+              aria-controls={`${id}-panel`}
+              tabIndex={on ? 0 : -1}
               onClick={() => setActive(c.key)}
               className={`group relative flex min-w-[96px] shrink-0 flex-col items-center gap-2 px-3 pt-2 pb-3.5 text-[13px] font-medium transition-colors duration-200 ${
                 on ? "text-navy" : "text-navy/65 hover:text-navy/80"
@@ -177,7 +210,7 @@ export function CategoryExplorer({ id = "explore", services }: { id?: string; se
         })}
       </div>
 
-      <div className="relative mt-7 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+      <div id={`${id}-panel`} role="tabpanel" aria-labelledby={`${id}-tab-${active}`} className="relative mt-7 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         <AnimatePresence mode="popLayout" initial={false}>
           {tiles.map((t, i) => (
             <motion.a
@@ -220,6 +253,17 @@ export function PopularRail({ title = "Popular in Accra", listings }: { title?: 
     setEdge({ start: el.scrollLeft < 4, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4 });
   };
   const scroll = (d: 1 | -1) => ref.current?.scrollBy({ left: d * ref.current.clientWidth * 0.8, behavior: "smooth" });
+  // Work out the arrows when the rail first appears and whenever its size changes, not only on scroll (issue #94):
+  // when every card fits, both arrows are disabled.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <section className="mx-auto max-w-[1280px] px-5 pt-20 md:px-8">

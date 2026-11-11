@@ -67,13 +67,34 @@ export function BusinessForm({ initial, library, allServices, fromWaitlist }: { 
 
   const onUpload = async (files: FileList | null) => {
     if (!files?.length) return;
+    const list = Array.from(files);
+    // Said up front, by name (issue #94): a request over the server's 25 MB limit used to fail with no reason given.
+    const big = list.find((f) => f.size > 6 * 1024 * 1024);
+    if (big) return setError({ msg: `${big.name} is over 6 MB. Make it smaller and try again.`, field: "images" });
+    // Several photos go up in batches of up to 18 MB each, one after another.
+    const batches: File[][] = [];
+    let size = 0;
+    for (const f of list) {
+      if (!batches.length || size + f.size > 18 * 1024 * 1024) {
+        batches.push([]);
+        size = 0;
+      }
+      batches[batches.length - 1].push(f);
+      size += f.size;
+    }
     setUploading(true);
-    const fd = new FormData();
-    Array.from(files).forEach((f) => fd.append("files", f));
-    const r = await uploadImages(fd).catch(() => ({ ok: false as const, error: "Upload failed. Try again." }));
+    setError(null);
+    for (const batch of batches) {
+      const fd = new FormData();
+      batch.forEach((f) => fd.append("files", f));
+      const r = await uploadImages(fd).catch(() => ({ ok: false as const, error: "Upload failed. Check your connection and try again." }));
+      if (!r.ok) {
+        setError({ msg: r.error, field: "images" });
+        break;
+      }
+      setImages((xs) => [...xs, ...r.paths]);
+    }
     setUploading(false);
-    if (r.ok) setImages((xs) => [...xs, ...r.paths]);
-    else setError({ msg: r.error, field: "images" });
   };
 
   const move = (i: number, d: -1 | 1) =>

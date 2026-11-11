@@ -127,6 +127,18 @@ describe("waitlist and contact page", () => {
   });
 });
 
+describe("contact details (issue #94)", () => {
+  it("gives the same reference when the same visitor asks again for the same business", async () => {
+    const me = visitor();
+    const a = await act("createEnquiry", [SLUG], { ip: me });
+    const b = await act("createEnquiry", [SLUG], { ip: me });
+    expect(a.result?.ref).toBeTruthy();
+    expect(b.result?.ref).toBe(a.result?.ref);
+    const other = await act("createEnquiry", [SLUG], { ip: visitor() });
+    expect(other.result?.ref).not.toBe(a.result?.ref);
+  });
+});
+
 describe("spam protection", () => {
   const entry = (n: number) => form({ ...who, business: `E2E Spam ${n}`, category: "education", city: "Accra" });
 

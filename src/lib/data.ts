@@ -61,6 +61,14 @@ export async function getPublicListings(): Promise<Listing[]> {
   return rows.map(toListing);
 }
 
+/** The current web address for a business's old one (issue #94), if it's public; null otherwise. */
+export async function currentSlugFor(oldSlug: string): Promise<string | null> {
+  const a = await db.slugAlias.findUnique({ where: { slug: oldSlug }, select: { business: { select: { slug: true, status: true, isExample: true } } } });
+  if (!a) return null;
+  const pub = (PUBLIC_STATUSES as readonly string[]).includes(a.business.status) && !(process.env.SITE_ENV === "production" && a.business.isExample);
+  return pub ? a.business.slug : null;
+}
+
 export async function getPublicListing(slug: string): Promise<Listing | null> {
   const row = await db.business.findFirst({ where: { slug, ...publicWhere() }, include: { credentials: true, services: true } });
   return row ? toListing(row) : null;

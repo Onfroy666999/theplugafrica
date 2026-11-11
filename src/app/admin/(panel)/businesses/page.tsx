@@ -9,6 +9,8 @@ import { can } from "@/lib/roles";
 import { CATS } from "@/lib/directory";
 import { BusinessFilters } from "./Filters";
 import { StatusSelect } from "./StatusSelect";
+import { CleanPhotos } from "./CleanPhotos";
+import { storageEnabled } from "@/lib/storage";
 import { Empty, PageHeader, Panel, fmtDate } from "../ui";
 
 type SP = Promise<{ q?: string; status?: string; category?: string; examples?: string }>;
@@ -71,6 +73,7 @@ export default async function Businesses({ searchParams }: { searchParams: SP })
           </ul>
         )}
       </Panel>
+      {can(admin.role, "delete") && storageEnabled() && <CleanPhotos />}
     </>
   );
 }
