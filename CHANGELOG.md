@@ -4,6 +4,14 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Security
+- Admin sign-in limit (#94):
+  - **Counted first:** every attempt is counted in one database step before the password is checked, so parallel requests can't get extra guesses.
+  - **Per connection:** 5 attempts per email from one connection every 15 minutes, as before.
+  - **Per email:** a new limit of 20 wrong attempts per email per hour from anywhere, so changing IP address doesn't give unlimited guesses. The team gets an email the first time it trips.
+  - **Normal use:** correct sign-ins never count, so normal use is unaffected.
+  - **Forms too:** public form limits use the same one-step counter.
+
 ## [0.13.1] - 2026-11-11
 
 ### Fixed

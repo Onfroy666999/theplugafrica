@@ -24,22 +24,29 @@ export async function peek(key: string) {
   return row && row.resetAt > new Date() ? row.count : 0;
 }
 
-/** Adds one to a key's counter, starting a new window if the old one has expired. Returns the new count. */
+/**
+ * Adds one to a key's counter, starting a new window if the old one has expired, and returns the new count.
+ * One SQL statement (issue #94): requests arriving together each get their own number, so none can slip past a limit
+ * by reading the count at the same moment as another.
+ */
 export async function hit(key: string, windowSeconds: number) {
   const now = new Date();
   const resetAt = new Date(now.getTime() + windowSeconds * 1000);
-  const row = await db.rateLimit.findUnique({ where: { key } });
   // Now and then, clear counters that expired more than a day ago.
   if (Math.random() < 0.02) await db.rateLimit.deleteMany({ where: { resetAt: { lt: new Date(now.getTime() - 86_400_000) } } });
-  if (!row || row.resetAt <= now) {
-    await db.rateLimit.upsert({ where: { key }, create: { key, count: 1, resetAt }, update: { count: 1, resetAt } });
-    return 1;
-  }
-  const updated = await db.rateLimit.update({ where: { key }, data: { count: { increment: 1 } } });
-  return updated.count;
+  const rows = await db.$queryRaw<{ count: number }[]>`
+    INSERT INTO "RateLimit" ("key", "count", "resetAt") VALUES (${key}, 1, ${resetAt})
+    ON CONFLICT ("key") DO UPDATE SET
+      "count"   = CASE WHEN "RateLimit"."resetAt" <= ${now} THEN 1 ELSE "RateLimit"."count" + 1 END,
+      "resetAt" = CASE WHEN "RateLimit"."resetAt" <= ${now} THEN EXCLUDED."resetAt" ELSE "RateLimit"."resetAt" END
+    RETURNING "count"`;
+  return Number(rows[0]?.count ?? 1);
 }
 
 export const clear = (key: string) => db.rateLimit.deleteMany({ where: { key } });
+
+/** Takes one back off a counter (an attempt that turned out to be fine, such as a correct sign-in). */
+export const unhit = (key: string) => db.rateLimit.updateMany({ where: { key, count: { gt: 0 } }, data: { count: { decrement: 1 } } });
 
 /** Seconds the visitor must wait before a form counts as human-made (bots submit instantly). */
 const MIN_FILL_MS = 3000;
