@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { parseImages } from "@/lib/data";
+import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { BUSINESS_STATUS, find } from "@/lib/status";
 import { BusinessForm } from "../BusinessForm";
@@ -10,6 +11,8 @@ import { photoLibrary } from "../library";
 import { PageHeader } from "../../ui";
 
 export default async function EditBusiness({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ created?: string }> }) {
+  // Checked here too: on client-side navigation the layout (and its check) isn't run again.
+  await requireAdmin();
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   const b = await db.business.findUnique({ where: { id }, include: { credentials: { orderBy: { position: "asc" } }, services: { select: { id: true } } } });
   if (!b) notFound();

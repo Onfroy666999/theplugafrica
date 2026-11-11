@@ -10,7 +10,8 @@ export default async function Users({ searchParams }: { searchParams: SP }) {
   await requireAdmin();
   const sp = await searchParams;
   const q = String(sp.q ?? "").trim().slice(0, 120);
-  const page = Math.max(1, Number(sp.page) || 1);
+  const asked = Number(sp.page);
+  const page = Number.isInteger(asked) && asked >= 1 && asked <= 10_000 ? asked : 1;
   const where = q ? { OR: [{ email: { contains: q, mode: "insensitive" as const } }, { name: { contains: q, mode: "insensitive" as const } }, { phone: { contains: q } }] } : {};
   const [rows, total] = await Promise.all([
     db.user.findMany({

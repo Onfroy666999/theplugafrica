@@ -6,6 +6,8 @@ import { OTHER_AREA, TIMES_OF_DAY } from "./requests";
 
 const text = (max: number) => z.string().trim().min(1, "Required").max(max);
 const optional = (max: number) => z.string().trim().max(max).optional().transform((v) => v || undefined);
+/** An optional email that must look like one: it becomes a recipient and a reply-to, and junk would bounce the whole email. */
+const optionalEmail = z.string().trim().toLowerCase().max(160).optional().transform((v) => v || undefined).pipe(z.email("Please check the email address.").optional());
 
 /** A reference code such as CNC-7KQ2-M9XA: a prefix and 8 characters that can't be confused (no 0/O, 1/I). */
 export function makeRef(prefix: string) {
@@ -49,7 +51,7 @@ export function parseDetails(fields: Record<string, unknown>) {
 export const ConciergeSchema = z.object({
   name: text(120),
   phone: text(40),
-  email: optional(160),
+  email: optionalEmail,
   city: text(60),
   category: text(40),
   details: text(4000),
@@ -62,7 +64,7 @@ export const ConciergeSchema = z.object({
 export const BusinessRequestSchema = z.object({
   name: text(120),
   phone: text(40),
-  email: optional(160),
+  email: optionalEmail,
   city: text(60),
   message: z.string().trim().min(10).max(2000),
 });
@@ -73,7 +75,7 @@ export const WaitlistSchema = z.object({
   city: text(60),
   name: text(120),
   phone: text(40),
-  email: optional(160),
+  email: optionalEmail,
 });
 
 export const ContactSchema = z

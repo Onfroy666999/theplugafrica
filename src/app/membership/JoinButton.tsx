@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Spinner } from "@/components/market/Form";
 import { Button } from "@/components/ui/Button";
 import { startMembership } from "./actions";
@@ -11,6 +11,12 @@ export function JoinButton({ signedIn }: { signedIn: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Coming back from Paystack with the Back button restores this page as it was left: make the button usable again.
+  useEffect(() => {
+    const back = (e: PageTransitionEvent) => e.persisted && setBusy(false);
+    window.addEventListener("pageshow", back);
+    return () => window.removeEventListener("pageshow", back);
+  }, []);
   const signIn = () => router.push("/account/sign-in?next=%2Fmembership");
   return (
     <div className="space-y-3">

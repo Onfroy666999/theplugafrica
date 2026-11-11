@@ -23,7 +23,7 @@ export function publicPrefix() {
 
 /** Photos the site may show: licensed/local files ("/images/...", "/uploads/...") or files in our own bucket. */
 export function isAllowedPhoto(src: string) {
-  if (src.startsWith("/") && !src.startsWith("//")) return true;
+  if (src.startsWith("/") && !src.startsWith("//") && !src.startsWith("/\\")) return true;
   const prefix = publicPrefix();
   return prefix !== null && src.startsWith(prefix);
 }

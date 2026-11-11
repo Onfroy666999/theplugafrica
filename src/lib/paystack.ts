@@ -48,6 +48,7 @@ export type PaystackTransaction = {
   status: string;
   reference: string;
   amount?: number; // pesewas
+  paid_at?: string | null;
   currency?: string;
   metadata?: Record<string, unknown> | string | null;
   customer?: { email?: string; customer_code?: string };

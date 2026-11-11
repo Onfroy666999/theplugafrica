@@ -29,7 +29,12 @@ export function FeeControls({ id, url, hasEmail, canEdit, canWaive }: { id: stri
   return (
     <div className="mt-3">
       <div className="flex flex-wrap gap-x-4 gap-y-2">
-        <button type="button" className={btn} onClick={() => navigator.clipboard.writeText(url).then(() => setMsg({ ok: true, text: "Pay link copied." }))}>
+        <button type="button" className={btn} onClick={() =>
+            (navigator.clipboard?.writeText(url) ?? Promise.reject()).then(
+              () => setMsg({ ok: true, text: "Pay link copied." }),
+              () => setMsg({ ok: false, text: `Couldn't copy. The link is: ${url}` }),
+            )
+          }>
           Copy pay link
         </button>
         {canEdit && hasEmail && (

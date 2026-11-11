@@ -4,6 +4,39 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-11-11
+
+### Fixed
+- Debug session (#94): five review agents went through the code, and every finding was checked before fixing.
+  - **Security:**
+    - Business and service names in structured data could run as script on public pages (the `<` escaping did nothing).
+    - A sign-in return link with a tab or newline could send people to another site.
+    - Two admin pages didn't check the session themselves.
+    - `/\host` was accepted as a local photo path.
+  - **Money:**
+    - An editor could cancel a fee by sending an unknown action.
+    - Admin fee changes no longer overwrite a payment that lands at the same moment.
+    - Reopening an old checkout link can't switch a cancelled membership back on.
+    - An active membership lapses if renewals stop arriving.
+    - A failed renewal with no recorded end date keeps the 3 days' grace.
+    - Deleting an account is refused until Paystack has confirmed the subscription.
+    - The team is alerted to a double subscription.
+    - A payment for a fee that's no longer due is flagged "refund needed" and emailed to the team.
+  - **Data:**
+    - A business can't be Verified with no credentials.
+    - Email fields on the concierge, business request and waitlist forms must be real addresses (junk bounced the team's alert).
+    - Request actions respect the live site's hidden examples.
+    - "Ask a concierge" from a real listing now links the request to that business.
+  - **Forms:**
+    - The time check uses the browser's own clock, so a phone with a fast clock is no longer refused.
+    - It no longer causes a hydration mismatch.
+    - Turnstile resets after each submit.
+    - "Send a new code" works with Turnstile on.
+  - **Admin:** inbox and status changes on a deleted entry or a bad value now say so, instead of "couldn't reach the server". Fractional page numbers no longer cause an error.
+  - **Hearts:** the hearts reset when someone else signs in, and a failed load is retried.
+  - **Buttons:** buttons that open Paystack work again after pressing Back. Cancelling a membership refreshes the page. Copying a link says when the browser refuses.
+  - **Follow-ups:** the remaining findings are listed in #94.
+
 ## [0.13.0] - 2026-11-10
 
 ### Added

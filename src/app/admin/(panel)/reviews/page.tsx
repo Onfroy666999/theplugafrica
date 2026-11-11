@@ -18,7 +18,8 @@ export default async function Reviews({ searchParams }: { searchParams: SP }) {
   await requireAdmin();
   const sp = await searchParams;
   const status = TABS.some((t) => t.value === sp.status) ? sp.status! : "pending";
-  const page = Math.max(1, Math.min(10_000, Number(sp.page) || 1));
+  const asked = Number(sp.page);
+  const page = Number.isInteger(asked) && asked >= 1 && asked <= 10_000 ? asked : 1;
   const where = { status };
   const [rows, total, counts] = await Promise.all([
     db.review.findMany({ where, orderBy: { createdAt: status === "pending" ? "asc" : "desc" }, skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE, include: { business: { select: { id: true, name: true, slug: true } } } }),

@@ -1,7 +1,7 @@
 import "server-only";
 import { db } from "./db";
 import { hasBenefits } from "./membership-plan";
-import { notifyNewMember } from "./notify";
+import { notifyNewMember, notifyTeam } from "./notify";
 import { planCode, type PaystackTransaction } from "./paystack";
 import { normaliseEmail } from "./signin-code";
 
@@ -16,11 +16,18 @@ export async function isMember(userId: string) {
 
 const planOf = (p: PaystackTransaction["plan"], o?: PaystackTransaction["plan_object"]) => (typeof p === "string" ? p : (p?.plan_code ?? o?.plan_code ?? null));
 
-/** After checkout: a successful payment for the membership plan by this visitor makes them a member. */
+/**
+ * After checkout: a successful payment for the membership plan by this visitor makes them a member. Only a checkout
+ * that was started (status "pending") can be confirmed, and only with a payment made after it started: reopening an
+ * old return link can't switch an ended membership back on.
+ */
 export async function confirmCheckout(userId: string, email: string, t: PaystackTransaction | null) {
   if (!t || t.status !== "success") return false;
   if (normaliseEmail(t.customer?.email ?? "") !== normaliseEmail(email)) return false;
   if (planOf(t.plan, t.plan_object) !== planCode()) return false;
+  const m = await getMembership(userId);
+  if (!m || m.status !== "pending") return false;
+  if (t.paid_at && new Date(t.paid_at).getTime() < m.updatedAt.getTime() - 60_000) return false;
   await activate(userId, { customerCode: t.customer?.customer_code ?? null, lastEvent: "checkout" });
   return true;
 }
@@ -67,7 +74,16 @@ export async function applyPaystackEvent(e: PaystackEvent): Promise<string> {
   const where = { userId: user.id };
 
   switch (e.event) {
-    case "subscription.create":
+    case "subscription.create": {
+      // A second live subscription for the same person (two checkouts in two tabs) would charge them twice.
+      const current = await getMembership(user.id);
+      if (current?.subscriptionCode && d.subscription_code && current.subscriptionCode !== d.subscription_code && hasBenefits(current))
+        notifyTeam(
+          "Check for a double membership charge",
+          `${email} now has two concierge membership subscriptions in Paystack (${current.subscriptionCode} and ${d.subscription_code}). Cancel one in the Paystack dashboard and refund if needed.`,
+          "/admin/members",
+        );
+    }
       await activate(user.id, {
         subscriptionCode: d.subscription_code,
         emailToken: d.email_token,
@@ -87,6 +103,8 @@ export async function applyPaystackEvent(e: PaystackEvent): Promise<string> {
       return "active";
     case "invoice.payment_failed":
       await db.membership.updateMany({ where, data: { status: "past_due", lastEvent: e.event } });
+      // The grace period counts from the end of the paid month; with no date on record, from now.
+      await db.membership.updateMany({ where: { ...where, currentPeriodEnd: null }, data: { currentPeriodEnd: new Date() } });
       return "past_due";
     case "subscription.not_renew":
       await db.membership.updateMany({ where, data: { status: "non_renewing", currentPeriodEnd: date(d.next_payment_date), lastEvent: e.event } });

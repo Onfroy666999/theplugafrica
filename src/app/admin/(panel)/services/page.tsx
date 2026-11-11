@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { CATS } from "@/lib/directory";
 import { photoLibrary } from "../businesses/library";
@@ -8,6 +9,7 @@ type SP = Promise<{ cat?: string }>;
 
 /** Manage the services (sub-categories) inside each category (issue #26). */
 export default async function Services({ searchParams }: { searchParams: SP }) {
+  await requireAdmin();
   const sp = await searchParams;
   const cats = CATS.filter((c) => c.key !== "emergency");
   const cat = cats.find((c) => c.key === sp.cat) ?? cats[0];

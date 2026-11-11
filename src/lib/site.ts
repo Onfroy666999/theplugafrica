@@ -30,5 +30,5 @@ export function pageMeta({ title, description, path, image, noindex }: { title: 
 
 /** Renders schema.org structured data. `<` is escaped so text can't close the script tag. */
 export function jsonLd(data: object) {
-  return { __html: JSON.stringify(data).replace(/</g, "\u003c") };
+  return { __html: JSON.stringify(data).replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029") };
 }

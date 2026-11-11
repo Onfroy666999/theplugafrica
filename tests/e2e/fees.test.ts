@@ -127,6 +127,26 @@ describe("paying", () => {
   });
 });
 
+describe("payments that shouldn't happen", () => {
+  it("flags a second payment on an already-paid fee for a refund", async () => {
+    const f = await fee(customerToken);
+    const body = JSON.stringify({ event: "charge.success", data: { status: "success", reference: `${f.ref}-SECOND`, amount: f.amountPesewas, currency: "GHS", customer: { email: CUSTOMER }, metadata: { purpose: "concierge_fee", feeId: f.id } } });
+    const sig = createHmac("sha512", PAYSTACK_TEST_KEY).update(body).digest("hex");
+    await fetch(`${BASE}/api/paystack/webhook`, { method: "POST", headers: { "x-paystack-signature": sig }, body });
+    expect((await fee(customerToken)).note).toMatch(/refund needed/);
+    const list = await emails((l) => l.some((e) => e.subject.startsWith("Refund needed")));
+    expect(list.some((e) => e.subject.startsWith("Refund needed"))).toBe(true);
+  });
+
+  it("refuses an unknown fee action instead of cancelling the fee", async () => {
+    const r = await act("recordDeal", [deal({ chargeBusiness: "", description: "Odd action check", value: "800", send: "" })], { at: "/admin/fees/new", cookie: owner, ip: visitor() });
+    const f = await fee(String((r.result?.fees as { url: string }[])[0].url.split("/pay/")[1]));
+    const odd = await act("updateFee", [f.id, "x"], { at: "/admin/fees", cookie: owner, ip: visitor() });
+    expect(odd.result).toMatchObject({ ok: false });
+    expect((await db.conciergeFee.findUniqueOrThrow({ where: { id: f.id } })).status).toBe("due");
+  });
+});
+
 describe("managing fees", () => {
   let token = "";
   it("records a deal for one side only, and marks it paid outside Paystack", async () => {

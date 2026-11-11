@@ -48,7 +48,7 @@ export function DealForm({
               <button
                 type="button"
                 className="press mt-2 text-[14px] font-semibold text-navy underline-offset-4 hover:underline"
-                onClick={() => navigator.clipboard.writeText(f.url).then(() => setCopied(f.ref))}
+                onClick={() => (navigator.clipboard?.writeText(f.url) ?? Promise.reject()).then(() => setCopied(f.ref), () => window.prompt("Copy the pay link:", f.url))}
               >
                 {copied === f.ref ? "Link copied" : "Copy pay link"}
               </button>
