@@ -4,6 +4,8 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-11-11
+
 ### Fixed
 - Debug session (#94): five review agents went through the code, and every finding was checked before fixing.
   - **Security:**
