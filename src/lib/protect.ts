@@ -54,7 +54,8 @@ const FORM_WINDOW_S = 60 * 60;
 export async function screenForm(fd: FormData, o: { turnstile?: boolean } = {}): Promise<string | "bot" | null> {
   if (String(fd.get("website") ?? "")) return "bot"; // honeypot: people never fill it
   // Time spent on the form, measured by the browser's own clock (a phone set a few minutes fast can't fail this).
-  const elapsed = Number(fd.get("_e"));
+  // Pages opened before this change send only the start time ("_t"): still accepted, measured on the server's clock.
+  const elapsed = fd.get("_e") ? Number(fd.get("_e")) : Date.now() - Number(fd.get("_t"));
   if (!Number.isFinite(elapsed) || elapsed < MIN_FILL_MS) return "Please take a moment to check your details, then send again.";
   if (o.turnstile !== false && !(await turnstileOk(String(fd.get("cf-turnstile-response") ?? "")))) return "Please complete the check above the button, then send again.";
   return null;
