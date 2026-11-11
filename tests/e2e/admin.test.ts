@@ -1,6 +1,6 @@
 // Admin end to end: sign-in, adding a business, the Verified rule, publishing and deleting, and the activity log.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { act, adminCredentials, db, form, page, signIn, visitor } from "./helpers";
+import { act, clearEmails, emails, adminCredentials, db, form, page, signIn, visitor } from "./helpers";
 
 const ip = visitor();
 const SLUG = "e2e-admin-bakery";
@@ -28,7 +28,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await db.business.deleteMany({ where: { slug: SLUG } });
   await db.auditLog.deleteMany({ where: { createdAt: { gte: started } } });
-  await db.rateLimit.deleteMany({ where: { key: { startsWith: "login:" } } });
+  await db.rateLimit.deleteMany({ where: { key: { startsWith: "login" } } });
   await db.$disconnect();
 });
 
@@ -53,6 +53,37 @@ describe("sign-in", () => {
     for (let i = 0; i < 5; i++) await signIn(email, "wrong-password", other);
     const r = await signIn(email, "wrong-password", other);
     expect(r.result).toMatchObject({ error: expect.stringContaining("Too many attempts") });
+  });
+
+  it("counts attempts sent all at once, so parallel guesses can't get past the limit", async () => {
+    const other = visitor();
+    const results = await Promise.all(Array.from({ length: 20 }, () => signIn("parallel@example.test", "wrong-password", other)));
+    const checked = results.filter((r) => String(r.result?.error).includes("don't match")).length;
+    expect(checked).toBeLessThanOrEqual(5);
+    expect(results.filter((r) => String(r.result?.error).includes("Too many attempts")).length).toBeGreaterThanOrEqual(15);
+  });
+
+  it("limits one account to 20 attempts an hour from anywhere, and tells the team", async () => {
+    const bcrypt = await import("bcryptjs");
+    const email = `e2e-lockout-${Math.random().toString(36).slice(2, 7)}@example.test`;
+    await db.admin.create({ data: { email, name: "E2E Lockout", role: "viewer", passwordHash: await bcrypt.hash("the-right-password-123", 4) } });
+    await clearEmails();
+    // 20 wrong guesses, each from a different address: the per-visitor limit never trips.
+    for (let i = 0; i < 20; i++) await signIn(email, "wrong-password", `203.0.113.${i + 1}`);
+    const blocked = await signIn(email, "the-right-password-123", "203.0.113.200");
+    expect(blocked.result).toMatchObject({ error: expect.stringContaining("Too many attempts") });
+    const list = await emails((l) => l.some((e) => e.subject.startsWith("Admin sign-in paused")));
+    expect(list.find((e) => e.subject.startsWith("Admin sign-in paused"))?.text).toContain(email);
+    await db.admin.delete({ where: { email } });
+    await db.rateLimit.deleteMany({ where: { key: { contains: email } } });
+  });
+
+  it("still lets the right password in after a few wrong ones", async () => {
+    const { email, password } = adminCredentials();
+    const other = visitor();
+    for (let i = 0; i < 3; i++) await signIn(email, "wrong-password", other);
+    const r = await signIn(email, password, other);
+    expect(r.result).toMatchObject({ ok: true });
   });
 });
 

@@ -9,8 +9,9 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { endSession, requireAdmin, startSession } from "@/lib/auth";
 import { audit } from "@/lib/audit";
+import { notifyTeam } from "@/lib/notify";
 import { db } from "@/lib/db";
-import { clear, hit, peek, visitorId } from "@/lib/protect";
+import { clear, hit, unhit, visitorId } from "@/lib/protect";
 import { onWorkers } from "@/lib/runtime";
 import { isAllowedPhoto, storageEnabled, uploadToStorage } from "@/lib/storage";
 import { CATS, getCat } from "@/lib/directory";
@@ -18,9 +19,15 @@ import { BUSINESS_STATUS, CONCIERGE_STATUS, CREDENTIAL_STATE, ENQUIRY_STATUS, WA
 
 /* ---------------- Sign in / out ---------------- */
 
-// Sign-in throttle: 5 failed attempts per email + visitor per 15 minutes, counted in the database so every
-// Cloudflare isolate shares it (issue #7; an in-memory Map reset per isolate).
+// Sign-in throttle, counted in the database so every Cloudflare isolate shares it (issues #7, #94):
+// - 5 attempts per email from one visitor in 15 minutes;
+// - 20 attempts per email from anywhere in an hour, so changing IP address doesn't give unlimited guesses.
+// Each attempt is counted before the password is checked (in one SQL statement), so parallel requests can't all get a
+// guess in. A correct sign-in clears the visitor's count: Kenneth signing in normally never meets the limit.
 const LOGIN_WINDOW_S = 15 * 60;
+const LOGIN_MAX = 5;
+const EMAIL_WINDOW_S = 60 * 60;
+const EMAIL_MAX = 20;
 // Compared against when an email is unknown, so timing doesn't reveal which emails exist. A fixed hash of a random,
 // discarded string: hashing one at runtime cost a second slow bcrypt run in every new Worker instance (issue #65).
 const DUMMY_HASH = "$2b$12$maf4o8ehDUChsltPClrNCOw/UF/hbJTA.ucl2JXvmNRl7J5APlC4u";
@@ -30,15 +37,25 @@ export async function login(_: unknown, fd: FormData): Promise<{ ok: true } | { 
   const email = String(fd.get("email") ?? "").toLowerCase().trim();
   const password = String(fd.get("password") ?? "");
   const key = `login:${email}:${await visitorId()}`;
-  if ((await peek(key)) >= 5) return { error: "Too many attempts. Wait 15 minutes and try again.", email };
+  const emailKey = `login-email:${email}`;
+  const [mine, all] = await Promise.all([hit(key, LOGIN_WINDOW_S), hit(emailKey, EMAIL_WINDOW_S)]);
+  if (mine > LOGIN_MAX || all > EMAIL_MAX) {
+    // The first time an account is locked from everywhere, tell the team: someone may be guessing its password.
+    if (all === EMAIL_MAX + 1 && (await db.admin.findUnique({ where: { email }, select: { id: true } })))
+      notifyTeam(
+        "Admin sign-in paused after many wrong passwords",
+        `${email} had more than ${EMAIL_MAX} wrong sign-in attempts in an hour, from one or more places, so signing in to it is paused for up to an hour. If that wasn't you, an owner can send a new password link from Admin › Team.`,
+        "/admin/team",
+      );
+    return { error: "Too many attempts. Wait a while and try again.", email };
+  }
 
   const admin = email ? await db.admin.findUnique({ where: { email } }) : null;
   const ok = await bcrypt.compare(password, admin?.passwordHash ?? DUMMY_HASH);
-  if (!admin || !ok) {
-    await hit(key, LOGIN_WINDOW_S);
-    return { error: "That email and password don't match.", email };
-  }
-  await clear(key);
+  if (!admin || !ok) return { error: "That email and password don't match.", email };
+  // Signed in: this visitor starts afresh, and this attempt comes off the account's count, so only wrong passwords add
+  // up there (Kenneth signing in on several devices never pauses his own account).
+  await Promise.all([clear(key), unhit(emailKey)]);
   await db.admin.update({ where: { id: admin.id }, data: { lastSignInAt: new Date() } });
   await audit(admin, "auth.sign_in", "Signed in");
   await startSession(admin);
