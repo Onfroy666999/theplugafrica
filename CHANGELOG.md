@@ -4,6 +4,8 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-11-11
+
 ### Security
 - Admin sign-in limit (#94):
   - **Counted first:** every attempt is counted in one database step before the password is checked, so parallel requests can't get extra guesses.
