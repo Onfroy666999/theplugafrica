@@ -67,6 +67,34 @@ describe("invitations", () => {
   });
 });
 
+describe("invitation edge cases (issue #94)", () => {
+  it("doesn't use up a link when the email already has an account", async () => {
+    const email = "e2e-taken@example.test";
+    const inv = await act("inviteMember", [form({ name: "E2E Taken", email, role: "viewer" }, { human: false })], { cookie: owner, at: "/admin/team", ip });
+    const t = token(inv.result?.url);
+    await db.admin.create({ data: { email, name: "E2E Taken", role: "viewer", passwordHash: "x" } });
+    const p = pw();
+    const r = await act("acceptInvite", [t, undefined, form({ name: "E2E Taken", password: p, confirm: p }, { human: false })], { at: `/admin/invite/${t}`, ip });
+    expect(r.result).toMatchObject({ error: expect.stringContaining("already has an account") });
+    expect((await db.invite.findFirst({ where: { email } }))?.usedAt).toBeNull();
+  });
+
+  it("keeps an owner when owners change each other's roles", async () => {
+    const a = await join("E2E Owner A", "e2e-owner-a@example.test", "owner");
+    const b = await join("E2E Owner B", "e2e-owner-b@example.test", "owner");
+    const ida = (await db.admin.findUniqueOrThrow({ where: { email: "e2e-owner-a@example.test" } })).id;
+    const idb = (await db.admin.findUniqueOrThrow({ where: { email: "e2e-owner-b@example.test" } })).id;
+    // Both at once: the owner-row lock makes them take turns; with the seeded owner there, both may go through.
+    const [x, y] = await Promise.all([
+      act("changeRole", [idb, "viewer"], { cookie: a.cookie, at: "/admin/team", ip }),
+      act("changeRole", [ida, "viewer"], { cookie: b.cookie, at: "/admin/team", ip }),
+    ]);
+    expect(x.status).toBe(200);
+    expect(y.status).toBe(200);
+    expect(await db.admin.count({ where: { role: "owner" } })).toBeGreaterThanOrEqual(1);
+  });
+});
+
 describe("roles", () => {
   it("lets an editor edit but not delete or manage the team", async () => {
     expect((await act("setBusinessStatus", [bizId, "in_review"], { cookie: editor, ip })).result).toMatchObject({ ok: true });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChipGroup } from "@/components/ui/ChipGroup";
 import { CITIES } from "@/lib/listings";
 import { AREAS, MODE_HINTS, MODE_LABELS, OTHER_AREA, TIMES_OF_DAY, elsewhereLabel, modesFor, type ServiceMode } from "@/lib/requests";
@@ -20,7 +20,13 @@ export function RequestDetails({ category, service, defaultCity = "Accra" }: { c
   const [area, setArea] = useState("");
   const areas = AREAS[city];
   const needsPlace = mode === "my_place" || mode === "elsewhere";
-  const today = new Date().toISOString().slice(0, 10);
+  // The visitor's own today, set after the page loads (issue #94): the UTC date was a day ahead for evenings in the
+  // Americas, and a date worked out during render can differ between server and browser.
+  const [today, setToday] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    const d = new Date();
+    setToday(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
+  }, []);
 
   return (
     <div className="space-y-5">

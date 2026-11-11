@@ -9,11 +9,12 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { endSession, requireAdmin, startSession } from "@/lib/auth";
 import { audit } from "@/lib/audit";
+import { parseImages } from "@/lib/data";
 import { notifyTeam } from "@/lib/notify";
 import { db } from "@/lib/db";
 import { clear, hit, unhit, visitorId } from "@/lib/protect";
 import { onWorkers } from "@/lib/runtime";
-import { isAllowedPhoto, storageEnabled, uploadToStorage } from "@/lib/storage";
+import { deleteFromStorage, isAllowedPhoto, listStorageFiles, storageEnabled, uploadToStorage } from "@/lib/storage";
 import { CATS, getCat } from "@/lib/directory";
 import { BUSINESS_STATUS, CONCIERGE_STATUS, CREDENTIAL_STATE, ENQUIRY_STATUS, WAITLIST_STATUS, CONTACT_STATUS, canBeVerified, find, values } from "@/lib/status";
 
@@ -163,11 +164,21 @@ export async function saveBusiness(fd: FormData): Promise<SaveResult> {
     ? await db.business.findUnique({ where: { id }, include: { credentials: { orderBy: { position: "asc" } }, services: { select: { id: true } } } })
     : null;
   const data = { ...d, slug, images: JSON.stringify(images), services: { set: valid } };
-  const saved = id
-    ? await db.business.update({ where: { id }, data })
-    : await db.business.create({ data: { ...d, slug, images: JSON.stringify(images), services: { connect: valid } } });
-  await db.credential.deleteMany({ where: { businessId: saved.id } });
-  if (credentials.length) await db.credential.createMany({ data: credentials.map((c, i) => ({ ...c, businessId: saved.id, position: i })) });
+  // One transaction (issue #94): the business and its credentials are saved together or not at all, and a status
+  // change running at the same moment waits for it instead of seeing the credentials half-replaced.
+  const saved = await db.$transaction(async (tx) => {
+    const b = id
+      ? await tx.business.update({ where: { id }, data })
+      : await tx.business.create({ data: { ...d, slug, images: JSON.stringify(images), services: { connect: valid } } });
+    await tx.credential.deleteMany({ where: { businessId: b.id } });
+    if (credentials.length) await tx.credential.createMany({ data: credentials.map((c, i) => ({ ...c, businessId: b.id, position: i })) });
+    // A new web address: the old one keeps working as a redirect (issue #94). The new address is never an alias.
+    if (before && before.slug !== slug) {
+      await tx.slugAlias.upsert({ where: { slug: before.slug }, create: { slug: before.slug, businessId: b.id }, update: { businessId: b.id } });
+    }
+    await tx.slugAlias.deleteMany({ where: { slug } });
+    return b;
+  });
 
   const target = { type: "business", id: saved.id };
   if (!before) {
@@ -196,13 +207,20 @@ export async function saveBusiness(fd: FormData): Promise<SaveResult> {
 export async function setBusinessStatus(id: string, status: string) {
   const admin = await requireAdmin("edit");
   if (!z.enum(values(BUSINESS_STATUS)).safeParse(status).success) return { ok: false as const, error: "Unknown status." };
-  if (status === "verified") {
-    const creds = await db.credential.findMany({ where: { businessId: id }, select: { state: true } });
-    if (!canBeVerified(creds)) return { ok: false as const, error: "Check every credential before marking Verified." };
-  }
-  const before = await db.business.findUnique({ where: { id }, select: { name: true, status: true } });
-  if (!before) return { ok: false as const, error: "This business no longer exists." };
-  await db.business.update({ where: { id }, data: { status } });
+  // Locks the business while checking its credentials, so a save in progress finishes first (issue #94).
+  const result = await db.$transaction(async (tx) => {
+    const locked = await tx.$queryRaw<{ name: string; status: string }[]>`SELECT "name", "status" FROM "Business" WHERE "id" = ${id} FOR UPDATE`;
+    const before = locked[0];
+    if (!before) return { error: "This business no longer exists." };
+    if (status === "verified") {
+      const creds = await tx.credential.findMany({ where: { businessId: id }, select: { state: true } });
+      if (!canBeVerified(creds)) return { error: "Check every credential before marking Verified." };
+    }
+    await tx.business.update({ where: { id }, data: { status } });
+    return { before };
+  });
+  if ("error" in result) return { ok: false as const, error: result.error as string };
+  const before = result.before;
   if (before && before.status !== status)
     await audit(admin, "business.status", `Changed ${before.name} from ${statusLabel(before.status)} to ${statusLabel(status)}`, { type: "business", id });
   revalidatePath("/admin/businesses");
@@ -250,7 +268,16 @@ export async function uploadImages(fd: FormData): Promise<{ ok: true; paths: str
 
   try {
     let paths: string[];
-    if (storageEnabled()) paths = await Promise.all(ready.map((r) => uploadToStorage(r.name, r.bytes, r.type)));
+    if (storageEnabled()) {
+      // If one file fails, remove the ones that did upload: nothing is left in storage that no business can use (#94).
+      const results = await Promise.allSettled(ready.map((r) => uploadToStorage(r.name, r.bytes, r.type)));
+      const done = results.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
+      if (done.length < results.length) {
+        await deleteFromStorage(done).catch(() => 0);
+        throw new Error("One or more photos didn't upload");
+      }
+      paths = done;
+    }
     else {
       const dir = path.join(process.cwd(), "public", "uploads");
       await mkdir(dir, { recursive: true });
@@ -417,4 +444,25 @@ export async function deleteService(id: string): Promise<{ ok: true } | { ok: fa
   await audit(admin, "service.delete", `Deleted service ${s.name} from ${catName(s.category)}`, { type: "service", id });
   revalidatePath("/admin/services");
   return { ok: true };
+}
+
+/**
+ * Owners: delete uploaded photos that no business or service uses (issue #94). Only files more than a day old, so a
+ * photo uploaded for a business that hasn't been saved yet is never taken. Photos still in use are never touched.
+ */
+export async function deleteUnusedPhotos(): Promise<{ ok: true; removed: number } | { ok: false; error: string }> {
+  const admin = await requireAdmin("delete");
+  if (!storageEnabled()) return { ok: false, error: "Photo storage isn't set up on this site." };
+  const [files, businesses, services] = await Promise.all([
+    listStorageFiles(),
+    db.business.findMany({ select: { images: true } }),
+    db.service.findMany({ select: { image: true } }),
+  ]);
+  const used = new Set<string>([...businesses.flatMap((b) => parseImages(b.images)), ...services.map((s) => s.image)]);
+  const dayAgo = Date.now() - 86_400_000;
+  const unused = files.filter((f) => !used.has(f.url) && f.createdAt.getTime() < dayAgo).map((f) => f.url);
+  if (!unused.length) return { ok: true, removed: 0 };
+  const removed = await deleteFromStorage(unused);
+  await audit(admin, "photos.upload", `Deleted ${unused.length} unused uploaded ${unused.length === 1 ? "photo" : "photos"}`);
+  return { ok: true, removed };
 }

@@ -96,6 +96,7 @@ model Business {
   services          Service[] // one or more services within its category (issue #26)
   savedBy           SavedBusiness[]
   deals             ConciergeDeal[]
+  oldSlugs          SlugAlias[]
 
   @@index([status, category, city])
 }
@@ -150,12 +151,16 @@ model Enquiry {
   timeOfDay     String?
   status        String    @default("new") // new | contacted | converted | closed
   notes         String?
+  // A salted hash of the visitor (never their IP): asking again for the same business within a day returns the same
+  // reference instead of a new one, so review codes can't be minted in bulk (issue #94).
+  visitorHash   String?
   // The visitor's account when they were signed in (issue #82); kept as a plain request if the account is deleted.
   userId        String?
   user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt     DateTime  @default(now())
 
   @@index([userId])
+  @@index([businessId, visitorHash, createdAt])
 }
 
 model ConciergeRequest {
@@ -383,4 +388,15 @@ model ConciergeFee {
   createdAt     DateTime      @default(now())
 
   @@index([status, createdAt])
+}
+
+/// A business's previous web address (issue #94): /listing/<old> redirects to the current one, so shared links keep
+/// working after a rename.
+model SlugAlias {
+  slug       String   @id
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@index([businessId])
 }

@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { LinkButton } from "@/components/ui/Button";
 import { Breadcrumbs } from "@/components/market/Breadcrumbs";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Check, Star } from "@/components/market/Icons";
 import { ListingCard, StatusBadge } from "@/components/market/ListingCard";
 import { Footer, Header, Reveal } from "@/components/market/Sections";
 import { CATS } from "@/lib/directory";
-import { getApprovedReviews, getPublicListing, getPublicListings } from "@/lib/data";
+import { currentSlugFor, getApprovedReviews, getPublicListing, getPublicListings } from "@/lib/data";
 import { reviewsFor, type Listing } from "@/lib/listings";
 import { abs, jsonLd, pageMeta } from "@/lib/site";
 import { ContactPanel } from "./ContactPanel";
@@ -49,8 +49,14 @@ function businessLd(l: Listing) {
 }
 
 export default async function ListingPage({ params }: Props) {
-  const l = await getPublicListing((await params).slug);
-  if (!l) notFound();
+  const { slug } = await params;
+  const l = await getPublicListing(slug);
+  if (!l) {
+    // A renamed business: send old links to its current address (issue #94).
+    const current = await currentSlugFor(slug);
+    if (current) permanentRedirect(`/listing/${current}`);
+    notFound();
+  }
   const cat = CATS.find((c) => c.key === l.cat)!;
   // Example listings keep their example reviews; real ones show approved reviews (issue #14).
   const reviews = l.isExample

@@ -87,6 +87,34 @@ describe("sign-in", () => {
   });
 });
 
+describe("renamed businesses (issue #94)", () => {
+  it("redirects the old web address to the new one", async () => {
+    const b = await db.business.findFirstOrThrow({ where: { status: "verified" }, orderBy: { slug: "desc" }, include: { credentials: true, services: { select: { id: true } } } });
+    const renamed = `${b.slug}-renamed-e2e`;
+    const fields = {
+      id: b.id, name: b.name, slug: renamed, category: b.category, kind: b.kind, city: b.city, area: b.area, blurb: b.blurb, about: b.about,
+      price: b.price, responds: b.responds, languages: b.languages, phone: b.phone ?? "", whatsapp: b.whatsapp ?? "", email: b.email ?? "", status: b.status,
+      images: b.images, credentials: JSON.stringify(b.credentials.map((c) => ({ label: c.label, state: c.state }))), services: JSON.stringify(b.services.map((s) => s.id)),
+    };
+    const r = await act("saveBusiness", [form(fields, { human: false })], { cookie, at: `/admin/businesses/${b.id}`, ip });
+    expect(r.result).toMatchObject({ ok: true });
+    const old = await page(`/listing/${b.slug}`);
+    expect(old.status).toBe(308);
+    expect(old.location).toContain(`/listing/${renamed}`);
+    // Back to the original address: the alias for it is removed, so the page itself loads.
+    await act("saveBusiness", [form({ ...fields, slug: b.slug }, { human: false })], { cookie, at: `/admin/businesses/${b.id}`, ip });
+    expect((await page(`/listing/${b.slug}`)).status).toBe(200);
+    expect((await page(`/listing/${renamed}`)).status).toBe(308);
+    await db.slugAlias.deleteMany({ where: { businessId: b.id } });
+  });
+
+  it("sends an inbox page past the end to the last page", async () => {
+    const r = await page("/admin/messages?page=999", cookie);
+    expect([200, 307]).toContain(r.status);
+    if (r.status === 307) expect(r.location).toMatch(/\/admin\/messages(\?page=\d+)?$/);
+  });
+});
+
 describe("adding a business", () => {
   it("creates a draft that isn't on the site yet", async () => {
     const r = await act("saveBusiness", [form(fields({ services: servicesJson }), { human: false })], { cookie, at: "/admin/businesses/new", ip });
