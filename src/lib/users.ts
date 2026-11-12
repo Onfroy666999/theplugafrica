@@ -101,11 +101,11 @@ export async function checkCode(email: string, code: string): Promise<CodeCheck>
 export function sendCodeEmail(email: string, code: string) {
   return sendEmail({
     to: email,
-    subject: `${code} is your The Plug Africa sign-in code`,
+    subject: `${code} is your The Plug Africa verification code`,
     ...layout({
-      heading: "Your sign-in code",
-      intro: `Enter this code to sign in to The Plug Africa. It works for ${CODE_MINUTES} minutes.`,
-      rows: [["Code", code]],
+      heading: "Your verification code",
+      intro: `Your verification code for signing in to The Plug Africa is ${code}. Copy it into the sign-in page; it works for ${CODE_MINUTES} minutes.`,
+      code,
       footer: "If you didn't ask to sign in, you can ignore this email: nobody can sign in without the code.",
     }),
   });
