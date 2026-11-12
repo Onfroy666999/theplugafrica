@@ -4,6 +4,8 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-11-12
+
 ### Changed
 - Sign-in code (#108):
   - **The email** shows the code large and on its own, and selects in one tap. It's worded as a "verification code", so Gmail offers its "Copy code" button and phones can suggest it.
