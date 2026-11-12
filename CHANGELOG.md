@@ -4,6 +4,8 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-11-12
+
 ### Changed
 - Admin menu (#104): 15 sidebar links become 6 sections, with each section's pages as tabs along the top:
   - Dashboard;
