@@ -11,8 +11,8 @@ let cookie: string | null = null;
 
 /** The newest sign-in code emailed to an address. */
 async function codeFor(email: string, after = 0) {
-  const list = await emails((l) => l.filter((e) => e.to.includes(email) && /sign-in code/.test(e.subject)).length > after);
-  const mine = list.filter((e) => e.to.includes(email) && /sign-in code/.test(e.subject));
+  const list = await emails((l) => l.filter((e) => e.to.includes(email) && /verification code/.test(e.subject)).length > after);
+  const mine = list.filter((e) => e.to.includes(email) && /verification code/.test(e.subject));
   return mine[mine.length - 1].subject.match(/^(\d{6}) /)![1];
 }
 
