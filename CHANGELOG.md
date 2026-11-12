@@ -4,6 +4,19 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-11-12
+
+### Changed
+- Admin menu (#104): 15 sidebar links become 6 sections, with each section's pages as tabs along the top:
+  - Dashboard;
+  - Directory: Businesses, Services, Emergency;
+  - Inbox: Enquiries, Concierge, Waitlist, Messages, Reviews;
+  - Money: Fees, Members;
+  - People: Users, Team, Activity;
+  - My account.
+
+  Unread counts show on the section and its tabs. Page addresses are unchanged, so bookmarks and email links still work.
+
 ## [0.14.0] - 2026-11-11
 
 ### Fixed
