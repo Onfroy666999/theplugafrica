@@ -25,6 +25,26 @@ export function SignInForm({ next }: { next: string }) {
   const [wait, setWait] = useState(0);
   // The first step's form data (with its start time), reused when asking for a new code.
   const first = useRef<FormData | null>(null);
+  const [code, setCode] = useState("");
+  const [canPaste, setCanPaste] = useState(false);
+  useEffect(() => setCanPaste(typeof navigator !== "undefined" && typeof navigator.clipboard?.readText === "function"), []);
+
+  /**
+   * Fills in the code from typed or pasted text, and signs in straight away once it has all 6 digits. A pasted line such
+   * as "Your verification code is 073926" gives just the code. Returns whether a full code was found.
+   */
+  function takeCode(input: string, form: HTMLFormElement | null) {
+    const whole = input.match(new RegExp(`\\b\\d{${CODE_LENGTH}}\\b`))?.[0];
+    const digits = whole ?? input.replace(/\D/g, "").slice(0, CODE_LENGTH);
+    setCode(digits);
+    setError(null);
+    if (digits.length === CODE_LENGTH && !busy) {
+      // After React has put the digits in the field.
+      setTimeout(() => form?.requestSubmit(), 0);
+      return true;
+    }
+    return false;
+  }
 
   useEffect(() => {
     if (wait <= 0) return;
@@ -106,17 +126,38 @@ export function SignInForm({ next }: { next: string }) {
               </p>
             </div>
             <Field label="Code">
-              <Input
-                label="Code"
-                name="code"
-                required
-                autoFocus
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                pattern="[0-9 \-]*"
-                maxLength={9}
-                className="tracking-[0.3em]"
-              />
+              <div className="flex gap-2">
+                <Input
+                  label="Code"
+                  name="code"
+                  required
+                  autoFocus
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  // No maxLength: the browser would cut a pasted sentence before the code could be picked out of it.
+                  value={code}
+                  onChange={(e) => takeCode(e.target.value, e.currentTarget.form)}
+                  onPaste={(e) => {
+                    // Paste the whole email line if you like: the 6-digit code is picked out of it.
+                    e.preventDefault();
+                    takeCode(e.clipboardData.getData("text"), e.currentTarget.form);
+                  }}
+                  className="flex-1 text-center font-mono text-[22px] tracking-[0.35em]"
+                />
+                {canPaste && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={async (e) => {
+                      const form = e.currentTarget.form;
+                      const text = await navigator.clipboard.readText().catch(() => "");
+                      if (!takeCode(text, form)) setNotice("No 6-digit code found on the clipboard. Copy the code from the email, then try again.");
+                    }}
+                  >
+                    Paste
+                  </Button>
+                )}
+              </div>
             </Field>
             {error && <p role="alert" className="rounded-field bg-ember-soft px-4 py-3 text-[14px] font-medium text-ember">{error}</p>}
             {notice && <p role="status" className="rounded-field bg-cream px-4 py-3 text-[14px] font-medium text-navy">{notice}</p>}
@@ -128,6 +169,7 @@ export function SignInForm({ next }: { next: string }) {
               <button
                 type="button"
                 onClick={() => {
+                  setCode("");
                   setEmail(null);
                   setError(null);
                   setNotice(null);

@@ -13,8 +13,8 @@ let reference = "";
 
 async function signInVisitor(email: string) {
   await act("requestSignInCode", [form({ email })], { at: "/account/sign-in", ip: visitor() });
-  const list = await emails((l) => l.some((e) => e.to.includes(email) && /sign-in code/.test(e.subject)));
-  const code = list.filter((e) => e.to.includes(email) && /sign-in code/.test(e.subject)).pop()!.subject.slice(0, 6);
+  const list = await emails((l) => l.some((e) => e.to.includes(email) && /verification code/.test(e.subject)));
+  const code = list.filter((e) => e.to.includes(email) && /verification code/.test(e.subject)).pop()!.subject.slice(0, 6);
   return (await act("verifySignInCode", [form({ email, code }, { human: false })], { at: "/account/sign-in", ip: visitor() })).cookie;
 }
 

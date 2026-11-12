@@ -4,6 +4,12 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Changed
+- Sign-in code (#108):
+  - **The email** shows the code large and on its own, and selects in one tap. It's worded as a "verification code", so Gmail offers its "Copy code" button and phones can suggest it.
+  - **Notifications:** the subject still starts with the code, so it shows in the phone notification.
+  - **The sign-in page** takes whatever is pasted (even the whole sentence from the email) and keeps just the 6-digit code. A Paste button reads the clipboard, and the page signs in on its own as soon as 6 digits are in.
+
 ## [0.15.0] - 2026-11-12
 
 ### Changed
