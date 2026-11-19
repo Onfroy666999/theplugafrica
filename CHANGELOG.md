@@ -4,6 +4,8 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-11-19
+
 ### Added
 - Site photos (#112): **Admin › Directory › Site photos** changes the photos on the site without a developer:
   - the four home hero slides (with their captions);
