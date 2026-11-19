@@ -5,6 +5,10 @@ import Image from "next/image";
 import { Shield } from "@/components/market/Icons";
 import { Footer, Header, Reveal } from "@/components/market/Sections";
 import { WaitlistForm } from "./WaitlistForm";
+import { getSiteImages } from "@/lib/site-images-server";
+
+// Reads the photos chosen in Admin › Site photos (issue #112).
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = pageMeta({
   title: "List your business — The Plug Africa",
@@ -25,13 +29,14 @@ const STEPS = [
   { t: "Go live", d: "Your listing shows In review, then Verified once every check passes." },
 ];
 
-export default function BusinessesPage() {
+export default async function BusinessesPage() {
+  const img = (await getSiteImages())["page.businesses"];
   return (
     <main className="min-h-screen bg-white text-navy">
       <Header />
       <section className="mx-auto max-w-[1280px] px-3 pt-2 md:px-8 md:pt-4">
         <div className="relative isolate overflow-hidden rounded-hero md:rounded-hero">
-          <Image src="/images/jobs.jpg" alt="Business team in a meeting" fill priority sizes="100vw" className="-z-10 object-cover" />
+          <Image src={img.url} alt={img.alt} fill priority sizes="100vw" className="-z-10 object-cover" style={{ objectPosition: img.position }} />
           <div className="absolute inset-0 -z-10 bg-gradient-to-r from-navy/90 via-navy/60 to-navy/10" />
           <div className="max-w-2xl px-6 py-16 md:px-14 md:py-24">
             <p className="text-[13px] font-semibold tracking-[0.14em] text-gold-light uppercase">For businesses</p>

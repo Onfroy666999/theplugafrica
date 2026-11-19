@@ -447,18 +447,19 @@ export async function deleteService(id: string): Promise<{ ok: true } | { ok: fa
 }
 
 /**
- * Owners: delete uploaded photos that no business or service uses (issue #94). Only files more than a day old, so a
+ * Owners: delete uploaded photos that no business, service or site photo uses (issues #94, #112). Only files more than a day old, so a
  * photo uploaded for a business that hasn't been saved yet is never taken. Photos still in use are never touched.
  */
 export async function deleteUnusedPhotos(): Promise<{ ok: true; removed: number } | { ok: false; error: string }> {
   const admin = await requireAdmin("delete");
   if (!storageEnabled()) return { ok: false, error: "Photo storage isn't set up on this site." };
-  const [files, businesses, services] = await Promise.all([
+  const [files, businesses, services, sitePhotos] = await Promise.all([
     listStorageFiles(),
     db.business.findMany({ select: { images: true } }),
     db.service.findMany({ select: { image: true } }),
+    db.siteImage.findMany({ select: { url: true } }),
   ]);
-  const used = new Set<string>([...businesses.flatMap((b) => parseImages(b.images)), ...services.map((s) => s.image)]);
+  const used = new Set<string>([...businesses.flatMap((b) => parseImages(b.images)), ...services.map((s) => s.image), ...sitePhotos.map((p) => p.url)]);
   const dayAgo = Date.now() - 86_400_000;
   const unused = files.filter((f) => !used.has(f.url) && f.createdAt.getTime() < dayAgo).map((f) => f.url);
   if (!unused.length) return { ok: true, removed: 0 };

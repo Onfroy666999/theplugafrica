@@ -4,6 +4,7 @@ import Image from "next/image";
 import { CatIcon } from "@/components/market/Icons";
 import { Footer, Header } from "@/components/market/Sections";
 import { db } from "@/lib/db";
+import { getSiteImages } from "@/lib/site-images-server";
 import { EmergencyClient, type PublicContact } from "./EmergencyClient";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,7 @@ export const metadata: Metadata = pageMeta({
 
 export default async function EmergencyPage() {
   // Only numbers the team has verified (issue #11).
+  const img = (await getSiteImages())["page.emergency"];
   const rows = await db.emergencyContact.findMany({ where: { verifiedAt: { not: null } }, orderBy: [{ city: "asc" }, { name: "asc" }] });
   const contacts: PublicContact[] = rows.map((c) => ({
     id: c.id, city: c.city ?? "", service: c.service, name: c.name, phone: c.phone, altPhone: c.altPhone, address: c.address,
@@ -28,7 +30,7 @@ export default async function EmergencyPage() {
       <Header />
       <section className="mx-auto max-w-[1280px] px-3 pt-2 md:px-8 md:pt-4">
         <div className="relative isolate overflow-hidden rounded-hero md:rounded-hero">
-          <Image src="/images/emergency.jpg" alt="Ambulance crew at work" fill priority sizes="100vw" className="-z-10 object-cover" />
+          <Image src={img.url} alt={img.alt} fill priority sizes="100vw" className="-z-10 object-cover" style={{ objectPosition: img.position }} />
           <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/85 via-black/55 to-black/10" />
           <div className="max-w-2xl px-6 py-14 md:px-14 md:py-20">
             <span className="flex h-12 w-12 items-center justify-center rounded-card bg-ember text-white"><CatIcon k="emergency" /></span>
