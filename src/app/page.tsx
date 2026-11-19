@@ -14,6 +14,8 @@ import {
 import { getPublicListings, getServicesByCategory } from "@/lib/data";
 import { toCardListing } from "@/lib/listings";
 import { pageMeta } from "@/lib/site";
+import { emergencyTiles, heroSlides } from "@/lib/site-images";
+import { getSiteImages } from "@/lib/site-images-server";
 import { HeroSlides } from "./HeroSlides";
 
 export const metadata: Metadata = pageMeta({
@@ -30,7 +32,7 @@ export const dynamic = "force-dynamic";
  * button run in the browser (issue #76: it used to be one big browser component).
  */
 export default async function Home() {
-  const [all, services] = await Promise.all([getPublicListings(), getServicesByCategory()]);
+  const [all, services, photos] = await Promise.all([getPublicListings(), getServicesByCategory(), getSiteImages()]);
   const listings = all.filter((l) => l.city === "Accra").slice(0, 8).map(toCardListing);
   return (
     <main className="min-h-screen bg-white text-navy">
@@ -39,7 +41,7 @@ export default async function Home() {
       {/* Hero: rounded photo panel with a white search card (Thumbtack pattern) */}
       <section className="mx-auto max-w-[1280px] px-3 pt-2 md:px-8 md:pt-4">
         <div className="relative isolate overflow-hidden rounded-hero md:min-h-[600px] md:rounded-hero">
-          <HeroSlides>
+          <HeroSlides slides={heroSlides(photos)}>
             <div className="flex items-center md:min-h-[600px] md:p-12 lg:p-16">
               <div className="enter-up w-full rounded-panel bg-white px-2 pt-6 pb-2 md:max-w-[600px] md:p-9 md:shadow-float">
                 <h1 className="font-heading text-[36px] leading-[1.06] font-extrabold tracking-[-0.03em] text-navy md:text-[52px]">
@@ -60,12 +62,12 @@ export default async function Home() {
         </div>
       </section>
 
-      <CategoryExplorer services={services} />
+      <CategoryExplorer services={services} emergencyTiles={emergencyTiles(photos)} />
       {/* Hidden until there are businesses to show (the live site hides examples) */}
       {listings.length > 0 && <PopularRail listings={listings} />}
       <HowItWorks />
-      <ConciergeBand />
-      <BusinessAndEmergency />
+      <ConciergeBand img={photos["home.concierge"]} />
+      <BusinessAndEmergency img={photos["home.business"]} />
       <Footer />
       <FloatingConcierge />
     </main>

@@ -11,6 +11,7 @@ import { CATEGORY_CONTENT } from "@/lib/content";
 import { getCategoryServices } from "@/lib/data";
 import { getCat } from "@/lib/directory";
 import { pageMeta } from "@/lib/site";
+import { getSiteImages } from "@/lib/site-images-server";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cat = getCat((await params).category);
   if (!cat) return {};
   const c = CATEGORY_CONTENT[cat.key];
-  return pageMeta({ title: `${cat.name} in Ghana — The Plug Africa`, description: c?.welcome ?? cat.line, path: `/explore/${cat.key}`, image: c?.image ?? cat.tiles[0]?.img });
+  return pageMeta({ title: `${cat.name} in Ghana — The Plug Africa`, description: c?.welcome ?? cat.line, path: `/explore/${cat.key}`, image: (await getSiteImages())[`category.${cat.key}`]?.url ?? cat.tiles[0]?.img });
 }
 
 /** Category page: a welcome, the services inside it, what we check, and common questions (issues #26, #38). */
@@ -29,7 +30,8 @@ export default async function CategoryPage({ params }: Props) {
   if (category === "emergency") redirect("/emergency");
   const cat = getCat(category);
   if (!cat) notFound();
-  const services = await getCategoryServices(category);
+  const [services, photos] = await Promise.all([getCategoryServices(category), getSiteImages()]);
+  const img = photos[`category.${cat.key}`];
   const c = CATEGORY_CONTENT[cat.key];
 
   return (
@@ -60,9 +62,9 @@ export default async function CategoryPage({ params }: Props) {
               )}
             </div>
           </div>
-          {c && (
+          {img && (
             <div className="relative aspect-[4/3] overflow-hidden rounded-hero bg-navy/5">
-              <Image src={c.image} alt={c.imageAlt} fill priority sizes="(min-width:1024px) 45vw, 100vw" className="object-cover" />
+              <Image src={img.url} alt={img.alt} fill priority sizes="(min-width:1024px) 45vw, 100vw" className="object-cover" style={{ objectPosition: img.position }} />
             </div>
           )}
         </section>

@@ -10,6 +10,9 @@ import { Arrow, CatIcon, Check } from "./Icons";
 import { LinkButton } from "@/components/ui/Button";
 import { STAGGER } from "@/lib/motion";
 import { Reveal } from "./SectionsClient";
+import type { SiteImage } from "@/lib/site-images";
+
+const PHOTO = { concierge: { url: "/images/portrait-efua.jpg", alt: "Example concierge", caption: "", position: "50% 0%" }, business: { url: "/images/jobs.jpg", alt: "Business team in a meeting", caption: "" } };
 
 export { CategoryExplorer, FloatingConcierge, Header, PopularRail, Reveal } from "./SectionsClient";
 // Motion values live in lib/motion (mirrors the CSS tokens in globals.css).
@@ -63,7 +66,7 @@ export function HowItWorks() {
 
 /* ---------- Concierge band (Quintessentially-style quiet dark block) ---------- */
 
-export function ConciergeBand() {
+export function ConciergeBand({ img = PHOTO.concierge }: { img?: SiteImage }) {
   return (
     <section className="mx-auto max-w-[1280px] px-5 pt-24 md:px-8">
       <Reveal>
@@ -82,7 +85,7 @@ export function ConciergeBand() {
             </div>
           </div>
           <div className="relative min-h-[280px]">
-            <Image src="/images/portrait-efua.jpg" alt="Example concierge" fill sizes="(min-width:768px) 45vw, 100vw" className="object-cover object-top" />
+            <Image src={img.url} alt={img.alt} fill sizes="(min-width:768px) 45vw, 100vw" className="object-cover" style={{ objectPosition: img.position }} />
             <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/20 to-transparent md:via-transparent" />
           </div>
         </div>
@@ -93,12 +96,12 @@ export function ConciergeBand() {
 
 /* ---------- Businesses + emergency ---------- */
 
-export function BusinessAndEmergency() {
+export function BusinessAndEmergency({ img = PHOTO.business }: { img?: SiteImage }) {
   return (
     <section className="mx-auto grid max-w-[1280px] gap-4 px-5 pt-4 md:grid-cols-[1.4fr_1fr] md:px-8">
       <Reveal>
         <div className="relative flex h-full min-h-[300px] overflow-hidden rounded-hero">
-          <Image src="/images/jobs.jpg" alt="Business team in a meeting" fill sizes="(min-width:768px) 55vw, 100vw" className="object-cover" />
+          <Image src={img.url} alt={img.alt} fill sizes="(min-width:768px) 55vw, 100vw" className="object-cover" style={{ objectPosition: img.position }} />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
           <div className="relative mt-auto p-8">
             <h3 className="font-heading text-[26px] font-bold text-white">Run a business? Get found.</h3>

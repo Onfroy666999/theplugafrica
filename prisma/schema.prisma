@@ -400,3 +400,13 @@ model SlugAlias {
 
   @@index([businessId])
 }
+
+/// A photo on the site that the admin has changed (issue #112): the home hero, category headers, page headers. Only
+/// changed slots have a row; the rest show the built-in photo (src/lib/site-images.ts lists every slot).
+model SiteImage {
+  key       String   @id
+  url       String
+  alt       String   @default("")
+  caption   String   @default("")
+  updatedAt DateTime @updatedAt
+}

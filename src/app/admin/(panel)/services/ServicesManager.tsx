@@ -14,6 +14,7 @@ import { deleteService, moveService, saveService, setServiceVisible } from "../.
 import { call } from "@/lib/call";
 import { Empty, Panel } from "../ui";
 import { useCan } from "../AdminContext";
+import { PhotoPicker } from "../PhotoPicker";
 
 type Svc = { id: string; slug: string; name: string; description: string; image: string; visible: boolean; count: number };
 
@@ -158,18 +159,7 @@ function ServiceForm({ category, initial, library, onDone }: { category: { key: 
       <Field label="Short description" hint="shown on the service page">
         <Input label="Short description" name="description" defaultValue={initial?.description} maxLength={240} placeholder="e.g. Car rental with or without a driver." />
       </Field>
-      <div>
-        <span className="block text-[14px] font-semibold text-navy">Photo</span>
-        <ul className="mt-2 grid max-h-[220px] grid-cols-4 gap-2 overflow-y-auto pr-1">
-          {library.map((src) => (
-            <li key={src}>
-              <button type="button" aria-pressed={image === src} onClick={() => setImage(src)} className={`press relative block aspect-square w-full overflow-hidden rounded-field ring-offset-2 ${image === src ? "ring-2 ring-gold" : ""}`}>
-                <Image src={src} alt="" fill sizes="100px" className="object-cover" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <PhotoPicker value={image} onChange={setImage} library={library} onError={setError} />
       <Switch checked={visible} onChange={setVisible} label={visible ? "Visible on the site" : "Hidden"} />
       {error && <p role="alert" className="rounded-field bg-ember-soft px-4 py-3 text-[14px] font-medium text-ember">{error}</p>}
       <Button type="submit" size="lg" full disabled={pending}>
