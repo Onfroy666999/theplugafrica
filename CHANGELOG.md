@@ -4,6 +4,21 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-11-19
+
+### Added
+- Site photos (#112): **Admin › Directory › Site photos** changes the photos on the site without a developer:
+  - the four home hero slides (with their captions);
+  - the header photo of each category page;
+  - the page headers (About, For businesses, Concierge, Emergency);
+  - the concierge band and the "Run a business?" panel on the home page;
+  - the four Emergency tiles on the home page.
+  Each photo can be uploaded or picked from the library, given a description, and reset to the original. Changes show on the site straight away.
+
+### Changed
+- Admin › Services: the photo picker can upload a new photo, not only pick from the library (#112).
+- "Delete unused uploaded photos" keeps photos used as site photos (#112).
+
 ## [0.15.1] - 2026-11-12
 
 ### Changed

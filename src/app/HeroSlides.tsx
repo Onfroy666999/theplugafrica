@@ -5,20 +5,15 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { DUR, EASE } from "@/lib/motion";
 
-const SLIDES = [
-  { img: "/images/rentals.jpg", cap: "Rentals · Example home, East Legon", pos: "50% 55%" },
-  { img: "/images/chauffeur.jpg", cap: "Special Services · Example chauffeur, Accra", pos: "50% 40%" },
-  { img: "/images/education.jpg", cap: "Education · Example school, Kumasi", pos: "50% 35%" },
-  { img: "/images/dining.jpg", cap: "Entertainment · Example restaurant, Osu", pos: "50% 40%" },
-];
+import type { SiteImage } from "@/lib/site-images";
 
 /**
  * The home hero's cross-fading photos (issue #76). Its own small component, so changing the photo re-renders only this,
  * not the whole page. One photo layer serves both layouts: a panel above the search card on phones, the full hero
  * background from tablet up. Plays only while visible, stops when someone picks a photo, and doesn't play at all
- * with reduced motion (auto-moving content needs a way to stop it).
+ * with reduced motion (auto-moving content needs a way to stop it). The photos are chosen in Admin › Site photos (#112).
  */
-export function HeroSlides({ children }: { children: React.ReactNode }) {
+export function HeroSlides({ slides, children }: { slides: SiteImage[]; children: React.ReactNode }) {
   const [i, setI] = useState(0);
   const [stopped, setStopped] = useState(false);
   const [visible, setVisible] = useState(true);
@@ -36,34 +31,34 @@ export function HeroSlides({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (stopped || reduce || !visible) return;
     const t = setInterval(() => {
-      if (document.visibilityState === "visible") setI((n) => (n + 1) % SLIDES.length);
+      if (document.visibilityState === "visible") setI((n) => (n + 1) % slides.length);
     }, 6000);
     return () => clearInterval(t);
-  }, [stopped, reduce, visible]);
+  }, [stopped, reduce, visible, slides.length]);
 
-  const s = SLIDES[i];
+  const s = slides[i] ?? slides[0];
   return (
     <>
       <div ref={ref} className="relative h-56 overflow-hidden rounded-panel bg-navy/5 sm:h-72 md:absolute md:inset-0 md:-z-10 md:h-auto md:rounded-none">
         <AnimatePresence initial={false}>
           <motion.div key={i} className="absolute inset-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: DUR.crossfade, ease: EASE.inOut }}>
-            <Image src={s.img} alt="" fill priority={i === 0} sizes="(min-width:1280px) 1220px, 100vw" className="object-cover" style={{ objectPosition: s.pos }} />
+            <Image src={s.url} alt={s.alt} fill priority={i === 0} sizes="(min-width:1280px) 1220px, 100vw" className="object-cover" style={{ objectPosition: s.position }} />
           </motion.div>
         </AnimatePresence>
         <div className="absolute inset-0 hidden bg-gradient-to-r from-black/35 via-black/5 to-transparent md:block" />
         {/* Solid backing rather than a blur: a blur over a changing photo is recalculated every frame. */}
-        <span className="absolute bottom-3 left-3 rounded-full bg-black/60 px-3 py-1.5 text-[11.5px] font-medium text-white md:hidden">{s.cap}</span>
+        <span className="absolute bottom-3 left-3 rounded-full bg-black/60 px-3 py-1.5 text-[11.5px] font-medium text-white md:hidden">{s.caption}</span>
       </div>
 
       {children}
 
       <div className="absolute right-6 bottom-6 hidden items-center gap-3 md:flex">
-        <span className="rounded-full bg-black/55 px-3.5 py-2 text-[12px] font-medium text-white">{s.cap}</span>
+        <span className="rounded-full bg-black/55 px-3.5 py-2 text-[12px] font-medium text-white">{s.caption}</span>
         <div className="flex gap-1.5 rounded-full bg-black/45 px-2.5 py-2.5">
-          {SLIDES.map((x, k) => (
+          {slides.map((x, k) => (
             <button
-              key={x.img}
-              aria-label={`Show ${x.cap}`}
+              key={k}
+              aria-label={`Show photo ${k + 1}${x.caption ? `: ${x.caption}` : ""}`}
               aria-pressed={k === i}
               onClick={() => {
                 setI(k);

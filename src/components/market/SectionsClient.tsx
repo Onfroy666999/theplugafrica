@@ -147,7 +147,8 @@ export function Reveal({ children, delay = 0, className = "", as = "div" }: { ch
 /* ---------- Category explorer: icon tabs swap a row of photo tiles ---------- */
 
 /** Category tabs; each tab shows that category's services (from the database) linking to their service pages. */
-export function CategoryExplorer({ id = "explore", services }: { id?: string; services?: Record<string, ServiceCard[]> }) {
+/** `emergencyTiles`: the Emergency tab's photos from Admin › Site photos (issue #112); the built-in ones otherwise. */
+export function CategoryExplorer({ id = "explore", services, emergencyTiles }: { id?: string; services?: Record<string, ServiceCard[]>; emergencyTiles?: { title: string; img: string }[] }) {
   const [active, setActive] = useState<CatKey>("rentals");
   const reduce = useReducedMotion();
   const cat = CATS.find((c) => c.key === active)!;
@@ -155,7 +156,7 @@ export function CategoryExplorer({ id = "explore", services }: { id?: string; se
   // Services from the database when available; Emergency (and the reference page) use the built-in tiles.
   const tiles = fromDb?.length
     ? fromDb.slice(0, 8).map((s) => ({ title: s.name, img: s.image, href: `/explore/${active}/${s.slug}`, note: cat.concierge ? "Handled by The Plug" : s.count ? `${s.count} ${s.count === 1 ? "business" : "businesses"}` : "Coming soon" }))
-    : cat.tiles.map((t) => ({ ...t, href: active === "emergency" ? "/emergency" : `/explore?cat=${active}`, note: "" }));
+    : (active === "emergency" && emergencyTiles?.length ? emergencyTiles : cat.tiles).map((t) => ({ ...t, href: active === "emergency" ? "/emergency" : `/explore?cat=${active}`, note: "" }));
   const seeAll = active === "emergency" ? "/emergency" : `/explore/${active}`;
 
   return (

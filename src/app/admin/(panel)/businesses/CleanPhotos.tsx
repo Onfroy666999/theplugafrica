@@ -4,7 +4,7 @@ import { useState } from "react";
 import { call } from "@/lib/call";
 import { deleteUnusedPhotos } from "../../actions";
 
-/** Owners: remove uploaded photos no business or service uses (issue #94). Asks first; only files over a day old. */
+/** Owners: remove uploaded photos no business, service or site photo uses (issue #94). Asks first; only files over a day old. */
 export function CleanPhotos() {
   const [step, setStep] = useState<"idle" | "confirm" | "busy">("idle");
   const [msg, setMsg] = useState<string | null>(null);
@@ -13,7 +13,7 @@ export function CleanPhotos() {
     <div className="mt-6 text-[13.5px] text-navy/65">
       {step === "confirm" ? (
         <span className="flex flex-wrap items-center gap-3">
-          Delete every uploaded photo that no business or service uses (uploaded more than a day ago)? This can&apos;t be undone.
+          Delete every uploaded photo that no business, service or site photo uses (uploaded more than a day ago)? This can&apos;t be undone.
           <button
             type="button"
             className={link}

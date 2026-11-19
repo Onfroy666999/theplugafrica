@@ -5,6 +5,10 @@ import { FloatingConcierge, Footer, Header, Reveal } from "@/components/market/S
 import { LinkButton } from "@/components/ui/Button";
 import { STAGGER } from "@/lib/motion";
 import { pageMeta } from "@/lib/site";
+import { getSiteImages } from "@/lib/site-images-server";
+
+// Reads the photos chosen in Admin › Site photos (issue #112).
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = pageMeta({
   title: "About — The Plug Africa",
@@ -31,7 +35,8 @@ const DONT = [
   "We don't guarantee the outcome of any job or deal. Always check credentials before you commit.",
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const img = (await getSiteImages())["page.about"];
   return (
     <main className="min-h-screen bg-white text-navy">
       <Header />
@@ -49,7 +54,7 @@ export default function AboutPage() {
           </div>
         </div>
         <div className="relative aspect-[4/5] overflow-hidden rounded-hero bg-navy/5 lg:aspect-[5/6]">
-          <Image src="/images/market.jpg" alt="A trader at her stall on a street in Ghana" fill priority sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover object-[50%_30%]" />
+          <Image src={img.url} alt={img.alt} fill priority sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" style={{ objectPosition: img.position }} />
         </div>
       </section>
 

@@ -8,6 +8,10 @@ import { CONCIERGE_FEE_PERCENT } from "@/lib/fees";
 import { MEMBERSHIP_USD } from "@/lib/membership-plan";
 import { Footer, Header, Reveal } from "@/components/market/Sections";
 import { ConciergeForm } from "./ConciergeForm";
+import { getSiteImages } from "@/lib/site-images-server";
+
+// Reads the photos chosen in Admin › Site photos (issue #112).
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = pageMeta({
   title: "Concierge — The Plug Africa",
@@ -22,7 +26,8 @@ const DOES = [
   "Follow up until it's done",
 ];
 
-export default function ConciergePage() {
+export default async function ConciergePage() {
+  const img = (await getSiteImages())["page.concierge"];
   return (
     <main className="min-h-screen bg-white text-navy">
       <Header />
@@ -44,7 +49,7 @@ export default function ConciergePage() {
             ))}
           </ul>
           <div className="relative mt-10 hidden h-[320px] overflow-hidden rounded-hero lg:block">
-            <Image src="/images/chauffeur.jpg" alt="Example chauffeur opening a car door" fill sizes="45vw" className="object-cover" />
+            <Image src={img.url} alt={img.alt} fill sizes="45vw" className="object-cover" style={{ objectPosition: img.position }} />
           </div>
         </div>
         <div className="lg:pt-2">
