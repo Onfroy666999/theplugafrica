@@ -4,6 +4,9 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Fixed
+- Account: after cancelling the concierge membership, the card says "Cancelled. Your benefits last until …" straight away instead of "Active" until the page is reloaded (#116).
+
 ## [0.16.0] - 2026-11-19
 
 ### Added

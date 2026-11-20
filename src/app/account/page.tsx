@@ -170,8 +170,11 @@ export default async function AccountPage() {
             <h2 className="font-heading text-[18px] font-bold">Concierge membership</h2>
             {membership && !canJoin(membership) ? (
               <>
-                <p className="mt-2 text-[14.5px] leading-relaxed text-white/75">{describeMembership(membership)}</p>
-                <MembershipControls status={membership.status} />
+                <MembershipControls
+                  status={membership.status}
+                  line={describeMembership(membership)}
+                  cancelledLine={describeMembership({ ...membership, status: "cancelled" })}
+                />
               </>
             ) : (
               <>
