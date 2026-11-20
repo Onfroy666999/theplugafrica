@@ -4,6 +4,8 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-11-20
+
 ### Fixed
 - Toggles: the white knob is centred in its track instead of sitting against the top edge, on every toggle (fee form, Explore, Services, Emergency) (#118).
 - Admin pages refresh their data when you come back to the tab, so a fee paid or a request sent in the meantime shows without reloading (#118).
