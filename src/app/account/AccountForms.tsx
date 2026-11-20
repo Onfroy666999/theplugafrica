@@ -84,8 +84,12 @@ export function DeleteAccount() {
   );
 }
 
-/** Change the card (on Paystack's own page) or cancel. Cancelling keeps the benefits until the paid month ends. */
-export function MembershipControls({ status }: { status: string }) {
+/**
+ * The membership line, plus change card or cancel. Cancelling keeps the benefits until the paid month ends; the line
+ * switches to `cancelledLine` straight away rather than waiting for the page to reload (issue #116).
+ */
+export function MembershipControls({ status: initial, line, cancelledLine }: { status: string; line: string; cancelledLine: string }) {
+  const [status, setStatus] = useState(initial);
   const router = useRouter();
   const [busy, setBusy] = useState<"card" | "cancel" | null>(null);
   const [confirm, setConfirm] = useState(false);
@@ -98,7 +102,9 @@ export function MembershipControls({ status }: { status: string }) {
   const running = status === "active" || status === "past_due";
   const link = "press text-[14px] font-semibold text-white underline-offset-4 hover:underline disabled:opacity-60";
   return (
-    <div className="mt-4 space-y-3">
+    <>
+      <p className="mt-2 text-[14.5px] leading-relaxed text-white/75">{status === "cancelled" ? cancelledLine : line}</p>
+      <div className="mt-4 space-y-3">
       <div className="flex flex-wrap gap-x-5 gap-y-2">
         <button
           type="button"
@@ -136,7 +142,10 @@ export function MembershipControls({ status }: { status: string }) {
                 setBusy(null);
                 setConfirm(false);
                 setMsg(r.ok ? { ok: true, text: "Cancelled. You won't be charged again." } : { ok: false, text: r.error });
-                if (r.ok) router.refresh();
+                if (r.ok) {
+                  setStatus("cancelled");
+                  router.refresh();
+                }
               }}
             >
               {busy === "cancel" && <Spinner />}
@@ -147,6 +156,7 @@ export function MembershipControls({ status }: { status: string }) {
         </div>
       )}
       {msg && <p role={msg.ok ? "status" : "alert"} className="text-[14px] font-medium text-white">{msg.text}</p>}
-    </div>
+      </div>
+    </>
   );
 }

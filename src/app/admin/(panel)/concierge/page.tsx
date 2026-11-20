@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { LinkButton } from "@/components/ui/Button";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { CATS } from "@/lib/directory";
@@ -87,9 +88,10 @@ export default async function Concierge({ searchParams }: { searchParams: SP }) 
                   </p>
                 ))}
                 {can(admin.role, "edit") && (
-                  <Link href={`/admin/fees/new?request=${r.id}`} className="mt-2 inline-block text-[13.5px] font-semibold text-navy underline-offset-4 hover:underline">
-                    {r.deals.length ? "Record another deal" : "Record deal"}
-                  </Link>
+                  // A real button, not bold text that reads as a label (issue #118).
+                  <LinkButton href={`/admin/fees/new?request=${r.id}`} variant="secondary" size="sm" className="mt-3">
+                    {r.deals.length ? "Record another deal" : "Record a deal"}
+                  </LinkButton>
                 )}
               </InboxItem>
             ))}
