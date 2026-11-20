@@ -8,6 +8,7 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 - Toggles: the white knob is centred in its track instead of sitting against the top edge, on every toggle (fee form, Explore, Services, Emergency) (#118).
 - Admin pages refresh their data when you come back to the tab, so a fee paid or a request sent in the meantime shows without reloading (#118).
 - Admin › Concierge: "Record a deal" is a button instead of bold text that read like a label (#118).
+- Account: after cancelling the concierge membership, the card says "Cancelled. Your benefits last until …" straight away instead of "Active" until the page is reloaded (#116).
 
 ## [0.16.0] - 2026-11-19
 
