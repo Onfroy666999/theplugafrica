@@ -7,6 +7,7 @@ import { can, roleLabel } from "@/lib/roles";
 import { logout } from "../actions";
 import { AdminRoleProvider } from "./AdminContext";
 import { AdminNav, SectionTabs, type NavSection } from "./AdminNav";
+import { RefreshOnReturn } from "./RefreshOnReturn";
 
 export const metadata: Metadata = { title: "Admin — The Plug Africa", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -101,6 +102,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           {admin.role === "viewer" && " (view only)"}
         </p>
         <SectionTabs sections={sections} />
+        <RefreshOnReturn />
         <AdminRoleProvider role={admin.role}>{children}</AdminRoleProvider>
       </main>
     </div>
