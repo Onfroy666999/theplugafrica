@@ -36,6 +36,7 @@ Check the **account switcher** (top left) shows Kenneth's account before every s
 
 1. Storage & Databases › **Hyperdrive** › **Create configuration**.
 2. Name `theplugafrica-staging-db`; paste the **Session pooler** string; **Create**.
+   Then open the configuration › **Settings** › **Caching** and turn it **off**. With caching on, Hyperdrive answers reads from a copy up to about a minute old, so the admin shows old values right after a change: a toggle flips back, a cancelled membership still says Active (issue #122). The site's reads are small and fast without it.
 3. Copy the configuration **ID** (it isn't secret; it's also the last part of the page address) and send it to Claude, who adds it to `wrangler.jsonc` under `env.staging.hyperdrive` and merges that into `develop`. Repeat for production later with `theplugafrica-db`.
 
 ## Part D: Create the Workers from GitHub (Reginald, in Kenneth's Cloudflare account)
