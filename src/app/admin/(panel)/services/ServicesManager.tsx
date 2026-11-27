@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import { Field, Input, Spinner } from "@/components/market/Form";
 import { Button } from "@/components/ui/Button";
 import { ChipGroup } from "@/components/ui/ChipGroup";
@@ -33,6 +33,10 @@ export function ServicesManager({ category, services, library }: { category: { k
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  // Its own transition, so showing/hiding doesn't dim the list the way a reorder does.
+  const [, startToggle] = useTransition();
+  // The switch moves as soon as it's clicked (issue #124); if saving fails, it goes back when the transition ends.
+  const [shown, setShown] = useOptimistic(services, (list, { id, visible }: { id: string; visible: boolean }) => list.map((s) => (s.id === id ? { ...s, visible } : s)));
   /** Runs a quick change (show/hide, reorder) and says so if the request didn't arrive. */
   const quick = (action: () => Promise<unknown>) =>
     start(async () => {
@@ -57,7 +61,7 @@ export function ServicesManager({ category, services, library }: { category: { k
         ) : (
           <ul className={`divide-y divide-navy/[0.07] ${pending ? "opacity-70" : ""}`}>
             <AnimatePresence initial={false}>
-              {services.map((s, i) => (
+              {shown.map((s, i) => (
                 <motion.li
                   key={s.id}
                   layout={!reduce}
@@ -79,7 +83,15 @@ export function ServicesManager({ category, services, library }: { category: { k
                     <span className="text-[13px] font-medium text-navy/65">{s.visible ? "Visible" : "Hidden"}</span>
                   ) : (
                   <div className="flex flex-wrap items-center gap-2">
-                    <Switch checked={s.visible} label={s.visible ? "Visible" : "Hidden"} onChange={(v) => quick(() => setServiceVisible(s.id, v))} />
+                    <Switch checked={s.visible} label={s.visible ? "Visible" : "Hidden"} onChange={(v) =>
+                        startToggle(async () => {
+                          setShown({ id: s.id, visible: v });
+                          setNotice(null);
+                          const r = (await call(setServiceVisible(s.id, v))) as { ok?: boolean; error?: string } | undefined;
+                          if (r && r.ok === false) setNotice(r.error ?? "That change didn't save. Please try again.");
+                        })
+                      }
+                    />
                     <IconBtn label="Move up" disabled={i === 0} onClick={() => quick(() => moveService(s.id, -1))}>↑</IconBtn>
                     <IconBtn label="Move down" disabled={i === services.length - 1} onClick={() => quick(() => moveService(s.id, 1))}>↓</IconBtn>
                     <Button variant="secondary" size="sm" onClick={() => setEditing(s)}>Edit</Button>
