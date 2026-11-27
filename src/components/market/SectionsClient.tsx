@@ -22,7 +22,7 @@ import { DUR, EASE, SPRING, STAGGER } from "@/lib/motion";
 
 const NAV = [
   { label: "Explore", href: "/explore" },
-  { label: "New Business", href: "/explore/new-business" },
+  { label: "Business", href: "/explore/new-business" },
   { label: "Concierge", href: "/concierge" },
   { label: "How it works", href: "/#how-it-works" },
   { label: "Emergency", href: "/emergency" },

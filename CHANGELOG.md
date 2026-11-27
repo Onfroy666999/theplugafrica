@@ -4,6 +4,19 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-11-27
+
+### Added
+- **Legal services** in Business: a licensed lawyer, found and coordinated by The Plug, for contracts, leases and property, company matters and disputes (#126). Created on existing databases by the `legal_service` migration.
+- Emergency: Ghana's national numbers, each checked on the service's own website on 27 Nov 2026: 112 (national emergency and ambulance), Police 191 and toll-free 18555, Fire 192, and the DOVVSU helpline 055 100 0900. NADMO's disaster lines are added but hidden until the team confirms them (#128). Added by the `ghana_emergency_numbers` migration, which skips any number already listed.
+
+### Changed
+- The "New Business" category is now called **Business** (its web address, /explore/new-business, is unchanged) (#126).
+- Admin › Services: the Visible/Hidden switch moves the moment you click it, and goes back with a message if the change doesn't save (#124).
+
+### Fixed
+- Staging and live: Hyperdrive's query caching is turned off, so the admin shows a change straight away (a visibility toggle no longer flips back) (#122). A dashboard setting; documented in DEPLOY.md Part C.
+
 ## [0.16.1] - 2026-11-20
 
 ### Fixed
