@@ -6,6 +6,8 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ### Changed
 - Admin › Services: the Visible/Hidden switch moves the moment you click it, and goes back with a message if the change doesn't save (#124).
+### Fixed
+- Staging and live: Hyperdrive's query caching is turned off, so the admin shows a change straight away (a visibility toggle no longer flips back) (#122). A dashboard setting; documented in DEPLOY.md Part C.
 
 ## [0.16.1] - 2026-11-20
 
