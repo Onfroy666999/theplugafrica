@@ -4,6 +4,12 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Changed
+- The "New Business" category is now called **Business** (its web address, /explore/new-business, is unchanged) (#126).
+
+### Added
+- **Legal services** in Business: a licensed lawyer, found and coordinated by The Plug, for contracts, leases and property, company matters and disputes (#126). Created on existing databases by the `legal_service` migration.
+
 ## [0.16.1] - 2026-11-20
 
 ### Fixed
