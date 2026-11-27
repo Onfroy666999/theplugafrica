@@ -9,16 +9,21 @@ import { Field, Input, Select, Spinner, Success, Textarea, toOptions } from "@/c
 import { Button, LinkButton } from "@/components/ui/Button";
 import { CATS } from "@/lib/directory";
 import { getListing } from "@/lib/listings";
+
+export type AboutListing = { slug: string; name: string; kind: string; area: string; city: string; cat: string };
 import { RequestDetails } from "@/components/market/RequestDetails";
 import { DUR } from "@/lib/motion";
 
 const CATEGORY_OPTIONS = CATS.filter((c) => c.key !== "emergency").map((c) => ({ value: c.key, label: c.name }));
 const WHEN_OPTIONS = toOptions(["As soon as possible", "This week", "This month", "In the next few months", "Just exploring"]);
 
-/** `service`: set on a concierge service page (issue #36); fixes the category and names the service. */
-export function ConciergeForm({ service }: { service?: { category: string; slug: string; name: string } } = {}) {
+/**
+ * `service`: set on a concierge service page (issue #36); fixes the category and names the service.
+ * `about`: the business from ?listing=, looked up on the server (issue #132: lawyers are requested this way).
+ */
+export function ConciergeForm({ service, about }: { service?: { category: string; slug: string; name: string }; about?: AboutListing | null } = {}) {
   const params = useSearchParams();
-  const listing = getListing(params.get("listing") ?? "");
+  const listing = about ?? getListing(params.get("listing") ?? "");
   const [ref, setRef] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

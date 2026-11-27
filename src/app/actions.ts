@@ -30,6 +30,8 @@ export async function createEnquiry(slug: string): Promise<
 > {
   const b = await db.business.findFirst({ where: { slug, ...publicWhere() } });
   if (!b) return { ok: false, error: "This business is no longer listed." };
+  // Contact through the concierge only (issue #132): its details are never given out.
+  if (b.mediated) return { ok: false, error: "This business is reached through a Plug concierge. Send a concierge request from its page instead." };
   if (await limitForm("reveal", 20)) return { ok: false, error: "You've asked for several businesses' details in a short time. Please wait a while." };
   // Asking again for the same business within a day gives the same reference (issue #94), so review codes can't be
   // collected in bulk by revealing a business over and over.
@@ -53,7 +55,7 @@ export async function submitConcierge(fd: FormData): Promise<FormResult> {
   const where = parseDetails(Object.fromEntries(fd));
   if (!where.ok) return { ok: false, error: where.error };
   const d = parsed.data;
-  const business = d.listing ? await db.business.findFirst({ where: { slug: d.listing, ...publicWhere() }, select: { id: true } }) : null;
+  const business = d.listing ? await db.business.findFirst({ where: { slug: d.listing, ...publicWhere() }, select: { id: true, name: true, kind: true, mediated: true, availability: true } }) : null;
   // Store the service name (not the slug) so the request still reads correctly if the service is renamed later.
   const service = d.service ? await db.service.findFirst({ where: { category: d.category, slug: d.service }, select: { name: true } }) : null;
   const over = await limit("concierge");
@@ -64,7 +66,12 @@ export async function submitConcierge(fd: FormData): Promise<FormResult> {
   await db.conciergeRequest.create({
     data: { ref, name: d.name, phone: d.phone, email: d.email, city: d.city, category: d.category, service: service?.name, details: d.details, timing: d.when, businessId: business?.id, userId: user?.id, fromMember, ...where.data },
   });
-  notifyConcierge({ ref, name: d.name, phone: d.phone, email: d.email, category: d.category, service: service?.name, details: d.details, timing: d.when, city: d.city, member: fromMember, ...where.data });
+  notifyConcierge({
+    ref, name: d.name, phone: d.phone, email: d.email, category: d.category, service: service?.name, details: d.details, timing: d.when, city: d.city, member: fromMember,
+    // The business they asked about, so the concierge can start straight away (issue #132).
+    business: business ? { name: business.name, kind: business.kind, mediated: business.mediated, availability: business.availability } : undefined,
+    ...where.data,
+  });
   return { ok: true, ref };
 }
 
@@ -72,8 +79,9 @@ export async function submitConcierge(fd: FormData): Promise<FormResult> {
 export async function sendBusinessRequest(slug: string, fd: FormData): Promise<FormResult> {
   const blocked = await screen(fd, "PLG");
   if (blocked) return blocked;
-  const b = await db.business.findFirst({ where: { slug, ...publicWhere() }, select: { id: true, name: true, email: true } });
+  const b = await db.business.findFirst({ where: { slug, ...publicWhere() }, select: { id: true, name: true, email: true, mediated: true } });
   if (!b) return { ok: false, error: "This business is no longer listed." };
+  if (b.mediated) return { ok: false, error: "This business is reached through a Plug concierge. Send a concierge request from its page instead." };
   const parsed = BusinessRequestSchema.safeParse(Object.fromEntries(fd));
   if (!parsed.success) return { ok: false, error: "Please add your name, phone number and a sentence about what you need." };
   const where = parseDetails(Object.fromEntries(fd));

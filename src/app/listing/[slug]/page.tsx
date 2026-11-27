@@ -10,7 +10,7 @@ import { CATS } from "@/lib/directory";
 import { currentSlugFor, getApprovedReviews, getPublicListing, getPublicListings } from "@/lib/data";
 import { reviewsFor, type Listing } from "@/lib/listings";
 import { abs, jsonLd, pageMeta } from "@/lib/site";
-import { ContactPanel } from "./ContactPanel";
+import { AvailabilityBadge, ContactPanel } from "./ContactPanel";
 import { WriteReview } from "./WriteReview";
 
 const reviewDate = (d: Date) => new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric", timeZone: "Africa/Accra" }).format(d);
@@ -91,6 +91,7 @@ export default async function ListingPage({ params }: Props) {
               <span>{l.kind}</span>
               <span>{l.area}, {l.city}</span>
               <StatusBadge status={l.status} />
+              {(l.mediated || (l.availability && l.availability !== "available")) && <AvailabilityBadge value={l.availability} />}
             </div>
           </div>
           {l.isExample && <span className="rounded-full bg-cream px-3 py-1.5 text-[12px] font-semibold text-navy/70">Example listing</span>}

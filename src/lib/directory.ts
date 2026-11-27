@@ -16,7 +16,11 @@ export type Tile = { title: string; img: string };
 // `tiles` now only feed the Emergency tab and fallbacks; services come from the database (issue #26).
 
 /** `concierge`: The Plug delivers the service itself (no business listings); service pages lead to a concierge request (issue #36). */
-export const CATS: { key: CatKey; name: string; line: string; tiles: Tile[]; concierge?: boolean }[] = [
+/**
+ * `listingServices`: in a concierge category, the services that list businesses all the same (issue #132: Lawyers in
+ * Business). Those businesses are contacted through the concierge only.
+ */
+export const CATS: { key: CatKey; name: string; line: string; tiles: Tile[]; concierge?: boolean; listingServices?: string[] }[] = [
   {
     key: "rentals",
     name: "Rentals",
@@ -81,6 +85,7 @@ export const CATS: { key: CatKey; name: string; line: string; tiles: Tile[]; con
     name: "Business",
     line: "Starting or running a business in Ghana? The Plug handles registration, licences, compliance and legal work for you.",
     concierge: true,
+    listingServices: ["lawyers"],
     tiles: [
       { title: "Set up a new business", img: "/images/svc-business-setup.jpg" },
       { title: "Licence acquisition", img: "/images/svc-licences.jpg" },
@@ -157,4 +162,13 @@ export const getCat = (key: string) => CATS.find((c) => c.key === key);
 export const isConciergeCat = (key: string) => getCat(key)?.concierge === true;
 
 /** Categories that hold business listings: Explore filters, the business form and the waitlist. */
-export const LISTING_CATS = CATS.filter((c) => c.key !== "emergency" && !c.concierge);
+export const LISTING_CATS = CATS.filter((c) => c.key !== "emergency" && (!c.concierge || !!c.listingServices?.length));
+
+/**
+ * Whether a service lists businesses (true) or is delivered by The Plug itself (false). Every service in a listing
+ * category lists businesses; in a concierge category, only its `listingServices` do (issue #132).
+ */
+export function listsBusinesses(category: string, service: string) {
+  const c = getCat(category);
+  return !!c && (!c.concierge || !!c.listingServices?.includes(service));
+}

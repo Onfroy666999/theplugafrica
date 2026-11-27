@@ -27,6 +27,8 @@ export type ConciergeServiceContent = {
   included: string[];
   /** Optional extra list, e.g. the licences we commonly help with. */
   examples?: Checklist;
+  /** Optional link to related listings, e.g. Legal services → the lawyers (issue #132). */
+  browse?: { label: string; href: string };
   youNeed: string[];
   whoFor: string[];
   faqs: Faq[];
@@ -362,6 +364,7 @@ export const CONCIERGE_SERVICE_CONTENT: Record<string, ConciergeServiceContent> 
   },
 
   "new-business/legal": {
+    browse: { label: "Browse verified lawyers", href: "/explore/new-business/lawyers" },
     welcome: "Legal help for your business, from a licensed lawyer, without the chasing.",
     intro:
       "Most business problems that turn legal start small: a contract signed without being read properly, a lease with a clause nobody explained, a supplier who won't pay. We find a licensed lawyer who handles your kind of matter, agree the scope and the fees with you up front, and follow the work through until it's done. The Plug isn't a law firm and doesn't give legal advice itself: the lawyer does, and we keep things moving.",

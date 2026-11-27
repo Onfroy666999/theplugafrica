@@ -155,7 +155,7 @@ export function CategoryExplorer({ id = "explore", services, emergencyTiles }: {
   const fromDb = services?.[active];
   // Services from the database when available; Emergency (and the reference page) use the built-in tiles.
   const tiles = fromDb?.length
-    ? fromDb.slice(0, 8).map((s) => ({ title: s.name, img: s.image, href: `/explore/${active}/${s.slug}`, note: cat.concierge ? "Handled by The Plug" : s.count ? `${s.count} ${s.count === 1 ? "business" : "businesses"}` : "Coming soon" }))
+    ? fromDb.slice(0, 8).map((s) => ({ title: s.name, img: s.image, href: `/explore/${active}/${s.slug}`, note: cat.concierge && !cat.listingServices?.includes(s.slug) ? "Handled by The Plug" : s.count ? `${s.count} ${s.count === 1 ? "business" : "businesses"}` : "Coming soon" }))
     : (active === "emergency" && emergencyTiles?.length ? emergencyTiles : cat.tiles).map((t) => ({ ...t, href: active === "emergency" ? "/emergency" : `/explore?cat=${active}`, note: "" }));
   const seeAll = active === "emergency" ? "/emergency" : `/explore/${active}`;
 
