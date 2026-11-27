@@ -4,6 +4,8 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-11-27
+
 ### Added
 - **Lawyers & law firms** in Business (#132): independent lawyers and law firms listed with their credentials and availability. Business stays concierge-led; Lawyers is its one listings service, and Legal services links to it.
 - **Contact through the concierge only** (#132): a switch on each business (on for lawyers). Its phone, WhatsApp and email are never shown and the site refuses to give them out; the only action is "Request through The Plug", which alerts the concierge with the business's name and availability.
