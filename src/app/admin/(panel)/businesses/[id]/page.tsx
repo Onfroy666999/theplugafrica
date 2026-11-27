@@ -53,6 +53,8 @@ export default async function EditBusiness({ params, searchParams }: { params: P
           credentials: b.credentials.map((c) => ({ label: c.label, state: c.state })),
           services: b.services.map((sv) => sv.id),
           isExample: b.isExample,
+          mediated: b.mediated,
+          availability: b.availability,
         }}
       />
     </>

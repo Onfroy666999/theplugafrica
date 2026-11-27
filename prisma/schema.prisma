@@ -83,6 +83,11 @@ model Business {
   whatsapp    String?
   email       String?
   status      String   @default("draft") // draft | in_review | verified | hidden
+  /// Contact through the concierge only (issue #132): the site never shows the contact details and offers no direct
+  /// contact; visitors send a concierge request about the business instead. On for lawyers.
+  mediated     Boolean @default(false)
+  /// available | limited | unavailable (src/lib/availability.ts)
+  availability String  @default("available")
   isExample   Boolean  @default(false) // design placeholder, not a real business
   rating      Float?
   reviewCount Int      @default(0)

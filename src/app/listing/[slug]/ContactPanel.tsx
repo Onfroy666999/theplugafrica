@@ -9,11 +9,60 @@ import { RequestDetails } from "@/components/market/RequestDetails";
 import { Chat, Check, Shield } from "@/components/market/Icons";
 import { Button, LinkButton } from "@/components/ui/Button";
 import { Sheet, SheetTitle } from "@/components/ui/Sheet";
+import { availabilityOf } from "@/lib/availability";
 import type { Listing } from "@/lib/listings";
 import { DUR, EASE } from "@/lib/motion";
 
 /** Contact card (desktop), contact bar (phones) and the disclaimer sheet. Contacting creates a reference code. */
 export function ContactPanel({ l }: { l: Listing }) {
+  if (l.mediated) return <MediatedPanel l={l} />;
+  return <DirectPanel l={l} />;
+}
+
+/**
+ * A business reached only through the concierge (issue #132, lawyers): no contact details and no direct request. The
+ * one action is a concierge request about this business; the concierge is alerted with its name and availability.
+ */
+function MediatedPanel({ l }: { l: Listing }) {
+  const href = `/concierge?listing=${l.slug}`;
+  return (
+    <>
+      <div className="rounded-panel border border-navy/12 bg-white p-6 shadow-card">
+        <p className="font-heading text-[20px] font-bold text-navy">{l.price}</p>
+        <AvailabilityBadge value={l.availability} className="mt-2" />
+        <LinkButton href={href} full size="lg" className="mt-5">
+          <Shield className="h-5 w-5" /> Request through The Plug
+        </LinkButton>
+        <p className="mt-4 text-[12.5px] leading-relaxed text-navy/65">
+          {l.name} works with clients through The Plug. A concierge contacts them for you, agrees the scope and fees with you before any work starts, and follows up until it&apos;s done.
+        </p>
+      </div>
+
+      {/* Phones: the request stays one tap away while reading */}
+      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-4 border-t border-navy/10 bg-white/95 px-5 py-3 backdrop-blur-md lg:hidden">
+        <div className="min-w-0">
+          <p className="truncate font-heading text-[15px] font-bold text-navy">{l.price}</p>
+          <p className="truncate text-[12.5px] text-navy/65">{availabilityOf(l.availability).label}</p>
+        </div>
+        <LinkButton href={href} className="shrink-0">Request</LinkButton>
+      </div>
+    </>
+  );
+}
+
+/** "Available for new work" and the like (issue #132). */
+export function AvailabilityBadge({ value, className = "" }: { value?: string; className?: string }) {
+  const a = availabilityOf(value);
+  const tone = a.tone === "ok" ? "bg-ok-soft text-ok" : a.tone === "gold" ? "bg-gold/15 text-gold-ink" : "bg-navy/[0.06] text-navy/65";
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12.5px] font-semibold ${tone} ${className}`}>
+      <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-current" />
+      {a.label}
+    </span>
+  );
+}
+
+function DirectPanel({ l }: { l: Listing }) {
   const [open, setOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   const [session, setSession] = useState(0); // fresh steps on each open, not on close (avoids a flash mid-exit)

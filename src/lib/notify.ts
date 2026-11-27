@@ -1,4 +1,5 @@
 import "server-only";
+import { availabilityOf } from "./availability";
 import { after } from "next/server";
 import { getCat } from "./directory";
 import { layout, sendEmail } from "./email";
@@ -30,13 +31,23 @@ function later(fn: () => Promise<unknown>) {
   });
 }
 
-export function notifyConcierge(r: { ref: string; name: string; phone: string; email?: string; category: string; service?: string | null; details: string; timing: string; member?: boolean } & Where) {
+export function notifyConcierge(
+  r: { ref: string; name: string; phone: string; email?: string; category: string; service?: string | null; details: string; timing: string; member?: boolean; business?: { name: string; kind: string; mediated: boolean; availability: string } } & Where,
+) {
   later(async () => {
     const d = describeRequest(r);
     const about = [getCat(r.category)?.name ?? r.category, r.service].filter(Boolean).join(" › ");
+    const b = r.business;
+    // A request for a business that's reached only through the concierge (issue #132): name it in the subject.
+    const subject = b?.mediated ? `${r.member ? "Member · " : ""}Request for ${b.name} (${r.ref}): through the concierge` : `${r.member ? "Member · " : ""}New concierge request ${r.ref}: ${about}`;
+    const intro = b?.mediated
+      ? `${r.name}${r.member ? ", a concierge member," : ""} wants ${b.name}. This business is reached only through the concierge: contact them and arrange it.`
+      : `${r.name}${r.member ? ", a concierge member," : ""} asked a concierge for help.`;
     // Members get priority (issue #83): say so up front.
-    await teamAlert(`${r.member ? "Member · " : ""}New concierge request ${r.ref}: ${about}`, "New concierge request", `${r.name}${r.member ? ", a concierge member," : ""} asked a concierge for help.`, [
-      ["Reference", r.ref], ["About", about], ["Name", r.name], ["Phone", r.phone], ["Email", r.email], ["Where", d.place], ["When", d.when], ["How soon", r.timing], ["Request", r.details],
+    await teamAlert(subject, "New concierge request", intro, [
+      ["Reference", r.ref], ["About", about],
+      ...(b ? ([["Business", `${b.name} (${b.kind})`], ["Availability", availabilityOf(b.availability).label]] as [string, string][]) : []),
+      ["Name", r.name], ["Phone", r.phone], ["Email", r.email], ["Where", d.place], ["When", d.when], ["How soon", r.timing], ["Request", r.details],
     ], "/admin/concierge", r.email);
     if (r.email)
       await sendEmail({

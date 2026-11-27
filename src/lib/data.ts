@@ -44,6 +44,8 @@ export function toListing(b: Row): Listing {
       .filter((sv) => sv.visible)
       .sort((x, y) => x.position - y.position)
       .map((sv) => ({ slug: sv.slug, name: sv.name })),
+    mediated: b.mediated,
+    availability: b.availability,
   };
 }
 

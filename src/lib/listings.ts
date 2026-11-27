@@ -26,6 +26,10 @@ export type Listing = {
   isExample?: boolean;
   /** Services (sub-categories) the business offers, in display order. Filled from the database. */
   services?: { slug: string; name: string }[];
+  /** Contacted through the concierge only (issue #132): no direct contact on its page. */
+  mediated?: boolean;
+  /** available | limited | unavailable (src/lib/availability.ts) */
+  availability?: string;
 };
 
 /**
