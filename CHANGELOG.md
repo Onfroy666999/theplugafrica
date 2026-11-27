@@ -9,6 +9,9 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ### Added
 - **Legal services** in Business: a licensed lawyer, found and coordinated by The Plug, for contracts, leases and property, company matters and disputes (#126). Created on existing databases by the `legal_service` migration.
+- Admin › Services: the Visible/Hidden switch moves the moment you click it, and goes back with a message if the change doesn't save (#124).
+### Fixed
+- Staging and live: Hyperdrive's query caching is turned off, so the admin shows a change straight away (a visibility toggle no longer flips back) (#122). A dashboard setting; documented in DEPLOY.md Part C.
 
 ## [0.16.1] - 2026-11-20
 
