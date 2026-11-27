@@ -4,6 +4,8 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- Emergency: Ghana's national numbers, each checked on the service's own website on 27 Nov 2026: 112 (national emergency and ambulance), Police 191 and toll-free 18555, Fire 192, and the DOVVSU helpline 055 100 0900. NADMO's disaster lines are added but hidden until the team confirms them (#128). Added by the `ghana_emergency_numbers` migration, which skips any number already listed.
 ### Changed
 - The "New Business" category is now called **Business** (its web address, /explore/new-business, is unchanged) (#126).
 
