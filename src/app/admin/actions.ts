@@ -15,7 +15,8 @@ import { db } from "@/lib/db";
 import { clear, hit, unhit, visitorId } from "@/lib/protect";
 import { onWorkers } from "@/lib/runtime";
 import { deleteFromStorage, isAllowedPhoto, listStorageFiles, storageEnabled, uploadToStorage } from "@/lib/storage";
-import { CATS, getCat } from "@/lib/directory";
+import { AVAILABILITY, type Availability } from "@/lib/availability";
+import { CATS, LISTING_CATS, getCat, listsBusinesses } from "@/lib/directory";
 import { BUSINESS_STATUS, CONCIERGE_STATUS, CREDENTIAL_STATE, ENQUIRY_STATUS, WAITLIST_STATUS, CONTACT_STATUS, canBeVerified, find, values } from "@/lib/status";
 
 /* ---------------- Sign in / out ---------------- */
@@ -86,8 +87,10 @@ const BusinessSchema = z.object({
   id: z.string().optional(),
   name: z.string().trim().min(2, "Add the business name").max(160),
   slug: z.string().trim().max(80).optional(),
-  // Concierge-only categories (New Business, #36) take no business listings.
-  category: z.enum(CATS.filter((c) => !c.concierge).map((c) => c.key) as [string, ...string[]]),
+  // Concierge-only categories (Business, #36) take listings only in their listing services (Lawyers, #132).
+  category: z.enum(LISTING_CATS.map((c) => c.key) as [string, ...string[]]),
+  mediated: z.enum(["true", "false"]).default("false").transform((v) => v === "true"),
+  availability: z.enum(AVAILABILITY.map((a) => a.value) as [Availability, ...Availability[]]).default("available"),
   kind: z.string().trim().min(2, "Add what kind of business it is").max(80),
   city: z.string().trim().min(2, "Add the city").max(60),
   area: z.string().trim().min(2, "Add the area or neighbourhood").max(80),
@@ -136,6 +139,7 @@ export type SaveResult = { ok: true; id: string } | { ok: false; error: string; 
 const BUSINESS_FIELDS: Record<string, string> = {
   name: "name", slug: "web address", category: "category", kind: "kind", city: "city", area: "area", blurb: "summary", about: "description",
   price: "price", responds: "response time", languages: "languages", phone: "phone", whatsapp: "WhatsApp", email: "email", status: "status",
+  mediated: "contact through the concierge only", availability: "availability",
 };
 const statusLabel = (v: string) => find(BUSINESS_STATUS, v).label;
 
@@ -155,8 +159,11 @@ export async function saveBusiness(fd: FormData): Promise<SaveResult> {
     return { ok: false, error: "Every credential must be Checked before a business can be marked Verified.", field: "status" };
 
   // Services must belong to the business's category; at least one is required when the category has services.
-  const valid = await db.service.findMany({ where: { id: { in: serviceIds }, category: d.category }, select: { id: true } });
-  if (valid.length !== serviceIds.length) return { ok: false, error: "Some chosen services belong to another category. Re-check the services.", field: "services" };
+  const chosen = await db.service.findMany({ where: { id: { in: serviceIds }, category: d.category }, select: { id: true, slug: true } });
+  if (chosen.length !== serviceIds.length) return { ok: false, error: "Some chosen services belong to another category. Re-check the services.", field: "services" };
+  // In Business, only the listing services (Lawyers) take businesses; the rest are delivered by The Plug (#132).
+  if (chosen.some((s) => !listsBusinesses(d.category, s.slug))) return { ok: false, error: "That service is delivered by The Plug itself and can't list businesses.", field: "services" };
+  const valid = chosen.map((s) => ({ id: s.id }));
   if (!valid.length && (await db.service.count({ where: { category: d.category } })) > 0)
     return { ok: false, error: "Choose at least one service so visitors can find this business.", field: "services" };
 

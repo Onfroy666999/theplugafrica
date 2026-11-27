@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getCategoryServices, getIndexableListings, getIndexableServices } from "@/lib/data";
-import { CATS } from "@/lib/directory";
+import { CATS, listsBusinesses } from "@/lib/directory";
 import { CITIES } from "@/lib/listings";
 import { SITE_URL, citySlug } from "@/lib/site";
 
@@ -20,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     u("/explore", { changeFrequency: "daily", priority: 0.9 }),
     ...CATS.filter((c) => c.key !== "emergency").map((c) => u(`/explore/${c.key}`, { changeFrequency: "weekly", priority: 0.8 })),
     // Services The Plug delivers itself (New Business, #36) are real pages from day one.
-    ...conciergeCats.flatMap((c, i) => conciergeServices[i].map((s) => u(`/explore/${c.key}/${s.slug}`, { changeFrequency: "monthly", priority: 0.8 }))),
+    ...conciergeCats.flatMap((c, i) => conciergeServices[i].filter((s) => !listsBusinesses(c.key, s.slug)).map((s) => u(`/explore/${c.key}/${s.slug}`, { changeFrequency: "monthly", priority: 0.8 }))),
     ...services.flatMap((s) => [
       u(`/explore/${s.category}/${s.slug}`, { lastModified: s.updatedAt, changeFrequency: "weekly", priority: 0.7 }),
       ...s.cities.filter((c) => CITIES.includes(c)).map((c) => u(`/explore/${s.category}/${s.slug}/${citySlug(c)}`, { lastModified: s.updatedAt, priority: 0.6 })),

@@ -8,10 +8,12 @@ import { useRef, useState, useTransition } from "react";
 import { Field, Input, Select, Spinner, Textarea } from "@/components/market/Form";
 import { Button } from "@/components/ui/Button";
 import { Sheet, SheetTitle } from "@/components/ui/Sheet";
-import { LISTING_CATS } from "@/lib/directory";
+import { AVAILABILITY } from "@/lib/availability";
+import { LISTING_CATS, isConciergeCat, listsBusinesses } from "@/lib/directory";
 import { DUR, EASE } from "@/lib/motion";
 import { BUSINESS_STATUS, CREDENTIAL_STATE } from "@/lib/status";
 import { deleteBusiness, saveBusiness, uploadImages } from "../../actions";
+import { Switch } from "@/components/ui/Switch";
 import { call } from "@/lib/call";
 import { useCan } from "../AdminContext";
 
@@ -36,12 +38,17 @@ export type BusinessInput = {
   credentials: { label: string; state: string }[];
   services: string[]; // service ids
   isExample?: boolean;
+  mediated?: boolean;
+  availability?: string;
 };
 
-export type ServiceOption = { id: string; category: string; name: string; visible: boolean };
+export type ServiceOption = { id: string; category: string; slug: string; name: string; visible: boolean };
 
 const CAT_OPTIONS = LISTING_CATS.map((c) => ({ value: c.key, label: c.name }));
 const STATUS_OPTIONS = BUSINESS_STATUS.map((s) => ({ value: s.value, label: s.label }));
+const AVAILABILITY_OPTIONS = AVAILABILITY.map((a) => ({ value: a.value, label: a.label }));
+/** Listings in a concierge category (Lawyers in Business, #132) start as contact-through-the-concierge-only. */
+const startsMediated = (cat: string) => isConciergeCat(cat);
 const CRED_OPTIONS = CREDENTIAL_STATE.map((s) => ({ value: s.value, label: s.label }));
 const DEFAULT_CREDS = ["Business registration (Registrar-General)", "Owner identity checked", "Address visited by our team"];
 
@@ -55,7 +62,10 @@ export function BusinessForm({ initial, library, allServices, fromWaitlist }: { 
   const [images, setImages] = useState<string[]>(initial?.images ?? []);
   const [category, setCategory] = useState(initial?.category || "rentals");
   const [serviceIds, setServiceIds] = useState<string[]>(initial?.services ?? []);
-  const categoryServices = allServices.filter((sv) => sv.category === category);
+  // Only services that list businesses (in Business: Lawyers, #132).
+  const categoryServices = allServices.filter((sv) => sv.category === category && listsBusinesses(sv.category, sv.slug));
+  const [mediated, setMediated] = useState(initial?.mediated ?? startsMediated(initial?.category || "rentals"));
+  const [availability, setAvailability] = useState(initial?.availability || "available");
   const [creds, setCreds] = useState(initial?.credentials ?? DEFAULT_CREDS.map((label) => ({ label, state: "pending" })));
   const [error, setError] = useState<{ msg: string; field?: string } | null>(null);
   const [saved, setSaved] = useState(false);
@@ -114,6 +124,8 @@ export function BusinessForm({ initial, library, allServices, fromWaitlist }: { 
     fd.set("images", JSON.stringify(images));
     fd.set("credentials", JSON.stringify(creds.filter((c) => c.label.trim())));
     fd.set("services", JSON.stringify(serviceIds));
+    fd.set("mediated", String(mediated));
+    fd.set("availability", availability);
     if (initial?.id) fd.set("id", initial.id);
     start(async () => {
       const r = await call(saveBusiness(fd));
@@ -155,6 +167,8 @@ export function BusinessForm({ initial, library, allServices, fromWaitlist }: { 
                 value={category}
                 onChange={(c) => {
                   setCategory(c);
+                  // A new business moved into Business starts as contact-through-the-concierge-only (#132).
+                  if (isNew && startsMediated(c)) setMediated(true);
                   // Services belong to one category: keep only those that still apply.
                   setServiceIds((ids) => ids.filter((id) => allServices.some((sv) => sv.id === id && sv.category === c)));
                 }}
@@ -202,7 +216,21 @@ export function BusinessForm({ initial, library, allServices, fromWaitlist }: { 
           )}
         </Section>
 
-        <Section title="Contact details" sub="Shown to customers only after they accept the disclaimer and receive a reference code.">
+        <Section title="How customers reach them" sub="Availability shows on the listing and goes to the concierge with every request.">
+          <div className="grid gap-5 md:grid-cols-[1fr_auto] md:items-end">
+            <Field label="Availability">
+              <Select label="Availability" options={AVAILABILITY_OPTIONS} value={availability} onChange={setAvailability} />
+            </Field>
+            <Switch checked={mediated} onChange={setMediated} label="Contact through the concierge only" />
+          </div>
+          <p className="mt-3 text-[13px] leading-relaxed text-navy/65">
+            {mediated
+              ? "Their phone, WhatsApp and email are never shown. Visitors send a request through The Plug, and the concierge is alerted with this business's name and availability."
+              : "Visitors can get the contact details (after the disclaimer, with a reference code) or send them a request directly."}
+          </p>
+        </Section>
+
+        <Section title="Contact details" sub={mediated ? "For the concierge only: never shown on the site for this business." : "Shown to customers only after they accept the disclaimer and receive a reference code."}>
           <div className="grid gap-5 md:grid-cols-3">
             <Field label="Phone"><Input label="Phone" name="phone" type="tel" defaultValue={v("phone")} placeholder="+233 …" /></Field>
             <Field label="WhatsApp"><Input label="WhatsApp" name="whatsapp" type="tel" defaultValue={v("whatsapp")} placeholder="+233 …" /></Field>

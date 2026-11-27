@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCategoryServices, getService, getServiceListings } from "@/lib/data";
-import { getCat } from "@/lib/directory";
+import { getCat, listsBusinesses } from "@/lib/directory";
 import { CITIES } from "@/lib/listings";
 import { cityFromSlug, pageMeta } from "@/lib/site";
 import { ServiceView } from "../ServiceView";
@@ -14,7 +14,7 @@ type Props = { params: Promise<Params> };
 async function load(p: Params) {
   const cat = getCat(p.category);
   const city = cityFromSlug(p.city);
-  if (!cat || cat.concierge || !city) return null;
+  if (!cat || !listsBusinesses(cat.key, p.service) || !city) return null;
   const [svc, all, siblings] = await Promise.all([getService(p.category, p.service), getServiceListings(p.category, p.service), getCategoryServices(p.category)]);
   if (!svc) return null;
   return { cat, city, svc, all, siblings, listings: all.filter((l) => l.city === city) };

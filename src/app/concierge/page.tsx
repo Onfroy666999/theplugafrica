@@ -9,6 +9,8 @@ import { MEMBERSHIP_USD } from "@/lib/membership-plan";
 import { Footer, Header, Reveal } from "@/components/market/Sections";
 import { ConciergeForm } from "./ConciergeForm";
 import { getSiteImages } from "@/lib/site-images-server";
+import { db } from "@/lib/db";
+import { publicWhere } from "@/lib/data";
 
 // Reads the photos chosen in Admin › Site photos (issue #112).
 export const dynamic = "force-dynamic";
@@ -26,7 +28,10 @@ const DOES = [
   "Follow up until it's done",
 ];
 
-export default async function ConciergePage() {
+export default async function ConciergePage({ searchParams }: { searchParams: Promise<{ listing?: string }> }) {
+  const slug = (await searchParams).listing;
+  // The business asked about (issue #132), so the form names it. Only public businesses.
+  const about = slug ? await db.business.findFirst({ where: { slug: String(slug).slice(0, 80), ...publicWhere() }, select: { slug: true, name: true, kind: true, area: true, city: true, category: true } }) : null;
   const img = (await getSiteImages())["page.concierge"];
   return (
     <main className="min-h-screen bg-white text-navy">
@@ -54,7 +59,7 @@ export default async function ConciergePage() {
         </div>
         <div className="lg:pt-2">
           <Suspense fallback={<div className="h-[640px] rounded-hero bg-cream" />}>
-            <ConciergeForm />
+            <ConciergeForm about={about && { slug: about.slug, name: about.name, kind: about.kind, area: about.area, city: about.city, cat: about.category }} />
           </Suspense>
         </div>
       </section>

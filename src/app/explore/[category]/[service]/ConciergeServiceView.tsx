@@ -42,7 +42,11 @@ export function ConciergeServiceView({ cat, svc, siblings }: { cat: { key: strin
             <p className="mt-4 max-w-xl text-[16px] leading-relaxed text-navy/65">{c?.intro ?? ""}</p>
             <div className="mt-7 flex flex-wrap gap-3">
               <LinkButton href="#request" size="lg">Request this service</LinkButton>
-              {c && <LinkButton href="#included" variant="secondary" size="lg">What&apos;s included</LinkButton>}
+              {c?.browse ? (
+                <LinkButton href={c.browse.href} variant="secondary" size="lg">{c.browse.label}</LinkButton>
+              ) : (
+                c && <LinkButton href="#included" variant="secondary" size="lg">What&apos;s included</LinkButton>
+              )}
             </div>
           </div>
           <div className="relative aspect-[4/3] overflow-hidden rounded-hero bg-navy/5">
