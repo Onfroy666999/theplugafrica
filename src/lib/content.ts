@@ -305,7 +305,7 @@ export const CATEGORY_CONTENT: Partial<Record<CatKey, CategoryContent>> = {
   "new-business": {
     welcome: "Start and run your business in Ghana, without the runaround.",
     intro: [
-      "Registering a company, getting the right licences and keeping up with filings can mean weeks of queues, forms and conflicting advice, especially if you're new to Ghana or running things from abroad. With New Business, The Plug does that work for you.",
+      "Registering a company, getting the right licences and keeping up with filings can mean weeks of queues, forms and conflicting advice, especially if you're new to Ghana or running things from abroad. The Plug does that work for you, and brings in a licensed lawyer when you need one.",
       "You get one concierge who explains what your business needs, agrees the fee with you up front and deals with the agencies until it's done. You stay in control: applications are made in your name, and official fees are paid directly to the agency.",
     ],
     image: "/images/new-business.jpg",
@@ -328,7 +328,7 @@ export const CATEGORY_CONTENT: Partial<Record<CatKey, CategoryContent>> = {
   },
 };
 
-/* ---------------- New Business services ---------------- */
+/* ---------------- Business services (the category's web address is still /explore/new-business) ---------------- */
 
 export const CONCIERGE_SERVICE_CONTENT: Record<string, ConciergeServiceContent> = {
   "new-business/business-setup": {
@@ -358,6 +358,34 @@ export const CONCIERGE_SERVICE_CONTENT: Record<string, ConciergeServiceContent> 
       { q: "Is there a minimum investment for foreign-owned businesses?", a: "Yes. The Ghana Investment Promotion Centre sets minimum capital requirements for businesses with foreign ownership, and they vary with the type of business and the share owned. We confirm what applies to you before you commit." },
       { q: "Do I need to be in Ghana?", a: "Not for most steps. We tell you in the first call if any step needs you in person, so you can plan around it." },
       { q: "What will it cost?", a: "Official fees go directly to the agencies in your name. The Plug's fee is agreed in writing after a free first call, before any work starts." },
+    ],
+  },
+
+  "new-business/legal": {
+    welcome: "Legal help for your business, from a licensed lawyer, without the chasing.",
+    intro:
+      "Most business problems that turn legal start small: a contract signed without being read properly, a lease with a clause nobody explained, a supplier who won't pay. We find a licensed lawyer who handles your kind of matter, agree the scope and the fees with you up front, and follow the work through until it's done. The Plug isn't a law firm and doesn't give legal advice itself: the lawyer does, and we keep things moving.",
+    included: [
+      "A first call to understand what you need, and whether it needs a lawyer at all",
+      "Matching you with a licensed lawyer who handles that kind of matter",
+      "Drafting or reviewing contracts: supply, service, employment, partnership and shareholder agreements",
+      "Leases and property: checking a lease, a land title or a purchase before you sign",
+      "Company matters: changes of directors or shareholders, resolutions and agreements between owners",
+      "Debt recovery and disputes: demand letters, negotiation and, where needed, mediation or court",
+      "Following up with the lawyer and keeping you informed at each step",
+    ],
+    youNeed: [
+      "A short description of the matter and what you want to achieve",
+      "Copies of any documents involved: contracts, leases, letters or emails",
+      "Your company documents, if it concerns a registered business",
+      "A Ghana Card or passport for whoever the lawyer will act for",
+    ],
+    whoFor: ["Small and growing businesses without a lawyer", "Diaspora and foreign investors", "Landlords and tenants with a business lease", "Anyone about to sign something important"],
+    faqs: [
+      { q: "Is The Plug a law firm?", a: "No. A licensed lawyer gives the advice and does the legal work. We find the right one for your matter, agree the scope and fees with you before they start, and follow up until it's done." },
+      { q: "What will it cost?", a: "There are two parts: the lawyer's fee, which they set and you agree before any work starts, and The Plug's fee for arranging and coordinating it, which we agree with you in writing after a free first call." },
+      { q: "Can I work with the lawyer from abroad?", a: "Usually, yes. Most matters can be handled by phone, video and email, and many documents can be signed remotely. We tell you early if anything needs you in person." },
+      { q: "Is what I tell you kept private?", a: "Yes. We share your details only with the lawyer handling your matter, and only what they need. What you tell the lawyer is covered by their professional duty of confidentiality." },
     ],
   },
 

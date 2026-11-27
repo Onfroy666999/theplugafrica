@@ -78,13 +78,14 @@ export const CATS: { key: CatKey; name: string; line: string; tiles: Tile[]; con
     ],
   },  {
     key: "new-business",
-    name: "New Business",
-    line: "Starting or running a business in Ghana? The Plug handles registration, licences and compliance for you.",
+    name: "Business",
+    line: "Starting or running a business in Ghana? The Plug handles registration, licences, compliance and legal work for you.",
     concierge: true,
     tiles: [
       { title: "Set up a new business", img: "/images/svc-business-setup.jpg" },
       { title: "Licence acquisition", img: "/images/svc-licences.jpg" },
       { title: "Compliance services", img: "/images/svc-compliance.jpg" },
+      { title: "Legal services", img: "/images/svc-licences.jpg" },
     ],
   },
 
