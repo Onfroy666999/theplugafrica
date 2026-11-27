@@ -4,6 +4,9 @@ Notable changes to The Plug Africa. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Changed
+- Admin › Services: the Visible/Hidden switch moves the moment you click it, and goes back with a message if the change doesn't save (#124).
+
 ## [0.16.1] - 2026-11-20
 
 ### Fixed
